@@ -12,6 +12,7 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'SGU_Custom_PostTypes' => __DIR__ . '/../..' . '/work/inc/sgu-custom-posttypes.php',
         'SGU_FW' => __DIR__ . '/..' . '/custom-fields/classes/setup.class.php',
         'SGU_FW_Abstract' => __DIR__ . '/..' . '/custom-fields/classes/abstract.class.php',
         'SGU_FW_Comment_Metabox' => __DIR__ . '/..' . '/custom-fields/classes/comment-options.class.php',
@@ -70,6 +71,8 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
         'SGU_FW_Taxonomy_Options' => __DIR__ . '/..' . '/custom-fields/classes/taxonomy-options.class.php',
         'SGU_FW_Walker_Nav_Menu_Edit' => __DIR__ . '/..' . '/custom-fields/functions/walker.php',
         'SGU_FW_Widget' => __DIR__ . '/..' . '/custom-fields/classes/widget-options.class.php',
+        'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
+        'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',
         'WP_Customize_Control_SGU_FW' => __DIR__ . '/..' . '/custom-fields/functions/customize.php',
         'WP_Customize_Panel_SGU_FW' => __DIR__ . '/..' . '/custom-fields/functions/customize.php',
         'WP_Customize_Section_SGU_FW' => __DIR__ . '/..' . '/custom-fields/functions/customize.php',

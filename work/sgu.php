@@ -28,12 +28,6 @@ if( ! class_exists( 'SGUP' ) ) {
     */
     class SGUP {
 
-        // fire us up
-        public function __construct( ) {
-
-
-        }
-
         /** 
          * init
          * 
@@ -49,7 +43,9 @@ if( ! class_exists( 'SGUP' ) ) {
 
             // hold our classes and the public method we'll be using
             $plugin_classes = array(
-                //[ 'class' => '', 'method' => ''],
+                [ 'class' => 'SGU_Plugin', 'method' => null],
+                [ 'class' => 'SGU_Custom_PostTypes', 'method' => null],
+                [ 'class' => 'SGU_Settings', 'method' => null],
             );
 
             // loop over each item
@@ -60,9 +56,19 @@ if( ! class_exists( 'SGUP' ) ) {
                     
                     // fire it up
                     $instance = new $item['class']( );
-                    
-                    // fire up the class initializers
-                    $instance -> init( );
+
+                    // if the method is empty
+                    if( empty( $item['method'] ) ) {
+
+                        // fire up the class initializers
+                        $instance -> init( );
+
+                    // otherwise
+                    } else {
+
+                        // fire up the class initializers
+                        $instance -> {$item['method']}( );
+                    }
                     
                     // now clean up the instance
                     unset( $instance );

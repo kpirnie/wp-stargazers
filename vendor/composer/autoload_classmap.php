@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'SGU_Custom_PostTypes' => $baseDir . '/work/inc/sgu-custom-posttypes.php',
     'SGU_FW' => $vendorDir . '/custom-fields/classes/setup.class.php',
     'SGU_FW_Abstract' => $vendorDir . '/custom-fields/classes/abstract.class.php',
     'SGU_FW_Comment_Metabox' => $vendorDir . '/custom-fields/classes/comment-options.class.php',
@@ -65,6 +66,8 @@ return array(
     'SGU_FW_Taxonomy_Options' => $vendorDir . '/custom-fields/classes/taxonomy-options.class.php',
     'SGU_FW_Walker_Nav_Menu_Edit' => $vendorDir . '/custom-fields/functions/walker.php',
     'SGU_FW_Widget' => $vendorDir . '/custom-fields/classes/widget-options.class.php',
+    'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
+    'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
     'WP_Customize_Control_SGU_FW' => $vendorDir . '/custom-fields/functions/customize.php',
     'WP_Customize_Panel_SGU_FW' => $vendorDir . '/custom-fields/functions/customize.php',
     'WP_Customize_Section_SGU_FW' => $vendorDir . '/custom-fields/functions/customize.php',
