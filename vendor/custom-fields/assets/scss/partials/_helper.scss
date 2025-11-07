@@ -1,0 +1,152 @@
+/**
+ * 10. Helper
+ */
+.sgu_fw-subtitle-text{
+  margin-top: 6px;
+  font-weight: 400;
+  color: #999;
+}
+
+.sgu_fw-desc-text{
+  clear: both;
+  float: left;
+  width: 100%;
+  margin-top: 6px;
+  font-weight: 400;
+  color: #999;
+}
+
+.sgu_fw-error-text{
+  margin-top: 6px;
+  color: #d02c21;
+}
+
+.sgu_fw-before-text{
+  margin-bottom: 6px;
+}
+
+.sgu_fw-after-text{
+  margin-top: 6px;
+}
+
+.sgu_fw-metabox-hide{
+  display: none !important;
+}
+
+.sgu_fw-metabox-show{
+  display: block !important;
+}
+
+.sgu_fw-depend-hidden.sgu_fw-depend-on{
+  display: none;
+}
+
+.sgu_fw-depend-visible.sgu_fw-depend-on{
+  display: block;
+  opacity: 0.75;
+  filter: grayscale(1);
+  user-select: none;
+  border-top: 1px solid #eee;
+
+  .clear:before{
+    content: "";
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    background-color: #eee;
+    opacity: 0.25;
+    z-index: 10;
+  }
+}
+
+.sgu_fw-warning-primary{
+  color: #fff !important;
+  border-color: #dc3545 !important;
+  background: #dc3545 !important;
+
+  &:hover,
+  &:focus{
+    border-color: #bd2130 !important;
+    background: #bd2130 !important;
+  }
+
+  &:focus{
+    box-shadow: 0 0 0 1px #fff, 0 0 0 3px #bd2130 !important;
+  }
+
+  &:active{
+    border-color: #bd2130 !important;
+    background: #bd2130 !important;
+  }
+}
+
+.sgu_fw-form-result{
+  display: none;
+  float: left;
+  padding: 0 8px;
+  margin-right: 4px;
+  font-size: 11px;
+  line-height: 30px;
+  user-select: none;
+  border-radius: 2px;
+}
+
+.sgu_fw-form-show{
+  display: block;
+}
+
+.sgu_fw-form-success{
+  color: #fff;
+  background-color: #46b450;
+}
+
+.sgu_fw-form-warning{
+  color: #8a6d3b;
+  background-color: #faebcc;
+}
+
+.sgu_fw-label-error{
+  position: relative;
+  top: -2px;
+  display: inline-block;
+  font-size: 10px;
+  line-height: 10px;
+  height: 10px;
+  width: 10px;
+  padding: 1px;
+  font-style: normal;
+  text-align: center;
+  color: #fff;
+  vertical-align: middle;
+  background-color: #e10000;
+  border-radius: 2px;
+}
+
+.sgu_fw-no-option{
+  padding: 30px;
+}
+
+.sgu_fw-input-number{
+  -moz-appearance:textfield;
+}
+
+.sgu_fw-input-number::-webkit-inner-spin-button,
+.sgu_fw-input-number::-webkit-outer-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sgu_fw-fa5-shims{
+
+  .sgu_fw{
+
+    .fas,
+    .far,
+    .fab{
+      font-family: "FontAwesome";
+      font-style: normal;
+    }
+  }
+}

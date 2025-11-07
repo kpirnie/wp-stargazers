@@ -1,0 +1,31 @@
+{
+    "name": "kevinpirnie/stargazers",
+    "description": "",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kevin Pirnie",
+            "email": "me@kpirnie.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.4"
+    },
+    "autoload": {
+        "classmap": [
+            "vendor/custom-fields",
+            "work/inc"
+        ],
+        "files": [
+            "work/sgu.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": true,
+        "apcu-autoloader": true,
+        "sort-packages": true
+    }
+}

@@ -1,0 +1,157 @@
+/**
+ * 12. Responsive
+ */
+@media only screen and (max-width:1200px){
+
+  .sgu_fw-metabox{
+
+    .sgu_fw-field{
+
+      .sgu_fw-title{
+        float: none;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .sgu_fw-fieldset{
+        float: none;
+        width: 100%;
+      }
+    }
+  }
+}
+
+@media only screen and (max-width:782px){
+
+  .sgu_fw-header-inner{
+    text-align: center;
+
+    h1{
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+
+  .sgu_fw-form-result{
+    float: none;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .sgu_fw-search,
+  .sgu_fw-header-right,
+  .sgu_fw-header-left{
+    width: 100%;
+  }
+
+  .sgu_fw-search{
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .sgu_fw-footer{
+    text-align: center;
+  }
+
+  .sgu_fw-buttons{
+    float: none;
+  }
+
+  .sgu_fw-copyright{
+    float: none;
+    margin-top: 10px;
+  }
+
+  .sgu_fw-nav,
+  .sgu_fw-expand-all,
+  .sgu_fw-reset-section,
+  .sgu_fw-nav-background{
+    display: none !important;
+  }
+
+  .sgu_fw-nav-normal + .sgu_fw-content{
+    margin-left: 0;
+  }
+
+  .sgu_fw-section-title,
+  .sgu_fw-section{
+    display: block !important;
+  }
+
+  .sgu_fw-field{
+
+    .sgu_fw-title{
+      float: none;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .sgu_fw-fieldset{
+      float: none;
+      width: 100%;
+    }
+  }
+
+  .sgu_fw-field-color{
+
+    .button.wp-picker-clear{
+      padding: 0 8px;
+      line-height: 2.14285714;
+      min-height: 32px;
+    }
+  }
+
+  .sgu_fw-profile-options,
+  .sgu_fw-taxonomy-edit-fields{
+
+    > .sgu_fw-field{
+
+      > .sgu_fw-title{
+        float: none;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      > .sgu_fw-fieldset{
+        float: none;
+        width: 100%;
+      }
+    }
+  }
+
+  .sgu_fw-nav-menu-options{
+
+    > .sgu_fw-fields{
+      margin-left: -10px;
+      margin-right: -10px;
+
+      > .sgu_fw-field{
+        padding: 10px;
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 782px) {
+
+  .sgu_fw-modal{
+
+    .sgu_fw-modal-inner{
+      width: 90%;
+    }
+  }
+}
+
+@media only screen and (max-height: 750px) {
+
+  .sgu_fw-modal{
+
+    .sgu_fw-modal-inner{
+      height: auto;
+    }
+
+    .sgu_fw-modal-content{
+      height: calc(100vh - 200px);
+    }
+  }
+}

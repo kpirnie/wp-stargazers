@@ -1,0 +1,728 @@
+/**
+ *
+ * ---------------------------------------------------------
+ * SGU_FW FRAMEWORK RTL CSS MAP
+ * ---------------------------------------------------------
+ *
+ * 01. Base
+ *     01. 01. Header
+ *     01. 02. Header Buttons
+ *     01. 03. Navigation
+ *     01. 04. Content
+ *     01. 05. Section
+ *     01. 06. Show All Settings
+ *     01. 07. Search Input
+ *     01. 08. Copyright
+ *     01. 09. Metabox
+ * 02. Fields
+ *     02. 01. Field: typography
+ *     02. 02. Field: checkbox, radio
+ *     02. 03. Field: switcher
+ *     02. 04. Field: upload
+ *     02. 05. Field: group
+ *     02. 06. Field: repeater
+ *     02. 07. Field: help
+ *     02. 08. Field: icon
+ *     02. 09. Field: gallery
+ *     02. 10. Field: sorter
+ *     02. 11. Field: tabbed
+ *     02. 12. Field: media
+ *     02. 13. Field: notice
+ *     02. 14. Field: border, spacing, dimensions
+ *     02. 15. Field: background
+ *     02. 16. Field: spinner
+ *     02. 17. Field: slider
+ *     02. 18. Field: button_set
+ *     02. 19. Field: link_color
+ *     02. 20. Field: color_group
+ *     02. 21. Field: palette
+ *     02. 22. Field: accordion
+ *     02. 23. Field: date
+ *     02. 24. Field: map
+ *     02. 25. Field: sortable
+ *     02. 26. Field: number
+ * 03. Taxonomy
+ * 04. Profile
+ * 05. Nav Menu
+ * 06. Modal
+ * 07. Customizer
+ * 08. Responsive
+ * 09. Others
+ *
+ * ---------------------------------------------------------
+ *
+ */
+
+/**
+ * 01. Base
+ */
+.sgu_fw-options{
+  margin-left: 20px;
+  margin-right: 0;
+}
+
+/**
+ * 01. 01. Header
+ */
+.sgu_fw-header{
+  h1{
+    float: right;
+  }
+
+  fieldset{
+    float: left;
+  }
+}
+
+/**
+ * 01. 02. Header Buttons
+ */
+.sgu_fw-buttons{
+  float: left;
+  direction: ltr;
+}
+
+.sgu_fw-header-left{
+  float: right;
+}
+
+.sgu_fw-header-right{
+  float: left;
+}
+
+/**
+ * 01. 03. Navigation
+ */
+.sgu_fw-nav{
+  float: right;
+
+  ul{
+    clear: right;
+
+    li{
+      .sgu_fw-active:after{
+        right: auto;
+        left: 0;
+        border-left-color: #fff;
+        border-right-color: transparent;
+      }
+
+      .sgu_fw-arrow:after{
+        content: "\f053";
+        right: auto;
+        left: 10px;
+      }
+
+      &.sgu_fw-tab-expanded .sgu_fw-arrow:after{
+        transform: rotate(-90deg);
+      }
+    }
+
+    ul{
+      li{
+        a{
+          padding-right: 25px;
+          padding-left: 15px;
+        }
+      }
+
+      &:before{
+        left: auto;
+        right: 15px;
+      }
+    }
+  }
+
+  .sgu_fw-tab-icon{
+    margin-left: 5px;
+    margin-right: 0;
+  }
+}
+
+.sgu_fw-nav-background{
+  left: auto;
+  right: 0;
+}
+
+/**
+ * 01. 04. Content
+ */
+.sgu_fw-content{
+  margin-left: 0;
+  margin-right: 225px;
+}
+
+/**
+ * 01. 05. Section
+ */
+.sgu_fw-sections{
+  float: right;
+}
+
+/**
+ * 01. 06. Show all options
+ */
+.sgu_fw-show-all .sgu_fw-content{
+  margin-right: 0;
+  overflow: hidden;
+}
+
+.sgu_fw-expand-all{
+  float: right;
+  right: auto;
+  left: 40px;
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+/**
+ * 01. 07. Search Input
+ */
+.sgu_fw-search{
+  float: right;
+
+  input{
+    margin: 0 0 0 5px;
+  }
+}
+
+/**
+ * 01. 08. Copyright
+ */
+.sgu_fw-copyright{
+  float: right;
+}
+
+/**
+ * 01. 09. Metabox
+ */
+.sgu_fw-metabox{
+  margin: -6px -12px -12px -12px;
+
+  .sgu_fw-section-title{
+    padding: 20px;
+  }
+}
+
+.sgu_fw-section-title{
+
+  .sgu_fw-section-icon{
+    margin-left: 5px;
+    margin-right: 0;
+  }
+}
+
+/**
+ * 02. Fields
+ */
+.sgu_fw-field{
+
+  .sgu_fw-title{
+    float: right;
+  }
+
+  .sgu_fw-fieldset{
+    float: left;
+  }
+}
+
+.sgu_fw-pseudo-field{
+  padding: 0 0 0 5px !important;
+}
+
+/**
+ * 02. 01. Field: typography
+ */
+.sgu_fw-field-typography{
+
+  select{
+    margin: 0;
+    width: 100%;
+  }
+
+  .sgu_fw--blocks-inputs{
+    .sgu_fw--blocks{
+      flex-direction: row-reverse;
+    }
+  }
+
+  .sgu_fw--unit{
+    left: 4px;
+    right: auto;
+  }
+}
+
+/**
+ * 02. 02. Field: checkbox, radio
+ */
+.sgu_fw-field-checkbox,
+.sgu_fw-field-radio{
+
+  ul ul li{
+    margin-left: 0;
+    margin-right: 8px;
+
+    &:first-child{
+      margin-right: 0;
+    }
+  }
+
+  .sgu_fw--inline-list li{
+    margin-right: 0;
+    margin-left: 15px;
+  }
+
+  .sgu_fw--text{
+    margin-left: 0;
+    margin-right: 5px;
+  }
+}
+
+/**
+ * 02. 03. Field: switcher
+ */
+.sgu_fw-field-switcher{
+
+  .sgu_fw--switcher{
+    float: right;
+  }
+
+  .sgu_fw--label{
+    float: right;
+    margin-left: 0;
+    margin-right: 5px;
+  }
+}
+
+/**
+ * 02. 04. Field: upload
+ */
+.sgu_fw-field-upload{
+
+  .sgu_fw--remove,
+  .sgu_fw--button{
+    margin-left: 0;
+    margin-right: 5px;
+  }
+}
+
+/**
+ * 02. 05. Field: group
+ */
+.sgu_fw-field-group{
+
+  .sgu_fw-cloneable-title{
+    padding: 15px 10px 15px 65px;
+  }
+
+  .sgu_fw-cloneable-helper{
+    right: auto;
+    left: 10px;
+  }
+}
+
+/**
+ * 02. 06. Field: repeater
+ */
+.sgu_fw-field-repeater{
+
+  .sgu_fw-repeater-helper{
+    border-left: 0;
+    border-right: 1px solid #eee;
+  }
+}
+
+/**
+ * 02. 07. Field: help
+ */
+.sgu_fw-help{
+  right: auto;
+  left: 5px;
+}
+
+/**
+ * 02. 08. Field: icon
+ */
+.sgu_fw-field-icon{
+
+  .button{
+    margin-right: 0;
+    margin-left: 5px;
+  }
+
+  .sgu_fw-icon-preview i{
+    margin-right: 0;
+    margin-left: 5px;
+  }
+}
+
+/**
+ * 02. 09. Field: gallery
+ */
+.sgu_fw-field-gallery{
+
+  ul li{
+    margin-right: 0;
+    margin-left: 5px;
+  }
+
+  .button{
+    margin-right: 0;
+    margin-left: 5px;
+  }
+}
+
+/**
+ * 02. 11. Field: tabbed
+ */
+.sgu_fw-field-tabbed{
+
+  .sgu_fw-tabbed-nav{
+
+    .sgu_fw--icon{
+      padding-right: 0;
+      padding-left: 5px;
+    }
+
+    a{
+      margin-right: 0;
+      margin-left: 5px;
+    }
+  }
+}
+
+/**
+ * 02. 12. Field: media
+ */
+.sgu_fw-field-media{
+
+  .button{
+    margin-left: 0;
+    margin-right: 7px;
+  }
+
+  .hidden + .button{
+    margin-right: 0;
+  }
+}
+
+/**
+ * 02. 13. Field: notice
+ */
+.sgu_fw-notice{
+  border-left: none;
+  border-right-style: solid;
+  border-right-width: 4px;
+}
+
+/**
+ * 02. 14. Field: border, spacing, dimensions
+ */
+.sgu_fw-field-dimensions,
+.sgu_fw-field-spacing,
+.sgu_fw-field-border{
+
+  .sgu_fw--input,
+  .sgu_fw-fieldset{
+    direction: ltr;
+  }
+
+  .sgu_fw--inputs,
+  .sgu_fw--color{
+    float: right;
+  }
+
+  .sgu_fw--color{
+    margin-right: 4px;
+    direction: rtl;
+  }
+}
+
+/**
+ * 02. 15. Field: background
+ */
+.sgu_fw-field-background{
+
+  .sgu_fw--block{
+    float: right;
+  }
+
+  .sgu_fw--select,
+  .sgu_fw--media{
+    padding-right: 0;
+  }
+
+  .sgu_fw--title{
+    margin-right: 0;
+    margin-left: 5px;
+  }
+}
+
+/**
+ * 02. 16. Field: spinner
+ */
+.sgu_fw-field-spinner{
+
+  .sgu_fw--spin{
+    float: right;
+    direction: ltr;
+  }
+}
+
+/**
+ * 02. 17. Field: slider
+ */
+.sgu_fw-field-slider{
+
+  .sgu_fw-slider-ui{
+    direction: ltr;
+    margin-right: 0;
+    margin-left: 15px;
+  }
+
+  .sgu_fw--input{
+    direction: ltr;
+  }
+}
+
+/**
+ * 02. 18. Field: button_set
+ */
+.sgu_fw-field-button_set{
+
+  .sgu_fw--button-group{
+    float: right;
+  }
+}
+
+/**
+ * 02. 19. Field: link_color
+ */
+.sgu_fw-field-link_color{
+
+  .sgu_fw--left{
+    float: right;
+    margin-right: 0;
+    margin-left: 10px;
+  }
+}
+
+/**
+ * 02. 20. Field: color_group
+ */
+.sgu_fw-field-color_group{
+
+  .sgu_fw--left{
+    float: right;
+    margin-right: 0;
+    margin-left: 10px;
+  }
+}
+
+/**
+ * 02. 21. Field: palette
+ */
+.sgu_fw-field-palette{
+
+  .sgu_fw--palette{
+    margin-right: 0;
+    margin-left: 10px;
+  }
+}
+
+/**
+ * 02. 22. Field: accordion
+ */
+.sgu_fw-field-accordion{
+
+  .sgu_fw--icon{
+    margin-right: 0;
+    margin-left: 2px;
+  }
+}
+
+/**
+ * 02. 23. Field: date
+ */
+.sgu_fw-field-date{
+
+  .sgu_fw--to {
+    margin-left: 0;
+    margin-right: 7px;
+  }
+}
+
+/**
+ * 02. 24. Field: map
+ */
+.sgu_fw-field-map{
+
+  .sgu_fw--map-input:last-child {
+    padding-left: 0;
+    padding-right: 10px;
+  }
+}
+
+/**
+ * 02. 25. Field: sortable
+ */
+.sgu_fw-field-sortable{
+
+  .sgu_fw-sortable-helper{
+    border-left: none;
+    border-right: 1px solid #eee;
+  }
+}
+
+/**
+ * 02. 26. Field: number
+ */
+.sgu_fw-field-number{
+
+  .sgu_fw--wrap{
+    float: right;
+  }
+
+  .sgu_fw--unit{
+    left: 4px;
+    right: auto;
+  }
+}
+
+/**
+ * 03. Taxonomy
+ */
+.sgu_fw-taxonomy-add-fields{
+  margin-right: 0;
+  margin-left: 30px;
+
+  .sgu_fw-field > .sgu_fw-fieldset > .sgu_fw-help{
+    left: -5px;
+    right: auto;
+  }
+}
+
+.sgu_fw-taxonomy-edit-fields{
+  margin-right: 0;
+  margin-left: 35px;
+
+  .sgu_fw-field > .sgu_fw-fieldset > .sgu_fw-help{
+    right: auto;
+    left: -5px;
+  }
+}
+
+/**
+ * 04. Profile
+ */
+.sgu_fw-profile-options{
+
+  > h2 > .fa{
+    padding-right: 0;
+    padding-left: 7px;
+  }
+
+  > .sgu_fw-field{
+
+    > .sgu_fw-fieldset{
+
+      > .sgu_fw-help{
+        left: -5px;
+        right: auto;
+      }
+    }
+  }
+}
+
+/**
+ * 05. Nav Menu
+ */
+.sgu_fw-nav-menu-options{
+
+  > .sgu_fw-fields{
+    margin-left: 0;
+    margin-right: -10px;
+  }
+}
+
+.sgu_fw-nav-menu-title {
+  padding-left: 14px;
+  padding-right: 12px;
+}
+
+.sgu_fw-nav-menu-icon{
+  margin-right: 0;
+  margin-left: 5px;
+}
+
+/**
+ * 06. Modal
+ */
+.sgu_fw-modal-content{
+
+  .sgu_fw-field{
+    padding: 15px 15px 15px 30px;
+  }
+}
+
+.sgu_fw-modal-title{
+  padding: 0 16px 0 36px;
+}
+
+.sgu_fw-modal-close{
+  right: auto;
+  left: 0;
+}
+
+/**
+ * 07. Customizer
+ */
+.control-section{
+
+  .sgu_fw-field{
+
+    .sgu_fw-fieldset{
+      margin-right: 0;
+    }
+  }
+}
+
+/**
+ * 08. Responsive
+ */
+@media only screen and (max-width:1200px){
+  .sgu_fw-metabox .sgu_fw-field .sgu_fw-fieldset{
+    margin-left: 0;
+  }
+}
+
+@media only screen and (max-width:782px){
+  .sgu_fw .sgu_fw-fieldset,
+  .sgu_fw .sgu_fw-content{
+    margin-right: 0;
+  }
+}
+
+/**
+ * 09. Others
+ */
+.sgu_fw-field{
+
+  .sgu_fw--transparent-slider{
+    margin-left: 0;
+    margin-right: 2px;
+
+    .ui-slider-handle{
+      margin: 0 -11px;
+    }
+  }
+
+  .sgu_fw--transparent-offset{
+    background-position: center right;
+  }
+
+  .sgu_fw--transparent-text{
+    right: auto;
+    left: 10px;
+  }
+}

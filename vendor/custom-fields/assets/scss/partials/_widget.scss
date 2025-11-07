@@ -1,0 +1,67 @@
+/**
+ * 04. Widget
+ */
+.sgu_fw-widgets{
+
+  > .sgu_fw-field{
+    position: relative;
+    top: -1px;
+    margin-left: -15px;
+    margin-right: -15px;
+    padding: 12px 15px;
+
+    .sgu_fw-title{
+      float: none;
+      width: 100%;
+      margin-bottom: 5px;
+    }
+
+    .sgu_fw-fieldset{
+      float: none;
+      width: 100%;
+    }
+  }
+
+  .sgu_fw-field-text input{
+    width: 100%;
+  }
+
+  .sgu_fw-field-notice .sgu_fw-notice{
+    padding: 15px;
+  }
+}
+
+.control-section{
+
+  .sgu_fw-widgets{
+
+    > .sgu_fw-field{
+      margin-left: -10px;
+      margin-right: -10px;
+      padding: 10px 12px;
+    }
+  }
+}
+
+.wp-block{
+
+  .sgu_fw-widgets{
+    font-size: 13px;
+
+    > .sgu_fw-field{
+      margin-left: -10px;
+      margin-right: -10px;
+
+      .button-primary{
+        color: #fff;
+      }
+
+      > .sgu_fw-title{
+
+        > h4{
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}
