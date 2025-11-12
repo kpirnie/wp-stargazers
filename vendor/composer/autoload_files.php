@@ -6,5 +6,6 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    '92e1323cf455d9db36d434a3947782b6' => $vendorDir . '/cmb2/cmb2/init.php',
     'd375b04b6307a289857df2b6d12b680a' => $baseDir . '/work/sgu.php',
 );

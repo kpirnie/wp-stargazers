@@ -12,14 +12,15 @@
         }
     ],
     "require": {
-        "php": ">=8.4"
+        "php": ">=8.4",
+        "cmb2/cmb2": "dev-master"
     },
     "autoload": {
         "classmap": [
-            "vendor/custom-fields",
             "work/inc"
         ],
         "files": [
+            "vendor/cmb2/cmb2/init.php",
             "work/sgu.php"
         ]
     },
