@@ -11,4 +11,7 @@ return array(
     'SGU_Custom_PostTypes' => $baseDir . '/work/inc/sgu-custom-posttypes.php',
     'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
+    'SGU_Shortcodes' => $baseDir . '/work/inc/sgu-shortcodes.php',
+    'SGU_Space_Data' => $baseDir . '/work/inc/data/sgu-space-data.php',
+    'SGU_Static' => $baseDir . '/work/inc/sgu-static.php',
 );

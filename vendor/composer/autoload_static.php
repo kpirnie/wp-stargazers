@@ -17,6 +17,9 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
         'SGU_Custom_PostTypes' => __DIR__ . '/../..' . '/work/inc/sgu-custom-posttypes.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
         'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',
+        'SGU_Shortcodes' => __DIR__ . '/../..' . '/work/inc/sgu-shortcodes.php',
+        'SGU_Space_Data' => __DIR__ . '/../..' . '/work/inc/data/sgu-space-data.php',
+        'SGU_Static' => __DIR__ . '/../..' . '/work/inc/sgu-static.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
