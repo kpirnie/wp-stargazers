@@ -7,8 +7,11 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'SGU_CLI_Command' => $baseDir . '/work/inc/sgu-cli.php',
     'SGU_CPT_Settings' => $baseDir . '/work/inc/sgu-cpt-settings.php',
     'SGU_Custom_PostTypes' => $baseDir . '/work/inc/sgu-custom-posttypes.php',
     'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
+    'SGU_Sync_Admin' => $baseDir . '/work/inc/sgu-sync-admin.php',
+    'SGU_Sync_Manager' => $baseDir . '/work/inc/sgu-sync-manager.php',
 );

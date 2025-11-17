@@ -47,7 +47,8 @@ if( ! class_exists( 'SGUP' ) ) {
                 [ 'class' => 'SGU_Custom_PostTypes', 'method' => null],
                 [ 'class' => 'SGU_CPT_Settings', 'method' => null],
                 [ 'class' => 'SGU_Settings', 'method' => null],
-                
+                [ 'class' => 'SGU_Sync_Admin', 'method' => null],
+
             );
 
             // loop over each item

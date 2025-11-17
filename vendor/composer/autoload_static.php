@@ -13,10 +13,13 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'SGU_CLI_Command' => __DIR__ . '/../..' . '/work/inc/sgu-cli.php',
         'SGU_CPT_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-cpt-settings.php',
         'SGU_Custom_PostTypes' => __DIR__ . '/../..' . '/work/inc/sgu-custom-posttypes.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
         'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',
+        'SGU_Sync_Admin' => __DIR__ . '/../..' . '/work/inc/sgu-sync-admin.php',
+        'SGU_Sync_Manager' => __DIR__ . '/../..' . '/work/inc/sgu-sync-manager.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
