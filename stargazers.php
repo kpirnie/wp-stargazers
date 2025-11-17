@@ -43,3 +43,45 @@ add_action( 'init', function( ) {
     unset( $sgu );
     
 }, 999 );
+
+// fire this up in admin_init to inject it
+add_action( 'admin_init', function( ) {
+
+    /**
+     * CMB2 Conditional Fields Handler
+     */
+
+    add_action('admin_footer', 'sgu_cmb2_conditional_fields');
+    function sgu_cmb2_conditional_fields() {
+        ?>
+        <script>
+        jQuery(document).ready(function($) {
+            function handleConditionals() {
+                $('[data-conditional-id]').each(function() {
+                    var $wrapper = $(this);
+                    var targetId = $(this).data('conditional-id');
+                    var targetValue = $(this).data('conditional-value');
+                    var $target = $('#' + targetId);
+                    
+                    if (!$target.length) return;
+                    
+                    var shouldShow = false;
+                    
+                    if ($target.is(':checkbox')) {
+                        shouldShow = (targetValue === 'on') ? $target.is(':checked') : !$target.is(':checked');
+                    } else {
+                        shouldShow = $target.val() == targetValue;
+                    }
+                    
+                    shouldShow ? $wrapper.show() : $wrapper.hide();
+                });
+            }
+            
+            handleConditionals();
+            $('.cmb2-wrap').on('change', 'input, select, textarea', handleConditionals);
+        });
+        </script>
+        <?php
+    }
+
+}, 999 );

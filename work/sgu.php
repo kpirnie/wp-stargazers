@@ -45,6 +45,7 @@ if( ! class_exists( 'SGUP' ) ) {
             $plugin_classes = array(
                 [ 'class' => 'SGU_Plugin', 'method' => null],
                 [ 'class' => 'SGU_Custom_PostTypes', 'method' => null],
+                [ 'class' => 'SGU_CPT_Settings', 'method' => null],
                 [ 'class' => 'SGU_Settings', 'method' => null],
                 
             );
