@@ -608,7 +608,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
             } );
 
             // we'll need to modify the query run
-            add_action( 'pre_get_posts', function( $_qry ) {
+            add_action( 'admin_init', function( $_qry ) {
 
                 // make sure this is only in admin
                 if( ! is_admin( ) ) {
