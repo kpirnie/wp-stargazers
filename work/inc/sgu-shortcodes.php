@@ -406,7 +406,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
                 HTML;
 
                 // if we're showing the paging links, and it's either bottom or both
-                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
 
                     // add the paging
                     $out[] = $this -> alert_pagination( $max_pages );
@@ -431,6 +431,31 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
             // clean up
             unset( $space_data );
 
+            // if there is no data, dump out earlier
+            if( ! $flares ) {
+                return '';
+            }
+            
+            // set the maximum number of pages
+            $max_pages = ( $flares -> max_num_pages ) ?: 1;
+
+            // if we're showing the paging links, and it's either top or both
+            if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+
+                // add the paging
+                $out[] = $this -> alert_pagination( $max_pages );
+            }
+
+            // display stuff goes here
+
+
+            // if we're showing the paging links, and it's either top or both
+            if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+
+                // add the paging
+                $out[] = $this -> alert_pagination( $max_pages );
+            }
+            
         }
 
 
@@ -445,6 +470,33 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
             // clean up
             unset( $space_data );
 
+            // if there is no data, dump out earlier
+            if( ! $weathers ) {
+                return '';
+            }
+            
+            // set the maximum number of pages
+            $max_pages = ( $weathers -> max_num_pages ) ?: 1;
+
+            // if we're showing the paging links, and it's either top or both
+            if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+
+                // add the paging
+                $out[] = $this -> alert_pagination( $max_pages );
+            }
+
+            // display stuff goes here
+            
+
+            // if we're showing the paging links, and it's either top or both
+            if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+
+                // add the paging
+                $out[] = $this -> alert_pagination( $max_pages );
+            }
+
+
+
         }
 
 
@@ -458,6 +510,31 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
 
             // clean up
             unset( $space_data );
+
+            // if there is no data, dump out earlier
+            if( ! $geoms ) {
+                return '';
+            }
+            
+            // set the maximum number of pages
+            $max_pages = ( $geoms -> max_num_pages ) ?: 1;
+
+            // if we're showing the paging links, and it's either top or both
+            if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+
+                // add the paging
+                $out[] = $this -> alert_pagination( $max_pages );
+            }
+
+            // display stuff goes here
+            
+
+            // if we're showing the paging links, and it's either top or both
+            if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+
+                // add the paging
+                $out[] = $this -> alert_pagination( $max_pages );
+            }
 
         }
 
