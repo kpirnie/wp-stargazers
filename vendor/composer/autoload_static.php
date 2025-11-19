@@ -13,8 +13,9 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'SGU_CPT_Admin_Cols' => __DIR__ . '/../..' . '/work/inc/sgu-cpt-admin-cols.php',
         'SGU_CPT_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-cpt-settings.php',
-        'SGU_Custom_PostTypes' => __DIR__ . '/../..' . '/work/inc/sgu-custom-posttypes.php',
+        'SGU_CPTs' => __DIR__ . '/../..' . '/work/inc/sgu-cpts.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
         'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',
         'SGU_Shortcodes' => __DIR__ . '/../..' . '/work/inc/sgu-shortcodes.php',

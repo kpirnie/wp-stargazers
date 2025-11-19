@@ -45,9 +45,6 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
             // hook into wp init
             add_action( 'init', function( ) :void {
 
-                // get/set the paged
-                $this -> paged = ( SGU_Static::safe_get_paged_var( ) ) ?: 1;
-
                 // add the latest alerts menu
                 $this -> add_latest_alerts_menu( );
 
@@ -60,7 +57,12 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
                 $this -> add_space_weather_alerts( );
                 $this -> add_geomagnetic_alerts( );
 
-            }, PHP_INT_MAX );
+            } );
+
+            // Set paged in a separate action that runs earlier if needed
+            add_action( 'wp', function( ) {
+                $this -> paged = ( SGU_Static::safe_get_paged_var( ) ) ?: 1;
+            } );
 
         }
 

@@ -44,8 +44,9 @@ if( ! class_exists( 'SGUP' ) ) {
             // hold our classes and the public method we'll be using
             $plugin_classes = array(
                 [ 'class' => 'SGU_Plugin', 'method' => null],
-                [ 'class' => 'SGU_Custom_PostTypes', 'method' => null],
+                [ 'class' => 'SGU_CPTs', 'method' => null],
                 [ 'class' => 'SGU_CPT_Settings', 'method' => null],
+                [ 'class' => 'SGU_CPT_Admin_Cols', 'method' => null],                
                 [ 'class' => 'SGU_Settings', 'method' => null],
                 [ 'class' => 'SGU_Shortcodes', 'method' => null],
                 

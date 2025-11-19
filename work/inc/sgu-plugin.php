@@ -91,6 +91,9 @@ if( ! class_exists( 'SGU_Plugin' ) ) {
                     );
                 }
 
+                // flush the rewrites for the CPT permalinks
+                flush_rewrite_rules( );
+
             } );
 
         }
