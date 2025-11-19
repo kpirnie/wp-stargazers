@@ -573,7 +573,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
                 $_screen = get_current_screen( );
     
                 // make sure we're only in the alerts admin
-                if( $_screen -> id == 'edit-sgu_neo' ) {
+                if( $_screen && $_screen -> id == 'edit-sgu_neo' ) {
                     
                     // hold our hazardous
                     $_cats = array(
@@ -621,7 +621,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
                 $_screen = get_current_screen( );
     
                 // make sure we're only in the alerts admin
-                if( $_screen -> id == 'edit-sgu_neo' ) {
+                if( $_screen && $_screen -> id == 'edit-sgu_neo' ) {
 
                     // make sure we're on the right post type, admin, edit page, and have a filter
                     if ( isset( $_GET['hazardous']) && $_GET['hazardous'] != '') {
@@ -802,7 +802,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
                 $_screen = get_current_screen( );
     
                 // make sure we're only in the alerts admin
-                if( $_screen -> id == 'edit-sgu_journal' ) {
+                if( $_screen && $_screen -> id == 'edit-sgu_journal' ) {
                     
                     // we need our db global
                     global $wpdb;
