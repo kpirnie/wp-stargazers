@@ -2,7 +2,7 @@
 /** 
  * Shortcodes Class
  * 
- * This class will control the shortcodes and their rendering
+ * This class will control the alert shortcodes and their rendering
  * 
  * @since 8.4
  * @author Kevin Pirnie <me@kpirnie.com>
@@ -13,10 +13,10 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
-if( ! class_exists( 'SGU_Shortcodes' ) ) {
+if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
 
     /** 
-     * Class SGU_CPT_Settings
+     * Class SGU_Alert_Shortcodes
      * 
      * @since 8.4
      * @access public
@@ -24,7 +24,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
      * @package US Stargazers Plugin
      * 
     */
-    class SGU_Shortcodes {
+    class SGU_Alert_Shortcodes {
 
         // hold the internal paged global
         private int $paged;
@@ -43,7 +43,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
         public function init( ): void { 
 
             // hook into wp init
-            add_action( 'init', function( ) :void {
+            add_action( 'init', function( ) :void {var_dump('here');
 
                 // add the latest alerts menu
                 $this -> add_latest_alerts_menu( );
@@ -422,119 +422,180 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
 
         private function add_solar_flare_alerts( ) : void {
 
-            // fire up the space data class
-            $space_data = new SGU_Space_Data( );
+            // register the shortcode
+            add_shortcode( 'sgup_flare_alerts', function( array $atts = [] ) : string {
 
-            // hold the data necessary for this method  
-            $flares = $space_data -> get_solar_flare_alerts( $this -> paged );
+                // Set default values
+                $atts = shortcode_atts( array(
+                    'show_paging' => false,
+                    'paging_location' => 'bottom',
+                    'per_page' => 6,
+                ), $atts, 'sgup_flare_alerts' );
 
-            // clean up
-            unset( $space_data );
+                // show the pagination links?
+                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
 
-            // if there is no data, dump out earlier
-            if( ! $flares ) {
-                return '';
-            }
-            
-            // set the maximum number of pages
-            $max_pages = ( $flares -> max_num_pages ) ?: 1;
+                // hold the paging location
+                $paging_loc = sanitize_text_field( $atts['paging_location'] );
 
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+                // how many per page
+                $per_page = absint( $atts['per_page'] ) ?: 6;            
 
-                // add the paging
-                $out[] = $this -> alert_pagination( $max_pages );
-            }
+                // fire up the space data class
+                $space_data = new SGU_Space_Data( );
 
-            // display stuff goes here
+                // hold the data necessary for this method  
+                $flares = $space_data -> get_solar_flare_alerts( $this -> paged );
+
+                // clean up
+                unset( $space_data );
+
+                // if there is no data, dump out earlier
+                if( ! $flares ) {
+                    return '';
+                }
+                
+                // set the maximum number of pages
+                $max_pages = ( $flares -> max_num_pages ) ?: 1;
+
+                // if we're showing the paging links, and it's either top or both
+                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+
+                    // add the paging
+                    $out[] = $this -> alert_pagination( $max_pages );
+                }
+
+                // display stuff goes here
 
 
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+                // if we're showing the paging links, and it's either top or both
+                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
 
-                // add the paging
-                $out[] = $this -> alert_pagination( $max_pages );
-            }
+                    // add the paging
+                    $out[] = $this -> alert_pagination( $max_pages );
+                }
+
+            } );
             
         }
 
 
         private function add_space_weather_alerts( ) : void {
 
-            // fire up the space data class
-            $space_data = new SGU_Space_Data( );
+            // register the shortcode
+            add_shortcode( 'sgup_sw_alerts', function( array $atts = [] ) : string {
 
-            // hold the data necessary for this method
-            $weathers = $space_data -> get_space_weather_alerts( $this -> paged );
+                // Set default values
+                $atts = shortcode_atts( array(
+                    'show_paging' => false,
+                    'paging_location' => 'bottom',
+                    'per_page' => 6,
+                ), $atts, 'sgup_sw_alerts' );
 
-            // clean up
-            unset( $space_data );
+                // show the pagination links?
+                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
 
-            // if there is no data, dump out earlier
-            if( ! $weathers ) {
-                return '';
-            }
-            
-            // set the maximum number of pages
-            $max_pages = ( $weathers -> max_num_pages ) ?: 1;
+                // hold the paging location
+                $paging_loc = sanitize_text_field( $atts['paging_location'] );
 
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+                // how many per page
+                $per_page = absint( $atts['per_page'] ) ?: 6;
 
-                // add the paging
-                $out[] = $this -> alert_pagination( $max_pages );
-            }
+                // fire up the space data class
+                $space_data = new SGU_Space_Data( );
 
-            // display stuff goes here
-            
+                // hold the data necessary for this method
+                $weathers = $space_data -> get_space_weather_alerts( $this -> paged );
 
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+                // clean up
+                unset( $space_data );
 
-                // add the paging
-                $out[] = $this -> alert_pagination( $max_pages );
-            }
+                // if there is no data, dump out earlier
+                if( ! $weathers ) {
+                    return '';
+                }
+                
+                // set the maximum number of pages
+                $max_pages = ( $weathers -> max_num_pages ) ?: 1;
 
+                // if we're showing the paging links, and it's either top or both
+                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
 
+                    // add the paging
+                    $out[] = $this -> alert_pagination( $max_pages );
+                }
+
+                // display stuff goes here
+                
+
+                // if we're showing the paging links, and it's either top or both
+                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+
+                    // add the paging
+                    $out[] = $this -> alert_pagination( $max_pages );
+                }
+
+            } );
 
         }
 
 
         private function add_geomagnetic_alerts( ) : void {
 
-            // fire up the space data class
-            $space_data = new SGU_Space_Data( );
+            // register the shortcode
+            add_shortcode( 'sgup_geomag_alerts', function( array $atts = [] ) : string {
 
-            // hold the data necessary for this method
-            $geoms = $space_data -> get_geo_magnetic_alerts( $this -> paged );
+                // Set default values
+                $atts = shortcode_atts( array(
+                    'show_paging' => false,
+                    'paging_location' => 'bottom',
+                    'per_page' => 6,
+                ), $atts, 'sgup_geomag_alerts' );
 
-            // clean up
-            unset( $space_data );
+                // show the pagination links?
+                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
 
-            // if there is no data, dump out earlier
-            if( ! $geoms ) {
-                return '';
-            }
-            
-            // set the maximum number of pages
-            $max_pages = ( $geoms -> max_num_pages ) ?: 1;
+                // hold the paging location
+                $paging_loc = sanitize_text_field( $atts['paging_location'] );
 
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+                // how many per page
+                $per_page = absint( $atts['per_page'] ) ?: 6;
 
-                // add the paging
-                $out[] = $this -> alert_pagination( $max_pages );
-            }
+                // fire up the space data class
+                $space_data = new SGU_Space_Data( );
 
-            // display stuff goes here
-            
+                // hold the data necessary for this method
+                $geoms = $space_data -> get_geo_magnetic_alerts( $this -> paged );
 
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+                // clean up
+                unset( $space_data );
 
-                // add the paging
-                $out[] = $this -> alert_pagination( $max_pages );
-            }
+                // if there is no data, dump out earlier
+                if( ! $geoms ) {
+                    return '';
+                }
+                
+                // set the maximum number of pages
+                $max_pages = ( $geoms -> max_num_pages ) ?: 1;
+
+                // if we're showing the paging links, and it's either top or both
+                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+
+                    // add the paging
+                    $out[] = $this -> alert_pagination( $max_pages );
+                }
+
+                // display stuff goes here
+                
+
+                // if we're showing the paging links, and it's either top or both
+                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+
+                    // add the paging
+                    $out[] = $this -> alert_pagination( $max_pages );
+                }
+
+            } );
 
         }
 
