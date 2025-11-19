@@ -39,371 +39,186 @@ if( ! class_exists( 'SGU_CPT_Admin_Cols' ) ) {
         */
         public function init( ): void {
 
-            // now we can modify the admin columns
-            $this -> admin_cols_cme_alerts( );
+            // setup all admin column configurations
+            $this -> setup_admin_columns( );
 
-            // now we can modify the admin columns
-            $this -> admin_cols_space_weather_alerts( );
-
-            // now we can modify the admin columns
-            $this -> admin_cols_geo_magnetic_alerts( );
-
-            // now we can modify the admin columns
-            $this -> admin_cols_solar_flare_alerts( );
-
-            // setup the admin columns and permissions
-            $this -> admin_cols_neos( );
-
-            // setup the admin columns and permissions
-            $this -> admin_cols_photo_journal( );
-            
-            // setup the admin columns and permissions
-            $this -> admin_cols_apod( );
-
-            // remove and format the links
+            // configure CPT admin links and styling
             $this -> cpt_links( );
 
         }
-        
+
+        /** 
+         * setup_admin_columns
+         * 
+         * Configure admin columns for all custom post types
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @return void This method returns nothing
+         * 
+        */
+        private function setup_admin_columns( ) : void {
+
+            // define CPTs that use simple column layout (checkbox, title, date)
+            $simple_cols = ['sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo'];
+            
+            // loop through simple column CPTs and add filters
+            foreach ( $simple_cols as $cpt ) {
+
+                // add filter to modify columns for this CPT
+                add_filter( "manage_{$cpt}_posts_columns", function( $_cols ) {
+
+                    // return the standard column configuration
+                    return [
+                        'cb' => __( 'Select All', 'sgup' ),
+                        'title' => __( 'Title', 'sgup' ),
+                        'date' => __( 'Date', 'sgup' ),
+                    ];
+
+                } );
+
+            }
+
+            // setup photo journal columns with image preview
+            add_filter( 'manage_sgu_journal_posts_columns', function( $_cols ) {
+
+                // return columns including image preview
+                return [
+                    'cb' => __( 'Select All', 'sgup' ),
+                    'img' => __( 'Image', 'sgup' ),
+                    'title' => __( 'Title', 'sgup' ),
+                    'date' => __( 'Date', 'sgup' ),
+                ];
+
+            } );
+
+            // populate the custom image column for photo journals
+            add_action( 'manage_sgu_journal_posts_custom_column', function( $_col, $_pid ) {
+
+                // check if we're rendering the image column
+                if( 'img' === $_col ) {
+
+                    // get the image URL from post meta
+                    $_img = get_post_meta( $_pid, 'sgu_journal_local_image', true );
+
+                    // get the attachment ID from the URL
+                    $_img_id = attachment_url_to_postid( $_img );
+
+                    // get the thumbnail size image source
+                    $_back_img = wp_get_attachment_image_src( $_img_id, 'thumbnail' );
+
+                    // if we got an array, use the URL, otherwise fallback to meta value
+                    $_back_img = is_array( $_back_img ) ? $_back_img[0] : $_img;
+
+                    // output the image tag
+                    echo '<img src="' . esc_url( $_back_img ) . '" alt="' . esc_attr( get_the_title( $_pid ) ) . '" style="height:150px;" />';
+
+                }
+
+            }, 10, 2);
+
+            // setup APOD columns with media preview
+            add_filter( 'manage_sgu_apod_posts_columns', function( $_cols ) {
+
+                // return columns including media preview
+                return [
+                    'cb' => __( 'Select All', 'sgup' ),
+                    'media' => __( 'Media', 'sgup' ),
+                    'title' => __( 'Title', 'sgup' ),
+                    'date' => __( 'Date', 'sgup' ),
+                ];
+
+            } );
+
+            // populate the custom media column for APOD
+            add_action( 'manage_sgu_apod_posts_custom_column', function( $_col, $_pid ) {
+
+                // check if we're rendering the media column
+                if( 'media' === $_col ) {
+
+                    // get the media URL from post meta
+                    $_media = get_post_meta( $_pid, 'sgu_apod_local_media', true );
+
+                    // get the media type (image or video)
+                    $_media_type = get_post_meta( $_pid, 'sgu_apod_local_media_type', true );
+                    
+                    // check if it's an image
+                    if( $_media_type == 'image' ) {
+
+                        // output image tag
+                        echo '<img src="' . esc_url( $_media ) . '" alt="' . esc_attr( get_the_title( $_pid ) ) . '" style="height:125px;" />';
+
+                    } else {
+
+                        // output object tag for video
+                        echo '<object height="125" data="' . esc_url( $_media ) . '"></object>';
+
+                    }
+
+                }
+
+            }, 10, 2);
+
+            // clean up
+            unset( $simple_cols );
+
+        }
+
         /** 
          * cpt_links
          * 
-         * This method is utilized for removing the admin links from the admin side for specified post types
+         * Remove and format admin links for specified custom post types
          * 
-         * @since 8.0
-         * @access public
-         * @static
+         * @since 8.4
+         * @access private
          * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @param string $_pt The post type
+         * @package US Stargazers Plugin
          * 
          * @return void This method returns nothing
          * 
         */
         private function cpt_links( ) : void {
 
-            // hold the cpts list
-            $cpts = array( 'sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_journal', 'sgu_apod', );
+            // define CPTs that should have restricted admin links
+            $cpts = ['sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_journal', 'sgu_apod'];
 
-            // remove the links from admin
+            // remove edit, view, and quick edit links from post rows
             add_filter( 'post_row_actions', function( $acts, $post ) use ( $cpts ) {
 
-                // make sure our post type matches that of the post
+                // check if current post type matches our CPT list
                 if( in_array( $post -> post_type, $cpts ) ) {
 
-                    // remove the items
-                    unset( $acts['edit'] );
-                    unset( $acts['view'] );
-                    unset( $acts['inline hide-if-no-js'] );
+                    // remove the edit, view, and inline edit actions
+                    unset( $acts['edit'], $acts['view'], $acts['inline hide-if-no-js'] );
 
                 }
 
-                // return the actions
+                // return the modified actions array
                 return $acts;
 
             }, 10, 2 );
 
-            // add CSS to disable title link pointer
+            // add CSS to disable title link pointer events
             add_action( 'admin_head', function( ) use ( $cpts ) {
+
+                // get the current post type from global
                 global $typenow;
+
+                // check if we're on one of our CPT screens
                 if( in_array( $typenow, $cpts ) ) {
+
+                    // output CSS to disable title link interactions
                     echo '<style>.row-title{pointer-events:none;cursor:default;color:#000;}</style>';
+
                 }
+
             } );
 
             // clean up
             unset( $cpts );
-
-        }
-
-        /** 
-         * admin_cols_cme_alerts
-         * 
-         * This method is utilized for creating the CME Alerts CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_cme_alerts( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_cme_alerts_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-        }
-
-        /** 
-         * admin_cols_space_weather_alerts
-         * 
-         * This method is utilized for creating the Space Weather Alerts CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_space_weather_alerts( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_sw_alerts_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-        }
-
-        /** 
-         * admin_cols_geo_magnetic_alerts
-         * 
-         * This method is utilized for creating the Geo Magnetic Alerts CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_geo_magnetic_alerts( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_geo_alerts_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-        }
-
-        /** 
-         * admin_cols_solar_flare_alerts
-         * 
-         * This method is utilized for creating the Solar Flare Alerts CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_solar_flare_alerts( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_sf_alerts_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-        }
-
-        /** 
-         * admin_cols_neos
-         * 
-         * This method is utilized for creating the Near Earth Object CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_neos( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_neo_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-        }
-        
-        /** 
-         * admin_cols_photo_journal
-         * 
-         * This method is utilized for creating the Photo Journal CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_photo_journal( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_journal_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'img' => __( 'Image', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-            // add the custom data to the columns
-            add_action( 'manage_sgu_journal_posts_custom_column', function( $_col, $_pid ) {
-
-                // if our column is the image column
-                if( 'img' === $_col ) {
-
-                    // get the image
-                    $_img = get_post_meta( $_pid, 'sgu_journal_local_image', true );
-
-                    // get the image id from the image url
-                    $_img_id = attachment_url_to_postid( $_img );
-
-                    // get the proper image
-                    $_back_img = wp_get_attachment_image_src( $_img_id, 'thumbnail' );
-                    
-                    // check if the attachment is an array
-                    if( is_array( $_back_img ) ) {
-
-                        // it is, so set the background image accordingly
-                        $_back_img = $_back_img[0];
-
-                    } else {
-
-                        // it's not, so set it to the meta image
-                        $_back_img = $_img;
-
-                    }
-
-                    // write it out
-                    echo '<img src="' . $_back_img . '" alt="' . __( get_the_title( $_pid ), 'sgup' ) . '" style="height:150px;" />';
-
-                }
-
-            }, 10, 2);
-
-        }
-
-        /** 
-         * admin_cols_apod
-         * 
-         * This method is utilized for creating the APOD CPT's admin columns and managing it's permissions
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return void This method returns nothing
-         * 
-        */
-        private function admin_cols_apod( ) : void {
-
-            // rework the columns
-            add_filter( 'manage_sgu_apod_posts_columns', function( $_cols ) {
-
-                // setup the columns we want
-                $_cols = array(
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'media' => __( 'Media', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                );
-
-                // reutrn the columns
-                return $_cols;
-
-            } );
-
-            // add the custom data to the columns
-            add_action( 'manage_sgu_apod_posts_custom_column', function( $_col, $_pid ) {
-
-                // if our column is the image column
-                if( 'media' === $_col ) {
-
-                    // get the media
-                    $_media = get_post_meta( $_pid, 'sgu_apod_local_media', true );
-
-                    // get the media type
-                    $_media_type = get_post_meta( $_pid, 'sgu_apod_local_media_type', true );
-
-                    // if it's an image
-                    if( $_media_type == 'image' ) {
-
-                        // write it out
-                        echo '<img src="' . $_media . '" alt="' . __( get_the_title( $_pid ), 'sgu' ) . '" style="height:125px;" />';
-
-                    } else {
-
-                        // it's a video
-                        echo '<object height="125" data="' . $_media . '"></object>';
-
-                    }
-
-                }
-
-            }, 10, 2);
 
         }
 
