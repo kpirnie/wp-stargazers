@@ -45,11 +45,8 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
             // hook into wp init
             add_action( 'init', function( ) :void {
 
-                // setup the paged global
-                global $paged;
-
                 // get/set the paged
-                $this -> paged = ( $paged ) ?: 1;
+                $this -> paged = ( SGU_Static::safe_get_paged_var( ) ) ?: 1;
 
                 // add the latest alerts menu
                 $this -> add_latest_alerts_menu( );
@@ -273,6 +270,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
                 $atts = shortcode_atts( array(
                     'show_paging' => false,
                     'paging_location' => 'bottom',
+                    'per_page' => 6,
                 ), $atts, 'sgup_cme_alerts' );
 
                 // show the pagination links?
@@ -280,6 +278,9 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
 
                 // hold the paging location
                 $paging_loc = sanitize_text_field( $atts['paging_location'] );
+
+                // how many per page
+                $per_page = absint( $atts['per_page'] ) ?: 6;
 
                 // fire up the space data class
                 $space_data = new SGU_Space_Data( );
@@ -302,7 +303,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
                 if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
 
                     // add the paging
-                    $out[] = $this -> alert_pagination( );
+                    $out[] = $this -> alert_pagination( $max_pages );
                 }
 
                 // open the output
@@ -321,7 +322,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
                     $source = $data -> source;
                     $region = $data -> region;
                     $note = $data -> note;
-                    $instruments = function( ) use ( $data ) : string {
+                    $instruments = ( function( ) use ( $data ) : string {
                         $ins = [];
 
                         // start the instrument output
@@ -333,7 +334,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
 
                         // loop the instruments
                         foreach( $data -> instruments as $inst ) {
-                            $name = $_inst['displayName'];
+                            $name = $inst['displayName'];
 
                             // add the item
                             $ins[] = <<<HTML
@@ -349,7 +350,7 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
 
                         // return the list
                         return implode( '', $ins );
-                    };
+                    } )( );
                     $lat = number_format( $data -> analyses[0]['latitude'], 4 );
                     $lon = number_format( $data -> analyses[0]['longitude'], 4 );
                     $half_width = number_format( $data -> analyses[0]['halfAngle'], 4 );
@@ -406,8 +407,11 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
                 if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
 
                     // add the paging
-                    $out[] = $this -> alert_pagination( );
+                    $out[] = $this -> alert_pagination( $max_pages );
                 }
+
+                // return the string
+                return implode( '', $out );
 
             } );
 
@@ -466,12 +470,47 @@ if( ! class_exists( 'SGU_Shortcodes' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        private function alert_pagination( ) : string {
+        private function alert_pagination( int $max_pages = 1 ) : string {
 
             // hold the output
             $out = [];
 
+            // build our pagination links
+            $page_links = paginate_links( array(
+                'prev_text'=>' <span uk-icon="icon: chevron-left"></span> ', 
+                'next_text'=>' <span uk-icon="icon: chevron-right"></span> ', 
+                'screen_reader_text' => ' ', 
+                'current' => max( 1, $this -> paged ), 
+                'total' => $max_pages, 
+                'type' => 'array', 
+                'mid_size' => 4, 
+                'paged' => $this -> paged,
+            ) );
 
+            // make sure we actually have them
+            if( $page_links ) {
+
+                // open the list
+                $out[] = <<<HTML
+                <ul class="uk-pagination uk-flex-center uk-margin-medium-top">
+                HTML;
+
+                // loop the items
+                foreach( $page_links as $link ) {
+
+                    // write it out
+                    $out[] = <<<HTML
+                    <li>$link</li>
+                    HTML;
+
+                }
+
+                // close the list
+                $out[] = <<<HTML
+                </ul>
+                HTML;
+
+            }
 
             // return the string version of it
             return implode( '', $out );

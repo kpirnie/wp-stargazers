@@ -567,7 +567,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
             } );
 
             // we're going to add a new filter dropdown
-            add_action( 'restrict_manage_posts', function() {
+            add_action( 'admin_init', function() {
 
                 // get the screen that we are on
                 $_screen = get_current_screen( );
@@ -796,7 +796,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
             } );
 
             // we're going to add a new filter dropdown
-            add_action( 'restrict_manage_posts', function( ) {
+            add_action( 'admin_init', function( ) {
 
                 // get the screen that we are on
                 $_screen = get_current_screen( );
@@ -853,7 +853,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
             } );
 
             // we'll need to modify the query run
-            add_action( 'pre_get_posts', function( $_qry ) {
+            add_action( 'admin_init', function( $_qry ) {
 
                 // make sure this is only in admin
                 if( ! is_admin( ) ) {
@@ -866,7 +866,7 @@ if( ! class_exists( 'SGU_Custom_PostTypes' ) ) {
                 $_screen = get_current_screen( );
     
                 // make sure we're only in the alerts admin
-                if( $_screen -> id == 'edit-sgu_journal' ) {
+                if( $_screen && $_screen -> id == 'edit-sgu_journal' ) {
 
                     // make sure we're on the right post type, admin, edit page, and have a filter
                     if ( isset( $_GET['categories']) && $_GET['categories'] != '') {
