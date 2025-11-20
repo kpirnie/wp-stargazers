@@ -26,8 +26,9 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
     */
     class SGU_Alert_Shortcodes {
 
-        // hold the internal paged global
+        // hold the internals
         private int $paged;
+        private SGU_Space_Data $space_data;
 
         /** 
          * init
@@ -42,27 +43,20 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
         */
         public function init( ): void { 
 
-            // hook into wp init
-            add_action( 'init', function( ) :void {var_dump('here');
+            // setup the internal paged
+            $this -> paged = ( SGU_Static::safe_get_paged_var( ) ) ?: 1;
 
-                // add the latest alerts menu
-                $this -> add_latest_alerts_menu( );
+            // setup the internal data class
+            $this -> space_data = new SGU_Space_Data( );
 
-                // add the latest alerts
-                $this -> add_latest_alerts( );
+            // add the latest alerts menu
+            $this -> add_latest_alerts_menu( );
 
-                // add in the full alerts
-                $this -> add_cme_alerts( );
-                $this -> add_solar_flare_alerts( );
-                $this -> add_space_weather_alerts( );
-                $this -> add_geomagnetic_alerts( );
+            // add the latest alerts
+            $this -> add_latest_alerts( );
 
-            } );
-
-            // Set paged in a separate action that runs earlier if needed
-            add_action( 'wp', function( ) {
-                $this -> paged = ( SGU_Static::safe_get_paged_var( ) ) ?: 1;
-            } );
+            // add the alert shortcodes
+            $this -> add_alerts( );
 
         }
 
@@ -253,9 +247,9 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
         }
 
         /** 
-         * add_cme_alerts
+         * add_alerts
          * 
-         * Add the cme alerts
+         * Add the alerts
          * 
          * @since 8.4
          * @access private
@@ -263,346 +257,86 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        private function add_cme_alerts( ) : void {
-
-            // register the shortcode
-            add_shortcode( 'sgup_cme_alerts', function( array $atts = [] ) : string {
-
-                // Set default values
-                $atts = shortcode_atts( array(
-                    'show_paging' => false,
-                    'paging_location' => 'bottom',
-                    'per_page' => 6,
-                ), $atts, 'sgup_cme_alerts' );
-
-                // show the pagination links?
-                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
-
-                // hold the paging location
-                $paging_loc = sanitize_text_field( $atts['paging_location'] );
-
-                // how many per page
-                $per_page = absint( $atts['per_page'] ) ?: 6;
-
-                // fire up the space data class
-                $space_data = new SGU_Space_Data( );
-
-                // hold the data necessary for this method
-                $cmes = $space_data -> get_cme_alerts( $this -> paged );
-
-                // clean up
-                unset( $space_data );
-
-                // if there is no data, dump out earlier
-                if( ! $cmes ) {
-                    return '';
-                }
-                
-                // set the maximum number of pages
-                $max_pages = ( $cmes -> max_num_pages ) ?: 1;
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-                // open the output
-                $out[] = <<<HTML
-                <div uk-grid class="uk-child-width-1-2@s">
-                HTML;
-
-                // loop the results
-                foreach( $cmes -> posts as $cme ) {
-
-                    // setup all the data we'll need for display
-                    $data = maybe_unserialize( $cme -> post_content );
-                    $title = $cme -> post_title;
-                    $catalog = $data -> catalog;
-                    $start = date( 'r', strtotime( $data -> start ) );
-                    $source = $data -> source;
-                    $region = $data -> region;
-                    $note = $data -> note;
-                    $instruments = ( function( ) use ( $data ) : string {
-                        $ins = [];
-
-                        // start the instrument output
-                        $ins[] = <<<HTML
-                        <a class="uk-accordion-title" href="#">Instruments</a>
-                        <div class="uk-accordion-content">
-                            <ul class="uk-list uk-list-disc">
-                        HTML;
-
-                        // loop the instruments
-                        foreach( $data -> instruments as $inst ) {
-                            $name = $inst['displayName'];
-
-                            // add the item
-                            $ins[] = <<<HTML
-                                <li>$name</li>
-                            HTML;
-                        }
-
-                        // end the instrument output
-                        $ins[] = <<<HTML
-                            </ul>
-                        </div>
-                        HTML;
-
-                        // return the list
-                        return implode( '', $ins );
-                    } )( );
-                    $lat = number_format( $data -> analyses[0]['latitude'], 4 );
-                    $lon = number_format( $data -> analyses[0]['longitude'], 4 );
-                    $half_width = number_format( $data -> analyses[0]['halfAngle'], 4 );
-                    $speed = number_format( $data -> analyses[0]['speed'], 4 );
-                    $type = $data -> analyses[0]['type'];
-                    $a_note = $data -> analyses[0]['note'];
-                    $link = $data -> link;
-
-                    // create the card
-                    $out[] = <<<HTML
-                    <div class="uk-card-small" uk-card>
-                        <div class="uk-card-header alert-title">
-                            <h3 class="uk-card-title">$title</h3>
-                        </div>
-                        <div class="uk-card-body">
-                            <ul class="uk-list uk-list-disc">
-                                <li><strong>Catalog:</strong> $catalog</li>
-                                <li><strong>Start:</strong> $start</li>
-                                <li><strong>Source:</strong> $source</li>
-                                <li><strong>Region:</strong> $region</li>
-                                <li><strong>Note:</strong> $note</li>
-                                <li>
-                                    <ul uk-accordion>
-                                        <li>$instruments</li>
-                                        <li>
-                                            <a class="uk-accordion-title" href="#">Analysis</a>
-                                            <div class="uk-accordion-content">
-                                                <ul class="uk-list uk-list-disc">
-                                                    <li><strong>Latitude:</strong> $lat</li>
-                                                    <li><strong>Longitude:</strong> $lon</li>
-                                                    <li><strong>Half Width:</strong> $half_width</li>
-                                                    <li><strong>Speed:</strong> $speed</li>
-                                                    <li><strong>Type:</strong> $type</li>
-                                                    <li><strong>Note:</strong> $a_note</li>
-                                                </ul>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
-                            <a class="uk-button uk-button-secondary uk-align-right" href="$link" target="_blank">More Info</a>
-                        </div>
-                    </div>
-                    HTML;
-
-                }
-
-                // close the output
-                $out[] = <<<HTML
-                </div>
-                HTML;
-
-                // if we're showing the paging links, and it's either bottom or both
-                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-                // return the string
-                return implode( '', $out );
-
-            } );
-
-        }
-
-
-        private function add_solar_flare_alerts( ) : void {
-
-            // register the shortcode
-            add_shortcode( 'sgup_flare_alerts', function( array $atts = [] ) : string {
-
-                // Set default values
-                $atts = shortcode_atts( array(
-                    'show_paging' => false,
-                    'paging_location' => 'bottom',
-                    'per_page' => 6,
-                ), $atts, 'sgup_flare_alerts' );
-
-                // show the pagination links?
-                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
-
-                // hold the paging location
-                $paging_loc = sanitize_text_field( $atts['paging_location'] );
-
-                // how many per page
-                $per_page = absint( $atts['per_page'] ) ?: 6;            
-
-                // fire up the space data class
-                $space_data = new SGU_Space_Data( );
-
-                // hold the data necessary for this method  
-                $flares = $space_data -> get_solar_flare_alerts( $this -> paged );
-
-                // clean up
-                unset( $space_data );
-
-                // if there is no data, dump out earlier
-                if( ! $flares ) {
-                    return '';
-                }
-                
-                // set the maximum number of pages
-                $max_pages = ( $flares -> max_num_pages ) ?: 1;
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-                // display stuff goes here
-
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-            } );
-            
-        }
-
-
-        private function add_space_weather_alerts( ) : void {
-
-            // register the shortcode
-            add_shortcode( 'sgup_sw_alerts', function( array $atts = [] ) : string {
-
-                // Set default values
-                $atts = shortcode_atts( array(
-                    'show_paging' => false,
-                    'paging_location' => 'bottom',
-                    'per_page' => 6,
-                ), $atts, 'sgup_sw_alerts' );
-
-                // show the pagination links?
-                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
-
-                // hold the paging location
-                $paging_loc = sanitize_text_field( $atts['paging_location'] );
-
-                // how many per page
-                $per_page = absint( $atts['per_page'] ) ?: 6;
-
-                // fire up the space data class
-                $space_data = new SGU_Space_Data( );
-
-                // hold the data necessary for this method
-                $weathers = $space_data -> get_space_weather_alerts( $this -> paged );
-
-                // clean up
-                unset( $space_data );
-
-                // if there is no data, dump out earlier
-                if( ! $weathers ) {
-                    return '';
-                }
-                
-                // set the maximum number of pages
-                $max_pages = ( $weathers -> max_num_pages ) ?: 1;
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-                // display stuff goes here
-                
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-            } );
-
-        }
-
-
-        private function add_geomagnetic_alerts( ) : void {
-
-            // register the shortcode
-            add_shortcode( 'sgup_geomag_alerts', function( array $atts = [] ) : string {
-
-                // Set default values
-                $atts = shortcode_atts( array(
-                    'show_paging' => false,
-                    'paging_location' => 'bottom',
-                    'per_page' => 6,
-                ), $atts, 'sgup_geomag_alerts' );
-
-                // show the pagination links?
-                $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
-
-                // hold the paging location
-                $paging_loc = sanitize_text_field( $atts['paging_location'] );
-
-                // how many per page
-                $per_page = absint( $atts['per_page'] ) ?: 6;
-
-                // fire up the space data class
-                $space_data = new SGU_Space_Data( );
-
-                // hold the data necessary for this method
-                $geoms = $space_data -> get_geo_magnetic_alerts( $this -> paged );
-
-                // clean up
-                unset( $space_data );
-
-                // if there is no data, dump out earlier
-                if( ! $geoms ) {
-                    return '';
-                }
-                
-                // set the maximum number of pages
-                $max_pages = ( $geoms -> max_num_pages ) ?: 1;
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-                // display stuff goes here
-                
-
-                // if we're showing the paging links, and it's either top or both
-                if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
-
-                    // add the paging
-                    $out[] = $this -> alert_pagination( $max_pages );
-                }
-
-            } );
+        private function add_alerts( ) : void {
+
+            // what shortcodes do we need created
+            $shortcodes = array( 'sgup_cme_alerts', 'sgup_flare_alerts', 'sgup_sw_alerts', 'sgup_geomag_alerts' );
+
+            // loop them
+            foreach( $shortcodes as $shortcode ) {
+
+                // register the shortcode
+                add_shortcode( $shortcode, function( array $atts = [] ) use( $shortcode ) : string {
+
+                    // Set default values
+                    $atts = shortcode_atts( array(
+                        'show_paging' => false,
+                        'paging_location' => 'bottom',
+                        'per_page' => 6,
+                    ), $atts, $shortcode );
+
+                    // show the pagination links?
+                    $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
+
+                    // hold the paging location
+                    $paging_loc = sanitize_text_field( $atts['paging_location'] );
+
+                    // how many per page
+                    $per_page = absint( $atts['per_page'] ) ?: 6;
+
+                    // setup the data
+                    $data = match( $shortcode ) {
+                        'sgup_cme_alerts' => $this -> space_data -> get_cme_alerts( $this -> paged ),
+                        'sgup_flare_alerts' => $this -> space_data -> get_solar_flare_alerts( $this -> paged ),
+                        'sgup_sw_alerts' => $this -> space_data -> get_space_weather_alerts( $this -> paged ),
+                        'sgup_geomag_alerts' => $this -> space_data -> get_geo_magnetic_alerts( $this -> paged ),
+                        default => null,
+                    };
+
+                    // make sure there is data, if not dump out early
+                    if( ! $data ) {
+                        return '';
+                    }
+
+                    // set the maximum number of pages
+                    $max_pages = ( $data -> max_num_pages ) ?: 1;
+
+                    // if we're showing the paging links, and it's either top or both
+                    if( $show_pagination && ( in_array( $paging_loc, ['top', 'both'] ) ) ) {
+
+                        // add the paging
+                        $out[] = $this -> alert_pagination( $max_pages );
+                    }
+
+                    // setup the rendered output
+                    $out[] = match( $shortcode ) {
+                        'sgup_cme_alerts' => $this -> render_cme_alerts( $data ),
+                        'sgup_flare_alerts' => $this -> render_flare_alerts( $data ),
+                        'sgup_sw_alerts' => $this -> render_sw_alerts( $data ),
+                        'sgup_geomag_alerts' => $this -> render_geomag_alerts( $data ),
+                        default => '',
+                    };
+
+                    // if we're showing the paging links, and it's either bottom or both
+                    if( $show_pagination && ( in_array( $paging_loc, ['bottom', 'both'] ) ) ) {
+
+                        // add the paging
+                        $out[] = $this -> alert_pagination( $max_pages );
+                    }
+
+                    // return the output
+                    return implode( '', $out );
+
+                } );
+
+            }
 
         }
 
         /** 
-         * alert_pagination
+         * render_cme_alerts
          * 
-         * Add the alert pagination
+         * Render the CME alerts
          * 
          * @since 8.4
          * @access private
@@ -610,49 +344,371 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        private function alert_pagination( int $max_pages = 1 ) : string {
+        private function render_cme_alerts( \WP_Query $data ) : string {
 
-            // hold the output
-            $out = [];
+            // open the output
+            $out[] = <<<HTML
+            <div uk-grid class="uk-child-width-1-2@s">
+            HTML;
 
-            // build our pagination links
-            $page_links = paginate_links( array(
-                'prev_text'=>' <span uk-icon="icon: chevron-left"></span> ', 
-                'next_text'=>' <span uk-icon="icon: chevron-right"></span> ', 
-                'screen_reader_text' => ' ', 
-                'current' => max( 1, $this -> paged ), 
-                'total' => $max_pages, 
-                'type' => 'array', 
-                'mid_size' => 4, 
-                'paged' => $this -> paged,
-            ) );
+            // loop the results
+            foreach( $data -> posts as $cme ) {
 
-            // make sure we actually have them
-            if( $page_links ) {
+                // setup all the data we'll need for display
+                $cme_data = maybe_unserialize( $cme -> post_content );
+                $title = $cme -> post_title;
+                $catalog = $cme_data -> catalog;
+                $start = date( 'r', strtotime( $cme_data -> start ) );
+                $source = $cme_data -> source;
+                $region = $cme_data -> region;
+                $note = $cme_data -> note;
+                $instruments = ( function( ) use ( $cme_data ) : string {
+                    $ins = [];
 
-                // open the list
-                $out[] = <<<HTML
-                <ul class="uk-pagination uk-flex-center uk-margin-medium-top">
-                HTML;
-
-                // loop the items
-                foreach( $page_links as $link ) {
-
-                    // write it out
-                    $out[] = <<<HTML
-                    <li>$link</li>
+                    // start the instrument output
+                    $ins[] = <<<HTML
+                    <a class="uk-accordion-title" href="#">Instruments</a>
+                    <div class="uk-accordion-content">
+                        <ul class="uk-list uk-list-disc">
                     HTML;
 
-                }
+                    // loop the instruments
+                    foreach( $cme_data -> instruments as $inst ) {
+                        $name = $inst['displayName'];
 
-                // close the list
+                        // add the item
+                        $ins[] = <<<HTML
+                            <li>$name</li>
+                        HTML;
+                    }
+
+                    // end the instrument output
+                    $ins[] = <<<HTML
+                        </ul>
+                    </div>
+                    HTML;
+
+                    // return the list
+                    return implode( '', $ins );
+                } )( );
+                $lat = number_format( $cme_data -> analyses[0]['latitude'], 4 );
+                $lon = number_format( $cme_data -> analyses[0]['longitude'], 4 );
+                $half_width = number_format( $cme_data -> analyses[0]['halfAngle'], 4 );
+                $speed = number_format( $cme_data -> analyses[0]['speed'], 4 );
+                $type = $cme_data -> analyses[0]['type'];
+                $a_note = $cme_data -> analyses[0]['note'];
+                $link = $cme_data -> link;
+
+                // create the card
+                $out[] = <<<HTML
+                <div class="uk-card-small" uk-card>
+                    <div class="uk-card-header alert-title">
+                        <h3 class="uk-card-title">$title</h3>
+                    </div>
+                    <div class="uk-card-body">
+                        <ul class="uk-list uk-list-disc">
+                            <li><strong>Catalog:</strong> $catalog</li>
+                            <li><strong>Start:</strong> $start</li>
+                            <li><strong>Source:</strong> $source</li>
+                            <li><strong>Region:</strong> $region</li>
+                            <li><strong>Note:</strong> $note</li>
+                            <li>
+                                <ul uk-accordion>
+                                    <li>$instruments</li>
+                                    <li>
+                                        <a class="uk-accordion-title" href="#">Analysis</a>
+                                        <div class="uk-accordion-content">
+                                            <ul class="uk-list uk-list-disc">
+                                                <li><strong>Latitude:</strong> $lat</li>
+                                                <li><strong>Longitude:</strong> $lon</li>
+                                                <li><strong>Half Width:</strong> $half_width</li>
+                                                <li><strong>Speed:</strong> $speed</li>
+                                                <li><strong>Type:</strong> $type</li>
+                                                <li><strong>Note:</strong> $a_note</li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <a class="uk-button uk-button-secondary uk-align-right" href="$link" target="_blank">More Info</a>
+                    </div>
+                </div>
+                HTML;
+
+            }
+
+            // close the output
+            $out[] = <<<HTML
+            </div>
+            HTML;
+
+            // return the output
+            return implode( '', $out );
+            
+        }
+
+        /** 
+         * render_flare_alerts
+         * 
+         * Render the Solar Flare alerts
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        private function render_flare_alerts( \WP_Query $data ) : string {
+
+            // start the output
+            $out[] = <<<HTML
+            <div uk-grid class="uk-child-width-1-2@s">
+            HTML;
+
+            // loop the results
+            foreach( $data -> posts as $flare ) {
+
+                // setup the data to be displayed
+                $title = $flare -> post_title;
+                $flare_data = maybe_unserialize( $flare -> post_content );
+                $fbegin = date( 'r', strtotime( $flare_data -> begin ) );
+                $fend = date( 'r', strtotime( $flare_data -> end ) );
+                $fpeak = date( 'r', strtotime( $flare_data -> peak ) );
+                $fclass = $flare_data -> class;
+                $fsource = $flare_data -> source;
+                $fregion = $flare_data -> region;
+                $finstruments = ( function( ) use ( $flare_data ) : string {
+                    $ins = [];
+
+                    // start the instrument output
+                    $ins[] = <<<HTML
+                    <a class="uk-accordion-title" href="#">Instruments</a>
+                    <div class="uk-accordion-content">
+                        <ul class="uk-list uk-list-disc">
+                    HTML;
+
+                    // loop the instruments
+                    foreach( $flare_data -> instruments as $inst ) {
+                        $name = $inst['displayName'];
+
+                        // add the item
+                        $ins[] = <<<HTML
+                            <li>$name</li>
+                        HTML;
+                    }
+
+                    // end the instrument output
+                    $ins[] = <<<HTML
+                        </ul>
+                    </div>
+                    HTML;
+
+                    // return the list
+                    return implode( '', $ins );
+                } )( );
+                $flink= $flare_data -> link;
+
+                // create the card
+                $out[] = <<<HTML
+                <div class="uk-card-small" uk-card>
+                    <div class="uk-card-header alert-title">
+                        <h3 class="uk-card-title">$title</h3>
+                    </div>
+                    <div class="uk-card-body">
+                        <ul class="uk-list uk-list-disc">
+                            <li><strong>Begin: </strong>$fbegin</li>
+                            <li><strong>End: </strong>$fend</li>
+                            <li><strong>Peak: </strong>$fpeak</li>
+                            <li><strong>Class: </strong>$fclass</li>
+                            <li><strong>Source: </strong>$fsource</li>
+                            <li><strong>Region: </strong>$fregion</li>
+                            <li>
+                                <ul uk-accordion>
+                                    <li>$finstruments</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <a class="uk-button uk-button-secondary uk-align-right" href="$flink" target="_blank">More Info</a>
+                    </div>
+                </div>
+                HTML;
+
+            }
+
+            // end the output
+            $out[] = <<<HTML
+            </div>
+            HTML;
+
+            // return the output
+            return implode( '', $out );
+
+        }
+
+        /** 
+         * render_sw_alerts
+         * 
+         * Render the Space Weather alerts
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        private function render_sw_alerts( \WP_Query $data ) : string {
+
+            // start the output
+            $out[] = <<<HTML
+            <div>
+            HTML;
+
+            // loop the results
+            foreach( $data -> posts as $sw ) {
+
+                // setup the output
+                $out[] = <<<HTML
+                <ul class="uk-list">
+                HTML;
+
+                // setup the data we need for the list items
+                $sw_data = maybe_unserialize( $sw -> post_content );
+                $issued = date( 'r', strtotime( $sw_data -> issued ) );
+                $message = $sw_data -> message;
+
+                // the list item
+                $out[] = <<<HTML
+                <li class="uk-padding-small uk-padding-remove-top uk-padding-remove-horizontal">
+                    <h4><strong>Issued:</strong> $issued</h4>
+                    <pre>$message</pre>
+                </li>
+                HTML;
+
+                // end the output
                 $out[] = <<<HTML
                 </ul>
                 HTML;
 
             }
 
-            // return the string version of it
+            // start the output
+            $out[] = <<<HTML
+            </div>
+            HTML;
+
+            // return the output
+            return implode( '', $out );
+
+        }
+
+        /** 
+         * render_geomag_alerts
+         * 
+         * Render the Geo Magnetic alerts
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        private function render_geomag_alerts( \WP_Query $data ) : string {
+
+            // loop the results
+            foreach( $data -> posts as $geomag ) {
+
+                // setup the data to return
+                $content = maybe_unserialize( $geomag -> post_content );
+
+                // return the content
+                $out[] = <<<HTML
+                <pre>$content</pre>
+                HTML;
+
+            }
+
+            // return the output
+            return implode( '', $out );
+
+        }
+
+        /** 
+         * alert_pagination
+         * 
+         * Render pagination links with first and last page buttons
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param int $max_pages Maximum number of pages
+         * @return string The rendered pagination HTML
+         * 
+        */
+        private function alert_pagination( int $max_pages = 1 ) : string {
+
+            // hold the output
+            $out = array();
+
+            // get current page
+            $current_page = max( 1, $this -> paged );
+
+            // build our pagination links
+            $page_links = paginate_links( array(
+                'prev_text'          => ' <span uk-icon="icon: chevron-left"></span> ', 
+                'next_text'          => ' <span uk-icon="icon: chevron-right"></span> ', 
+                'screen_reader_text' => ' ', 
+                'current'            => $current_page, 
+                'total'              => $max_pages, 
+                'type'               => 'array', 
+                'mid_size'           => 4,
+                'base'               => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
+                'format'             => '?paged=%#%',
+            ) );
+
+            // return empty string if no links
+            if( ! $page_links ) {
+                return '';
+            }
+
+            // open the pagination list
+            $out[] = '<ul class="uk-pagination uk-flex-center uk-margin-medium-top">';
+
+            // add first page link if we're not on page 1
+            if( $current_page > 1 ) {
+                
+                // build first page link using get_pagenum_link
+                $first_url = get_pagenum_link( 1 );
+                
+                // build first page link
+                $first_link = '<a href="' . esc_url( $first_url ) . '"><span uk-icon="icon: chevron-double-left"></span></a>';
+                
+                $out[] = "<li>$first_link</li>";
+            }
+
+            // add each page link as a list item
+            foreach( $page_links as $link ) {
+                $out[] = "<li>$link</li>";
+            }
+
+            // add last page link if we're not on the last page
+            if( $current_page < $max_pages ) {
+                
+                // build last page link using get_pagenum_link
+                $last_url = get_pagenum_link( $max_pages );
+                
+                // build last page link
+                $last_link = '<a href="' . esc_url( $last_url ) . '"><span uk-icon="icon: chevron-double-right"></span></a>';
+                
+                $out[] = "<li>$last_link</li>";
+            }
+
+            // close the pagination list
+            $out[] = '</ul>';
+
+            // return the complete pagination HTML
             return implode( '', $out );
 
         }
