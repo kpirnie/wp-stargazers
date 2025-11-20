@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'SGU_Alert_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-alert-shortcodes.php',
+    'SGU_Astro_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-astro-shortcodes.php',
     'SGU_CPT_Admin_Cols' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-admin-cols.php',
     'SGU_CPT_Settings' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-settings.php',
     'SGU_CPTs' => $baseDir . '/work/inc/custom-post-types/sgu-cpts.php',
