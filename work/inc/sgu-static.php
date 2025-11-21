@@ -109,6 +109,161 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return 1;
         }
 
+        /** 
+         * cpt_pagination
+         * 
+         * Render pagination links with first and last page buttons
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param int $max_pages Maximum number of pages
+         * @return string The rendered pagination HTML
+         * 
+        */
+        public static function cpt_pagination( int $max_pages = 1, int $_paged = 1 ) : string {
+
+            // hold the output
+            $out = [];
+
+            // get current page
+            $current_page = max( 1, $_paged );
+
+            // build our pagination links
+            $page_links = paginate_links( [
+                'prev_text'          => ' <span uk-icon="icon: chevron-left"></span> ', 
+                'next_text'          => ' <span uk-icon="icon: chevron-right"></span> ', 
+                'screen_reader_text' => ' ', 
+                'current'            => $current_page, 
+                'total'              => $max_pages, 
+                'type'               => 'array', 
+                'mid_size'           => 4,
+                'base'               => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
+                'format'             => '?paged=%#%',
+            ] );
+
+            // return empty string if no links
+            if( ! $page_links ) {
+                return '';
+            }
+
+            // open the pagination list
+            $out[] = '<ul class="uk-pagination uk-flex-center uk-margin-medium-top">';
+
+            // add first page link if we're not on page 1
+            if( $current_page > 1 ) {
+                $first_url = esc_url( get_pagenum_link( 1 ) );
+                $out[] = '<li><a href="' . $first_url . '"><span uk-icon="icon: chevron-double-left"></span></a></li>';
+            }
+
+            // add each page link as a list item
+            foreach( $page_links as $link ) {
+                $out[] = "<li>$link</li>";
+            }
+
+            // add last page link if we're not on the last page
+            if( $current_page < $max_pages ) {
+                $last_url = esc_url( get_pagenum_link( $max_pages ) );
+                $out[] = '<li><a href="' . $last_url . '"><span uk-icon="icon: chevron-double-right"></span></a></li>';
+            }
+
+            // close the pagination list
+            $out[] = '</ul>';
+
+            // return the complete pagination HTML
+            return implode( '', $out );
+
+        }
+
+        /** 
+         * parse_alert_date
+         * 
+         * This method is utilized to parse the date returned from some of the space API's
+         * 
+         * @since 7.3
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @return string The string representing the parsed date
+         * 
+        */
+        public static function parse_alert_date( string $_str_to_parse ) : string {
+
+            // get the year
+            $_year = substr( $_str_to_parse, 0, 4 );
+
+            // get the month
+            $_month = substr( $_str_to_parse, 5, 3 );
+
+            // get the day
+            $_day = substr( $_str_to_parse, 9, 2 );
+
+            // concatenate them to a date string
+            $_date = $_year . '-' . $_month . '-' . $_day . ' 00:00 UTC';
+
+            // return the date 
+            return date( 'Y-m-d H:i:s', strtotime( $_date ) );
+
+        }
+
+        /** 
+         * y_or_n
+         * 
+         * This method is utilized to convert a boolean value to Yes or No
+         * 
+         * @since 7.3
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param bool $should_cache The boolean value to convert
+         * 
+         * @return string The Yes or No string
+         * 
+        */
+        public static function y_or_n( bool $_val ) : string {
+
+            // return yes or no
+            return $_val == true ? 'Yes' : 'No';
+
+        }
+
+        /** 
+         * get_attachment_id
+         * 
+         * This method is utilized for getting the posts attachment ID
+         * by it's full URL
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param string $_url The url of the media to look up
+         * 
+         * @return void This method returns nothing
+         * 
+        */
+        public static function get_attachment_id( string $_url ) : int {
+
+            // we'll need the db global
+            global $wpdb;
+
+            // get the attachment
+            $_att = $wpdb -> get_col( $wpdb -> prepare( "SELECT ID FROM $wpdb->posts WHERE guid='%s';", $_url ) ); 
+            
+            // return the value
+            return ( $_att[0] ) ?? 0;
+
+        }
+
 
     }
 

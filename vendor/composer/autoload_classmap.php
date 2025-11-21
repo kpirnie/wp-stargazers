@@ -12,6 +12,7 @@ return array(
     'SGU_CPT_Admin_Cols' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-admin-cols.php',
     'SGU_CPT_Settings' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-settings.php',
     'SGU_CPTs' => $baseDir . '/work/inc/custom-post-types/sgu-cpts.php',
+    'SGU_Photo_Journal_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-photo-journal-shortcodes.php',
     'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
     'SGU_Space_Data' => $baseDir . '/work/inc/data/sgu-space-data.php',

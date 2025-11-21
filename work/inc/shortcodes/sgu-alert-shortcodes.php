@@ -261,7 +261,7 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
 
             // if we're showing the paging links, and it's either top or both
             if( $show_pagination && in_array( $paging_loc, ['top', 'both'] ) ) {
-                $out[] = $this -> alert_pagination( $max_pages );
+                $out[] = SGU_Static::cpt_pagination( $max_pages, $this -> paged );
             }
 
             // setup the rendered output using match
@@ -275,7 +275,7 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
 
             // if we're showing the paging links, and it's either bottom or both
             if( $show_pagination && in_array( $paging_loc, ['bottom', 'both'] ) ) {
-                $out[] = $this -> alert_pagination( $max_pages );
+                $out[] = SGU_Static::cpt_pagination( $max_pages, $this -> paged );
             }
 
             // return the output
@@ -527,74 +527,6 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
             }
 
             // return the output
-            return implode( '', $out );
-
-        }
-
-        /** 
-         * alert_pagination
-         * 
-         * Render pagination links with first and last page buttons
-         * 
-         * @since 8.4
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Stargazers Plugin
-         * 
-         * @param int $max_pages Maximum number of pages
-         * @return string The rendered pagination HTML
-         * 
-        */
-        private function alert_pagination( int $max_pages = 1 ) : string {
-
-            // hold the output
-            $out = [];
-
-            // get current page
-            $current_page = max( 1, $this -> paged );
-
-            // build our pagination links
-            $page_links = paginate_links( [
-                'prev_text'          => ' <span uk-icon="icon: chevron-left"></span> ', 
-                'next_text'          => ' <span uk-icon="icon: chevron-right"></span> ', 
-                'screen_reader_text' => ' ', 
-                'current'            => $current_page, 
-                'total'              => $max_pages, 
-                'type'               => 'array', 
-                'mid_size'           => 4,
-                'base'               => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
-                'format'             => '?paged=%#%',
-            ] );
-
-            // return empty string if no links
-            if( ! $page_links ) {
-                return '';
-            }
-
-            // open the pagination list
-            $out[] = '<ul class="uk-pagination uk-flex-center uk-margin-medium-top">';
-
-            // add first page link if we're not on page 1
-            if( $current_page > 1 ) {
-                $first_url = esc_url( get_pagenum_link( 1 ) );
-                $out[] = '<li><a href="' . $first_url . '"><span uk-icon="icon: chevron-double-left"></span></a></li>';
-            }
-
-            // add each page link as a list item
-            foreach( $page_links as $link ) {
-                $out[] = "<li>$link</li>";
-            }
-
-            // add last page link if we're not on the last page
-            if( $current_page < $max_pages ) {
-                $last_url = esc_url( get_pagenum_link( $max_pages ) );
-                $out[] = '<li><a href="' . $last_url . '"><span uk-icon="icon: chevron-double-right"></span></a></li>';
-            }
-
-            // close the pagination list
-            $out[] = '</ul>';
-
-            // return the complete pagination HTML
             return implode( '', $out );
 
         }

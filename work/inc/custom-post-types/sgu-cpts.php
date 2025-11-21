@@ -130,9 +130,8 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'menu_icon' => 'dashicons-images-alt2',
                     'supports' => ['title', 'editor', 'excerpt'],
                     'menu_position' => 5,
-                    'hierarchical' => true,
                     'publicly_queryable' => true,
-                    'capability_type' => 'page',
+                    'has_archive' => true,
                     'rewrite' => ['slug' => 'astronomy-information/nasa-photo-journal', 'with_front' => false],
                     'has_rewrite_rule' => true, // custom flag for pagination rewrite
                 ],
@@ -145,10 +144,9 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'menu_icon' => 'dashicons-images-alt2',
                     'supports' => ['title', 'editor', 'thumbnail'],
                     'menu_position' => 5,
-                    'hierarchical' => true,
                     'publicly_queryable' => true,
-                    'capability_type' => 'page',
-                    'rewrite' => ['slug' => 'astronomy-information/nasas-astronomy-photo-of-the-day', 'with_front' => false],
+                    'has_archive' => true,
+                    'rewrite' => ['slug' => 'astronomy-information/nasa-astronomy-photo-of-the-day', 'with_front' => false],
                     'has_rewrite_rule' => true, // custom flag for pagination rewrite
                 ],
             ];
