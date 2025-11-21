@@ -41,7 +41,13 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
 
             // register all custom post types
             $this -> register_all_cpts( );
-            
+
+            // Add rewrite rules for CPTs with single view shortcodes
+            SGU_Static::add_cpt_rewrites( [
+                'sgu_journal',
+                'sgu_apod',
+            ] );
+
             // inject admin styling for column widths
             add_action( 'admin_head', function( ) {
                 ?>
@@ -131,9 +137,10 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'supports' => ['title', 'editor', 'excerpt'],
                     'menu_position' => 5,
                     'publicly_queryable' => true,
-                    'has_archive' => true,
-                    'rewrite' => ['slug' => 'astronomy-information/nasa-photo-journal', 'with_front' => false],
-                    'has_rewrite_rule' => true, // custom flag for pagination rewrite
+                    'has_archive' => false,
+                    'public' => false,
+                    'show_in_nav_menus' => true,
+                    'rewrite' => false,
                 ],
                 'sgu_apod' => [
                     'labels' => [ 
@@ -146,8 +153,9 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'menu_position' => 5,
                     'publicly_queryable' => true,
                     'has_archive' => true,
-                    'rewrite' => ['slug' => 'astronomy-information/nasa-astronomy-photo-of-the-day', 'with_front' => false],
-                    'has_rewrite_rule' => true, // custom flag for pagination rewrite
+                    'public' => true, // ADD THIS
+                    'show_in_nav_menus' => true, // CHANGE THIS 
+                    'rewrite' => false,
                 ],
             ];
 
@@ -188,18 +196,6 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                 
                 // register this custom post type
                 register_post_type( $post_type, $args );
-                
-                // if this CPT needs pagination rewrite rules, add them
-                if ( $has_rewrite_rule && isset( $args['rewrite']['slug'] ) ) {
-
-                    // add the rewrite rule for paginated archives
-                    add_rewrite_rule(
-                        '^' . $args['rewrite']['slug'] . '/page/(\d+)/?$',
-                        'index.php?pagename=' . $args['rewrite']['slug'] . '&paged=$matches[1]',
-                        'top'
-                    );
-
-                }
 
             }
 

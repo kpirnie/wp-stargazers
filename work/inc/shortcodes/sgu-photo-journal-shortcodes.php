@@ -69,12 +69,25 @@ if( ! class_exists( 'SGU_Photo_Journal_Shortcodes' ) ) {
         */
         public function add_photo_journals( array $atts = [] ) : string {
 
+            wp_cache_delete( 'sgu_sgup_photo_journals_archive_url', 'sgu_urls' );
+
             // Set default values
             $atts = shortcode_atts( [
                 'show_paging' => false,
                 'paging_location' => 'bottom',
                 'per_page' => 6,
             ], $atts, 'sgup_photo_journals' );
+
+           // CHECK IF WE'RE VIEWING A SINGLE POST VIA QUERY VAR
+            $journal_slug = get_query_var( 'sgu_journal' );
+            
+            // DEBUG: Uncomment these lines to see what's happening
+            error_log( 'Journal slug from query var: ' . $journal_slug );
+            error_log( 'All query vars: ' . print_r( $GLOBALS['wp_query']->query_vars, true ) );
+            
+            if( ! empty( $journal_slug ) ) {
+                return $this -> render_single_journal_by_slug( $journal_slug );
+            }
 
             // show the pagination links?
             $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
@@ -94,7 +107,8 @@ if( ! class_exists( 'SGU_Photo_Journal_Shortcodes' ) ) {
             // if we don't have anything, just dump out
             if( ! $photo_journals ) { return ''; }
 
-            var_dump(is_single());
+            // hold the output
+            $out = [];
 
             // hold the max pages
             $max = $photo_journals -> max_num_pages ?: 1;
@@ -108,30 +122,26 @@ if( ! class_exists( 'SGU_Photo_Journal_Shortcodes' ) ) {
             $idx = 0;
 
             // loop the journals
-            $max = $photo_journals -> max_num_pages ?: 1;
             foreach( $photo_journals -> posts as $journal) {
 
-                // settup the necessary data
+                // setup the necessary data
                 $id = $journal -> ID;
-                $title = $journal -> post_title;
+                $title = esc_html( $journal -> post_title );
                 $content = wp_trim_words( $journal -> post_content, 30 );
                 $img = ( function( ) use( $id ) {
-                    // hold the local media/image
                     $_local_media = get_post_meta( $id, 'sgu_journal_local_image', true );
-                    // let's see if we have a local image
                     if( $_local_media ) {
-                        // get the image ID
                         $_img_id = SGU_Static::get_attachment_id( $_local_media );
-                        // return the resized image for display
                         return esc_url( wp_get_attachment_image_url( $_img_id, 'pageimages' ) );
-                    // we don't
                     } else {
-                        // return the remote one instead
                         return esc_url( get_post_meta( $id, 'sgu_journal_orignal_image', true ) );
                     }
                 } )( );
                 $side = ( $idx % 2 == 0 ) ? 'left' : 'right uk-flex-last@s';
-                $link = get_the_permalink( $id );//var_dump($img);exit;
+                
+                // USE THE STATIC METHOD TO GET THE LINK WITH SHORTCODE NAME
+                $base_url = SGU_Static::get_archive_url( 'sgup_photo_journals' );
+                $link = esc_url( rtrim( $base_url, '/' ) . '/' . $journal -> post_name . '/' );
 
                 // render the card
                 $out[] = <<<HTML
@@ -151,7 +161,6 @@ if( ! class_exists( 'SGU_Photo_Journal_Shortcodes' ) ) {
                 </div>
                 HTML;
 
-                // increment our index
                 ++$idx;
             }
 
@@ -160,9 +169,59 @@ if( ! class_exists( 'SGU_Photo_Journal_Shortcodes' ) ) {
                 $out[] = SGU_Static::cpt_pagination( $max, $pjpaged );
             }
 
-            // return the output
             return implode( '', $out );
+        }
 
+        /**
+         * Render single photo journal by slug
+         */
+        private function render_single_journal_by_slug( string $slug ) : string {
+            
+            // Get the post by slug
+            $args = [
+                'name' => $slug,
+                'post_type' => 'sgu_journal',
+                'posts_per_page' => 1,
+            ];
+            
+            $query = new WP_Query( $args );
+            
+            if( ! $query -> have_posts() ) {
+                return '<p>Photo journal not found.</p>';
+            }
+            
+            $post = $query -> posts[0];
+            
+            $title = esc_html( $post -> post_title );
+            $content = apply_filters( 'the_content', $post -> post_content );
+            
+            $img = ( function( ) use( $post ) {
+                $_local_media = get_post_meta( $post -> ID, 'sgu_journal_local_image', true );
+                if( $_local_media ) {
+                    $_img_id = SGU_Static::get_attachment_id( $_local_media );
+                    return esc_url( wp_get_attachment_image_url( $_img_id, 'full' ) );
+                } else {
+                    return esc_url( get_post_meta( $post -> ID, 'sgu_journal_orignal_image', true ) );
+                }
+            } )( );
+
+            // USE THE STATIC METHOD TO GET THE BACK LINK WITH SHORTCODE NAME
+            $back_link = esc_url( SGU_Static::get_archive_url( 'sgup_photo_journals' ) );
+
+            return <<<HTML
+            <article class="sgu-journal-single">
+                <h1 class="uk-heading-divider">$title</h1>
+                <div class="uk-margin-large">
+                    <img src="$img" alt="$title" class="uk-width-1-1">
+                </div>
+                <div class="uk-margin-large">
+                    $content
+                </div>
+                <div class="uk-margin-large">
+                    <a href="$back_link" class="uk-button uk-button-secondary">Back to Photo Journals</a>
+                </div>
+            </article>
+            HTML;
         }
 
     }

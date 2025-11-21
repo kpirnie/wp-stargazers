@@ -264,6 +264,123 @@ if( ! class_exists( 'SGU_Static' ) ) {
 
         }
 
+        /** 
+         * get_archive_url
+         * 
+         * Get the URL for the photo journal archive page
+         * Searches for a page containing the sgup_photo_journals shortcode
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @return string The URL to the archive page or '/' if not found
+         * 
+        */
+        public static function get_archive_url( string $shortcode ) : string {
+
+            // seutp the cache key
+            $cache_key = sprintf( "sgu_%s_archive_url", $shortcode );
+            
+            // Check cache first
+            $cached_url = wp_cache_get( $cache_key, 'sgu_urls' );
+            if( $cached_url !== false ) {
+                return $cached_url;
+            }
+            
+            // Search for page with the shortcode
+            $args = [
+                'post_type' => 'page',
+                'post_status' => 'publish',
+                'posts_per_page' => 1,
+                's' => sprintf( "[%s", $shortcode ),
+            ];
+            
+            $query = new WP_Query( $args );
+            
+            if( $query -> have_posts() ) {
+                $url = get_permalink( $query -> posts[0] -> ID );
+                // Cache for 24 hours
+                wp_cache_set( $cache_key, $url, 'sgu_urls', DAY_IN_SECONDS );
+                return $url;
+            }
+            
+            // Default fallback
+            $default_url = '/';
+            wp_cache_set( $cache_key, $default_url, 'sgu_urls', DAY_IN_SECONDS );
+            
+            return $default_url;
+        }
+
+        /** 
+         * get_the_single_url
+         * 
+         * Get the URL for a single photo journal post
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param string $slug The post slug
+         * @return string The URL to the single journal post
+         * 
+        */
+        public static function get_the_single_url( string $shortcode, string $slug ) : string {
+            
+            $base_url = self::get_archive_url( $shortcode );
+    
+            // If base is just '/', return it as is
+            if( $base_url === '/' ) {
+                return $base_url;
+            }
+            
+            // Build the proper URL
+            return rtrim( $base_url, '/' ) . '/' . $slug . '/';
+        }
+
+        /**
+         * add_cpt_rewrites
+         * 
+         * Add rewrite rules for CPTs that have single view shortcodes
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param array $cpts Array of CPT slugs that need single view rewrites
+         * @return void This method returns nothing
+         * 
+        */
+        public static function add_cpt_rewrites( array $cpts ) : void {
+                        
+            // Register query vars
+            add_filter( 'query_vars', function( $vars ) use ( $cpts ) {
+                foreach( $cpts as $cpt ) {
+                    $vars[] = $cpt;
+                }
+                return $vars;
+            } );
+            
+            // Add rewrite rules - hardcoded paths
+            add_rewrite_rule(
+                '^astronomy-information/nasa-photo-journal/([^/]+)/?$',
+                'index.php?pagename=astronomy-information/nasa-photo-journal&sgu_journal=$matches[1]',
+                'top'
+            );
+            
+            add_rewrite_rule(
+                '^astronomy-information/nasa-astronomy-photo-of-the-day/([^/]+)/?$',
+                'index.php?pagename=astronomy-information/nasa-astronomy-photo-of-the-day&sgu_apod=$matches[1]',
+                'top'
+            );
+
+        }
+
 
     }
 
