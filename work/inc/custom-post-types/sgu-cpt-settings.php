@@ -397,6 +397,18 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
                 // 'message_cb'      => 'yourprefix_options_page_message_callback',
             ) );
 
+            // create the page selector for the archive page
+            $cmes -> add_field( array(
+                'name'             => 'Archive Page',
+                'desc'             => 'Select the page to use as the archive page for the photo journal articles.',
+                'id'               => 'sgup_journal_archive',
+                'type'             => 'select',
+                'show_option_none' => true,
+                'options_cb' => function( ) : array {
+                        return SGU_Static::get_pages_array( );
+                    },
+                ) );
+
             // create the journal group
             $j_group = $cmes -> add_field( 
                 array(
@@ -405,7 +417,7 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
                     'id'      => 'sgup_journal_feeds',
                     'type'    => 'group',
                     'options'     => array(
-                        'group_title'       => __( 'Entry {#}', 'sgup' ), // since version 1.1.4, {#} gets replaced by row number
+                        'group_title'       => __( 'Feed {#}', 'sgup' ), // since version 1.1.4, {#} gets replaced by row number
                         'add_button'        => __( 'Add a Feed', 'sgup' ),
                         'remove_button'     => __( 'Remove Feed', 'sgup' ),
                         'sortable'          => true,

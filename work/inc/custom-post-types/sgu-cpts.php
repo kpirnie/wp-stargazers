@@ -42,12 +42,6 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
             // register all custom post types
             $this -> register_all_cpts( );
 
-            // Add rewrite rules for CPTs with single view shortcodes
-            SGU_Static::add_cpt_rewrites( [
-                'sgu_journal',
-                'sgu_apod',
-            ] );
-
             // inject admin styling for column widths
             add_action( 'admin_head', function( ) {
                 ?>
@@ -74,6 +68,14 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
          * 
         */
         private function register_all_cpts( ) : void {
+
+            // get the journal archive slug
+            $journal_archive_slug = ( function( ) : string {
+                $page_id = SGU_Static::get_sgu_option( 'sgup_journal_settings' ) -> sgup_journal_archive ?: 0;
+                return get_post_field( 'post_name', $page_id );
+            } )( );
+            var_dump('-----------------------------------------------------------------------------');
+            var_dump( $journal_archive_slug );
 
             // define all CPT configurations with their unique properties
             $cpt_definitions = [
@@ -137,10 +139,10 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'supports' => ['title', 'editor', 'excerpt'],
                     'menu_position' => 5,
                     'publicly_queryable' => true,
-                    'has_archive' => false,
-                    'public' => false,
+                    'has_archive' => 'astronomy-information/nasa-photo-journal',
+                    'public' => true,
                     'show_in_nav_menus' => true,
-                    'rewrite' => false,
+                    'rewrite' => ['slug' => 'astronomy-information/photo-journal', 'with_front' => false],
                 ],
                 'sgu_apod' => [
                     'labels' => [ 
@@ -152,10 +154,11 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'supports' => ['title', 'editor', 'thumbnail'],
                     'menu_position' => 5,
                     'publicly_queryable' => true,
-                    'has_archive' => true,
+                    'has_archive' => 'astronomy-information/nasas-astronomy-photo-of-the-day',
                     'public' => true, // ADD THIS
                     'show_in_nav_menus' => true, // CHANGE THIS 
                     'rewrite' => false,
+                    'rewrite' => ['slug' => 'astronomy-information/apod', 'with_front' => false],
                 ],
             ];
 

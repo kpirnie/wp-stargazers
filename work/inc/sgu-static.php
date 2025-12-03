@@ -26,6 +26,66 @@ if( ! class_exists( 'SGU_Static' ) ) {
     */
     class SGU_Static {
 
+        /**
+         * get_sgu_option
+         * 
+         * get an option saved from any of our settings
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param string $key Options array key
+         * @param mixed $default Optional default value
+         * 
+         * @return object Option object
+         */
+        public static function get_sgu_option( string $key, mixed $default = false ) : object {
+
+            // setup the return
+            $ret = get_option( $key, $default );
+
+            // see if it's an array
+            if ( is_array( $ret ) ) {
+                return ( object ) $ret;
+            }
+
+            // convert the non-array return to an object for return
+            return ( object ) array( $key => $ret );
+        }
+
+        /** 
+         * get_pages_array
+         * 
+         * get an array of all public published pages
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        public static function get_pages_array( ) : array {
+
+            // get all pages in the site
+            $pages = get_pages( );
+            
+            // setup the return
+            $ret = array();
+            
+            // loop the pages and store the id and title in the return array
+            foreach ( $pages as $page ) {
+                $ret[ $page -> ID ] = $page -> post_title;
+            }
+            
+            // return the results
+            return $ret;
+
+        }
+
         /** 
          * get_cpt_display_name
          * 
@@ -340,60 +400,6 @@ if( ! class_exists( 'SGU_Static' ) ) {
             
             // Build the proper URL
             return rtrim( $base_url, '/' ) . '/' . $slug . '/';
-        }
-
-        /**
-         * add_cpt_rewrites
-         * 
-         * Add rewrite rules for CPTs that have single view shortcodes
-         * 
-         * @since 8.4
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Stargazers Plugin
-         * 
-         * @param array $cpts Array of CPT slugs that need single view rewrites
-         * @return void This method returns nothing
-         * 
-        */
-        public static function add_cpt_rewrites( array $cpts ) : void {
-                            
-            // Register query vars
-            add_filter( 'query_vars', function( $vars ) use ( $cpts ) {
-                foreach( $cpts as $cpt ) {
-                    $vars[] = $cpt;
-                }
-                return $vars;
-            } );
-            
-            // WRAP IN INIT HOOK
-            add_action( 'init', function() use ( $cpts ) {
-                
-                // Add rewrite rules
-                add_rewrite_rule(
-                    '^astronomy-information/nasa-photo-journal/([^/]+)/?$',
-                    'index.php?sgu_journal=$matches[1]',
-                    'top'
-                );
-                
-                add_rewrite_rule(
-                    '^astronomy-information/nasa-astronomy-photo-of-the-day/([^/]+)/?$',
-                    'index.php?sgu_apod=$matches[1]',
-                    'top'
-                );
-                
-            }, 1 );
-
-            // Make WordPress think the query is valid
-            add_filter( 'pre_get_posts', function( $query ) use ( $cpts ) {
-                foreach( $cpts as $cpt ) {
-                    if( ! empty( get_query_var( $cpt ) ) ) {
-                        $query->is_404 = false;
-                        $query->is_page = true;
-                    }
-                }
-            } );
-
         }
 
     }

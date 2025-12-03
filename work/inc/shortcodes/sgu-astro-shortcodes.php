@@ -46,6 +46,9 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // add the neos content
             add_shortcode( 'sgup_neos', [ $this, 'add_neos' ] );
 
+            // add the hero slider
+            add_shortcode( 'sgup_hero_slider', [ $this, 'add_neos' ] );
+
         }
 
         /** 
@@ -227,6 +230,24 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
 
             // return the output
             return implode( '', $out );
+
+        }
+
+        /** 
+         * add_hero_slider
+         * 
+         * Render the Hero Slider
+         * It contains both APOD's and Photo Journals
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        public function add_hero_slider( array $atts = [] ) : string {
+
+
 
         }
 
