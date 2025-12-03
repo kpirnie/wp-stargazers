@@ -69,8 +69,6 @@ if( ! class_exists( 'SGU_Photo_Journal_Shortcodes' ) ) {
         */
         public function add_photo_journals( array $atts = [] ) : string {
 
-            wp_cache_delete( 'sgu_sgup_photo_journals_archive_url', 'sgu_urls' );
-
             // Set default values
             $atts = shortcode_atts( [
                 'show_paging' => false,

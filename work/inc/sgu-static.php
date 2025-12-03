@@ -285,7 +285,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
             $cache_key = sprintf( "sgu_%s_archive_url", $shortcode );
             
             // Check cache first
-            $cached_url = wp_cache_get( $cache_key, 'sgu_urls' );
+            $cached_url = false;//wp_cache_get( $cache_key, 'sgu_urls' );
             if( $cached_url !== false ) {
                 return $cached_url;
             }
@@ -357,7 +357,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
          * 
         */
         public static function add_cpt_rewrites( array $cpts ) : void {
-                        
+                            
             // Register query vars
             add_filter( 'query_vars', function( $vars ) use ( $cpts ) {
                 foreach( $cpts as $cpt ) {
@@ -366,21 +366,35 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 return $vars;
             } );
             
-            // Add rewrite rules - hardcoded paths
-            add_rewrite_rule(
-                '^astronomy-information/nasa-photo-journal/([^/]+)/?$',
-                'index.php?pagename=astronomy-information/nasa-photo-journal&sgu_journal=$matches[1]',
-                'top'
-            );
-            
-            add_rewrite_rule(
-                '^astronomy-information/nasa-astronomy-photo-of-the-day/([^/]+)/?$',
-                'index.php?pagename=astronomy-information/nasa-astronomy-photo-of-the-day&sgu_apod=$matches[1]',
-                'top'
-            );
+            // WRAP IN INIT HOOK
+            add_action( 'init', function() use ( $cpts ) {
+                
+                // Add rewrite rules
+                add_rewrite_rule(
+                    '^astronomy-information/nasa-photo-journal/([^/]+)/?$',
+                    'index.php?sgu_journal=$matches[1]',
+                    'top'
+                );
+                
+                add_rewrite_rule(
+                    '^astronomy-information/nasa-astronomy-photo-of-the-day/([^/]+)/?$',
+                    'index.php?sgu_apod=$matches[1]',
+                    'top'
+                );
+                
+            }, 1 );
+
+            // Make WordPress think the query is valid
+            add_filter( 'pre_get_posts', function( $query ) use ( $cpts ) {
+                foreach( $cpts as $cpt ) {
+                    if( ! empty( get_query_var( $cpt ) ) ) {
+                        $query->is_404 = false;
+                        $query->is_page = true;
+                    }
+                }
+            } );
 
         }
-
 
     }
 
