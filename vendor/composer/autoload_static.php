@@ -21,6 +21,7 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
         'SGU_CPTs' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpts.php',
         'SGU_Hero_Slider_Shortcode' => __DIR__ . '/../..' . '/work/inc/shortcodes/sgu-hero-slider-shortcode.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
+        'SGU_RSS_Parser' => __DIR__ . '/../..' . '/work/inc/sgu-rss-parser.php',
         'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',
         'SGU_Space_Data' => __DIR__ . '/../..' . '/work/inc/data/sgu-space-data.php',
         'SGU_Space_Requests' => __DIR__ . '/../..' . '/work/inc/api/sgu-space-requests.php',

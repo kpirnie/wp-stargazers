@@ -122,7 +122,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 
                 // format the url endpoint
                 $url = sprintf( $endpoint, $key );
-
+                var_dump($url);
                 // get the data
                 $ret[] = $this -> request_data( $url );
                 

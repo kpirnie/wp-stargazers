@@ -801,18 +801,30 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
             // first things first, if there's no data, just dump out
             if( ! $data ) { return false; }
 
+            // fire up the feed parser
+            $parser = new SGU_RSS_Parser( );
+            $rss = $parser -> parse( $data[0], 'string' ) ?: [];
             
-            // loop the cme data
+            // grab the items
+            $items = $rss['channel']['item'];
+
+            // loop over the items
             foreach( $items as $item ) {
 
-                var_dump($item);
-                echo '******************************************************************************************************';
+                // setup the data we need
+                $title = $item['title'];
+
+                echo PHP_EOL . '************************************************************************' . PHP_EOL;
+                var_dump($title);
+                echo PHP_EOL . '************************************************************************' . PHP_EOL;
 
             }
-
+          
             // clean up
-            unset( $items, $feed );
+            unset( $parser, $rss, $items );
 
+            // return
+            return true;
 
         }
 

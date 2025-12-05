@@ -15,6 +15,7 @@ return array(
     'SGU_CPTs' => $baseDir . '/work/inc/custom-post-types/sgu-cpts.php',
     'SGU_Hero_Slider_Shortcode' => $baseDir . '/work/inc/shortcodes/sgu-hero-slider-shortcode.php',
     'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
+    'SGU_RSS_Parser' => $baseDir . '/work/inc/sgu-rss-parser.php',
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
     'SGU_Space_Data' => $baseDir . '/work/inc/data/sgu-space-data.php',
     'SGU_Space_Requests' => $baseDir . '/work/inc/api/sgu-space-requests.php',
