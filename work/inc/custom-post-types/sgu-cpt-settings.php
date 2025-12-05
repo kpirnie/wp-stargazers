@@ -407,7 +407,8 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
                 'options_cb' => function( ) : array {
                         return SGU_Static::get_pages_array( );
                     },
-                ) );
+                ) 
+            );
 
             // create the journal group
             $j_group = $cmes -> add_field( 
@@ -481,6 +482,19 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
                 // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
                 // 'message_cb'      => 'yourprefix_options_page_message_callback',
             ) );
+
+            // create the page selector for the archive page
+            $cmes -> add_field( array(
+                'name'             => 'Archive Page',
+                'desc'             => 'Select the page to use as the archive page for the photo journal articles.',
+                'id'               => 'sgup_apod_archive',
+                'type'             => 'select',
+                'show_option_none' => true,
+                'options_cb' => function( ) : array {
+                        return SGU_Static::get_pages_array( );
+                    },
+                ) 
+            );
 
             // the endpoint
             $cmes -> add_field( 

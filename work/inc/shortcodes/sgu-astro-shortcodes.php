@@ -46,9 +46,6 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // add the neos content
             add_shortcode( 'sgup_neos', [ $this, 'add_neos' ] );
 
-            // add the hero slider
-            add_shortcode( 'sgup_hero_slider', [ $this, 'add_neos' ] );
-
         }
 
         /** 

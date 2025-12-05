@@ -472,6 +472,386 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
 
         }
 
+        /** 
+         * insert_geo
+         * 
+         * Process the data from the sync and insert it
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package Stargazers.us Theme
+         * 
+         * @param array $data The data array
+         * 
+         * @return bool This method returns the if it was successful or not
+         * 
+        */
+        public function insert_geo( array $data ) : bool {
+
+            // first things first, if there's no data, just dump out
+            if( ! $data ) { return false; }
+
+            // get the product from the content of the object
+            preg_match( '/:Product:\ (.*)/', $data[0], $match );                    
+            // hold the product 
+            $product = ( $match[1] ) ?? '3-Day Forecast';
+            // get the issued date from the content of the object
+            preg_match( '/:Issued:\ (.*)/', $data[0], $match );
+            // hold the issued date
+            $issued = ( SGU_Static::parse_alert_date( $match[1] ) ) ?? '';
+            // combine them for the title
+            $title = $product . ' - ' . $issued;
+            
+            // get a post ID by the title
+            $the_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_geo_alerts' ) ) ?: 0;
+
+            // if the post ID is equals 0
+            if( $the_id == 0 ) {
+
+                // the post arguments
+                $args = array(
+                    'post_status' => 'publish',
+                    'post_title' => sanitize_text_field( $title ),
+                    'post_content' => maybe_serialize( $data[0] ), // serialze the entire object
+                    'post_type' => 'sgu_geo_alerts',
+                    'post_author' => 16,
+                    'post_date' => sanitize_text_field( $issued ),
+                );
+
+                // insert and get the ID
+                $the_id = wp_insert_post( $args );
+
+            }
+
+            // return the boolean value from the id on insert
+            return filter_var( $the_id, FILTER_VALIDATE_BOOLEAN );
+
+        }
+
+        /** 
+         * insert_neo
+         * 
+         * Process the data from the sync and insert it
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package Stargazers.us Theme
+         * 
+         * @param array $data The data array
+         * 
+         * @return bool This method returns the if it was successful or not
+         * 
+        */
+        public function insert_neo( array $data ) : bool {
+
+            // first things first, if there's no data, just dump out
+            if( ! $data ) { return false; }
+
+            // all we want is the neos node from this
+            $neos = $data['near_earth_objects'];
+
+            // loop them
+            foreach( $neos as $key => $val ) {
+
+                // hold the key as the date... because... that's what it is
+                $date = $key;
+
+                // now loop each item
+                foreach( $val as $object ) {
+
+                    // setup the data we need
+                    $name = str_replace( ')', '', str_replace( '(', '', $object['name'] ) );
+                    $hazardous = filter_var( $object['is_potentially_hazardous_asteroid'], FILTER_VALIDATE_BOOLEAN );
+                    $posted = date( 'Y-m-d', strtotime( ( $date ) ?: date( "Y-m-d" ) ) );
+
+                    // get a post by the title
+                    $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $name ), 'sgu_neo' ) ) ?: 0;
+
+                    // if the post ID is equals 0
+                    if( $existing_id == 0 ) {
+
+                        // setup the data to insert
+                        $args = array(
+                            'post_status' => 'publish',
+                            'post_date' => sanitize_text_field( $posted  . ' 00:00 UTC' ),
+                            'post_title' => sanitize_text_field( $name ),
+                            'post_content' => maybe_serialize( $object ), // serialze the entire object
+                            'post_type' => 'sgu_neo',
+                            'post_author' => 16,
+                        );
+
+                        // insert and get the ID
+                        $the_id = wp_insert_post( $args );
+
+                        // update the hazardous field
+                        update_post_meta( $the_id, 'sgu_neo_hazardous', $hazardous );
+
+                    }
+
+                }
+
+            }
+
+            // clean up
+            unset( $neos );
+
+            // just return true
+            return true;
+
+        }
+
+        /** 
+         * insert_solar_flare
+         * 
+         * Process the data from the sync and insert it
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package Stargazers.us Theme
+         * 
+         * @param array $data The data array
+         * 
+         * @return bool This method returns the if it was successful or not
+         * 
+        */
+        public function insert_solar_flare( array $data ) : bool {
+
+            // first things first, if there's no data, just dump out
+            if( ! $data ) { return false; }
+
+            // loop the flares
+            foreach( $data as $flare ) {
+
+                // setup the data to insert
+                $title = sanitize_text_field( $flare['flrID'] );
+                $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $flare['beginTime'] ) ) );
+
+                // get a post by the title
+                $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_sf_alerts' ) ) ?: 0;
+
+                // the post arguments
+                $args = array(
+                    'post_status' => 'publish',
+                    'post_title' => $title,
+                    'post_content' => maybe_serialize( $flare ), // serialze the entire object
+                    'post_type' => 'sgu_sf_alerts',
+                    'post_author' => 16,
+                    'post_date' => $date,
+                );
+
+                // see if it exists yet
+                if( $existing_id == 0 ) {
+
+                    // insert the flare
+                    wp_insert_post( $args );
+
+                // otherwise, nasa changed the data... and so can we
+                } else {
+
+                    // append the ID to the arguments
+                    $args['ID'] = $existing_id;
+
+                    // update
+                    wp_update_post( $args );
+
+                }
+
+            }
+
+            // just return true
+            return true;
+
+        }
+
+        /** 
+         * insert_space_weather
+         * 
+         * Process the data from the sync and insert it
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package Stargazers.us Theme
+         * 
+         * @param array $data The data array
+         * 
+         * @return bool This method returns the if it was successful or not
+         * 
+        */
+        public function insert_space_weather( array $data ) : bool {
+
+            // first things first, if there's no data, just dump out
+            if( ! $data ) { return false; }
+
+            // loop the weather data
+            foreach( $data as $object ) {
+
+                // hold the data we need
+                $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $object['issue_datetime'] ) ) );
+                $title = sanitize_text_field( $object['product_id'] . ' ' . $date );
+
+                // get an existing post if there is one
+                $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_sw_alerts' ) ) ?: 0;
+
+                // setup the arguments
+                $args = array(
+                    'post_status' => 'publish',
+                    'post_title' => $title,
+                    'post_content' => maybe_serialize( $object ), // serialze the entire object
+                    'post_type' => 'sgu_sw_alerts',
+                    'post_author' => 16,
+                    'post_date' => $date,
+                );
+
+                // if the post does not already exist we can insert
+                if( $existing_id == 0 ) {
+                    wp_insert_post( $args );
+                // otherwise, nasa changed the data, and so can we
+                } else {
+                    // add the existing ID to the arguments
+                    $args['ID'] = $existing_id;
+                    wp_update_post( $args );
+                }
+
+            }
+
+            // just do it
+            return true;
+
+        }
+
+        /** 
+         * insert_cme
+         * 
+         * Process the data from the sync and insert it
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package Stargazers.us Theme
+         * 
+         * @param array $data The data array
+         * 
+         * @return bool This method returns the if it was successful or not
+         * 
+        */
+        public function insert_cme( array $data ) : bool {
+
+            // first things first, if there's no data, just dump out
+            if( ! $data ) { return false; }
+
+            // loop the cme data
+            foreach( $data as $object ) {
+
+                // setup the data we "need"
+                $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $object['startTime'] ) ) );
+                $title = sanitize_text_field( $object['activityID'] );
+                $content = maybe_serialize( $object );
+
+                // see if we have an existing post
+                $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_cme_alerts' ) ) ?: 0;
+
+                // setup the arguments
+                $args = array(
+                    'post_status' => 'publish',
+                    'post_title' => $title,
+                    'post_content' => $content,
+                    'post_type' => 'sgu_cme_alerts',
+                    'post_author' => 16,
+                    'post_date' => $date,
+                );
+
+                // if we do not have a record, insert one
+                if( $existing_id == 0 ) {
+                    wp_insert_post( $args );
+                // otherwise, nasa updated the data... so can we
+                } else {
+                    // set the arguments ID
+                    $args['ID'] = $existing_id;
+                    wp_update_post( $args );
+                }
+
+            }
+
+            // return
+            return true;
+
+        }
+
+        /** 
+         * insert_photo_journal
+         * 
+         * Process the data from the sync and insert it
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package Stargazers.us Theme
+         * 
+         * @param array $data The data array
+         * 
+         * @return bool This method returns the if it was successful or not
+         * 
+        */
+        public function insert_photo_journal( array $data ) : bool {
+
+            // first things first, if there's no data, just dump out
+            if( ! $data ) { return false; }
+
+            
+            // loop the cme data
+            foreach( $items as $item ) {
+
+                var_dump($item);
+                echo '******************************************************************************************************';
+
+            }
+
+            // clean up
+            unset( $items, $feed );
+
+
+        }
+
+
+
+        /** 
+         * clean_up
+         * 
+         * This method is utilized to clean up our data. 
+         * Even though we are checking and attempting to avoid duplicates,
+         * somehow we still get them...
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @return void This method returns nothing
+         * 
+        */
+        public function clean_up( ) : void {
+
+            // we need our database global because we're going to run a couple custom queries
+            global $wpdb;
+
+            // this one will remove the posts that are duplciated on the title
+            $_rem_p_sql = "DELETE c1 FROM $wpdb->posts c1 INNER JOIN $wpdb->posts c2 WHERE ( c1.post_type IN ( 'sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_journal', 'sgu_apod' ) ) AND ( c1.id > c2.id AND c1.post_title = c2.post_title );";
+
+            // this one will get rid of the orphaned post meta data
+            $_rem_pm_sql = "DELETE pm FROM $wpdb->postmeta pm LEFT JOIN $wpdb->posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;";
+
+            // run the post query
+            $wpdb -> query( $_rem_p_sql );
+
+            // run the postmeta query
+            $wpdb -> query( $_rem_pm_sql );
+
+        }
+        
     }
 
 }

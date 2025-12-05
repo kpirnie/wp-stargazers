@@ -19,10 +19,13 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
         'SGU_CPT_Settings' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-settings.php',
         'SGU_CPT_Templates' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-templates.php',
         'SGU_CPTs' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpts.php',
+        'SGU_Hero_Slider_Shortcode' => __DIR__ . '/../..' . '/work/inc/shortcodes/sgu-hero-slider-shortcode.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
         'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',
         'SGU_Space_Data' => __DIR__ . '/../..' . '/work/inc/data/sgu-space-data.php',
+        'SGU_Space_Requests' => __DIR__ . '/../..' . '/work/inc/api/sgu-space-requests.php',
         'SGU_Static' => __DIR__ . '/../..' . '/work/inc/sgu-static.php',
+        'SGU_Sync' => __DIR__ . '/../..' . '/work/inc/sgu-sync.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

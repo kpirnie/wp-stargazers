@@ -26,6 +26,61 @@ if( ! class_exists( 'SGU_Static' ) ) {
     */
     class SGU_Static {
 
+        /** 
+         * get_id_from_slug
+         * 
+         * This method is utilized for returning the post id from the slug
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param string $_the_slug The posts slug
+         * @param string $_post_type The post type
+         * @param array $_qry_args An array of extra query arguments
+         * 
+         * @return int Returns the ID
+         * 
+        */
+        public static function get_id_from_slug( string $_the_slug, string $_post_type = 'page', array $_qry_args = array( ) ) : int {
+
+            // our query arguments
+            $_args = array(
+                'name' => $_the_slug,
+                'post_type' => $_post_type, 
+                'post_status' => 'any',
+                'posts_per_page' => 1,
+            );
+
+            // if the extra query args are present
+            if( ! empty( $_qry_args ) ) {
+
+                // append it to the existing array
+                $_args = array_merge( $_args, $_qry_args );
+
+            }
+
+            // query for our neo items
+            $_qry = new WP_Query( $_args );
+            $_rs = $_qry -> get_posts( );
+
+            // make sure we have something here
+            if( $_rs ) {
+
+                // return the post id
+                return $_rs[0] -> ID;
+
+            // we don't
+            } else {
+
+                // return 0 = nothing found
+                return 0;
+            }
+
+        }
+
         /**
          * get_sgu_option
          * 

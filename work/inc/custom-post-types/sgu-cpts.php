@@ -72,10 +72,14 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
             // get the journal archive slug
             $journal_archive_slug = ( function( ) : string {
                 $page_id = SGU_Static::get_sgu_option( 'sgup_journal_settings' ) -> sgup_journal_archive ?: 0;
-                return get_post_field( 'post_name', $page_id );
+                return get_page_uri( $page_id );
             } )( );
-            var_dump('-----------------------------------------------------------------------------');
-            var_dump( $journal_archive_slug );
+
+            // get the apod archive slug
+            $apod_archive_slug = ( function( ) : string {
+                $page_id = SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_archive ?: 0;
+                return get_page_uri( $page_id );
+            } )( );
 
             // define all CPT configurations with their unique properties
             $cpt_definitions = [
@@ -129,6 +133,7 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'supports' => ['title', 'editor'],
                     'menu_position' => 5,
                 ],
+
                 'sgu_journal' => [
                     'labels' => [ 
                         'name' => __( 'NASA Photo Journal', 'sgup' ), 
@@ -139,11 +144,12 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'supports' => ['title', 'editor', 'excerpt'],
                     'menu_position' => 5,
                     'publicly_queryable' => true,
-                    'has_archive' => 'astronomy-information/nasa-photo-journal',
+                    'has_archive' => $journal_archive_slug,
                     'public' => true,
                     'show_in_nav_menus' => true,
-                    'rewrite' => ['slug' => 'astronomy-information/photo-journal', 'with_front' => false],
+                    'rewrite' => ['slug' => "$journal_archive_slug/journal", 'with_front' => false],
                 ],
+
                 'sgu_apod' => [
                     'labels' => [ 
                         'name' => __( 'NASA Astronomy Photo of the Day', 'sgup' ), 
@@ -154,11 +160,11 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'supports' => ['title', 'editor', 'thumbnail'],
                     'menu_position' => 5,
                     'publicly_queryable' => true,
-                    'has_archive' => 'astronomy-information/nasas-astronomy-photo-of-the-day',
+                    'has_archive' => $apod_archive_slug,
                     'public' => true, // ADD THIS
                     'show_in_nav_menus' => true, // CHANGE THIS 
                     'rewrite' => false,
-                    'rewrite' => ['slug' => 'astronomy-information/apod', 'with_front' => false],
+                    'rewrite' => ['slug' => "$apod_archive_slug/apod", 'with_front' => false],
                 ],
             ];
 

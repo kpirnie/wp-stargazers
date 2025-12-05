@@ -44,6 +44,25 @@ add_action( 'init', function( ) {
     
 }, 999 );
 
+// hook into WP CLI initialization, if it's being utilized
+if( defined( 'WP_CLI' ) ) {
+
+    // hook into the cli initialization
+    add_action( 'cli_init', function( ) : void {
+
+        // include our autoloader
+        include_once SGUP_PATH . '/vendor/autoload.php';
+
+        // create sync commands
+        WP_CLI::add_command( 'sgu sync data', ['SGU_Sync', 'sync_the_data'], 
+            ['shortdesc' => 'This method syncs the remote data to WordPress.  We then utilize WP to display.'] );
+        WP_CLI::add_command( 'sgu sync imagery', ['SGU_Sync', 'sync_the_imagery'], 
+            ['shortdesc' => 'This method syncs the remote imagery to WordPress.  We then utilize WP to display.'] );
+
+    }, PHP_INT_MAX );
+
+}
+
 // fire this up in admin_init to inject it
 add_action( 'admin_init', function( ) {
 
