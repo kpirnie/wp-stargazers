@@ -60,17 +60,12 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
 
             // return the results from the match of the type
             return match( $which ) {
-                'geo' => true,//$this -> space_data -> insert_geo( $data ),
-                'neo' => true,//$this -> space_data -> insert_neo( $data ),
-                'sf' => true,//$this -> space_data -> insert_solar_flare( $data ),
-                'sw' => true,//$this -> space_data -> insert_space_weather( $data ),
-                'pj' => $this -> space_data -> insert_photo_journal( $data ),
-                'apod' => ( function( ) use( $data ) {
-
-                    // default return
-                    return false;
-                } )( ),
-                'cme' => true,//$this -> space_data -> insert_cme( $data ),
+                'geo' => $this -> space_data -> insert_geo( $data ),
+                'neo' => $this -> space_data -> insert_neo( $data ),
+                'sf' => $this -> space_data -> insert_solar_flare( $data ),
+                'sw' => $this -> space_data -> insert_space_weather( $data ),
+                'apod' => $this -> space_data -> insert_apod( $data ),
+                'cme' => $this -> space_data -> insert_cme( $data ),
                 default => true,
             };
 
@@ -100,20 +95,6 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
             // now get our endpoints
             $endpoints = $this -> get_endpoints( $which );
         
-            // if we are pulling photo journals
-            if( $which === 'pj' ) {
-                // hold a temp array
-                $temp = [];
-                // loop over them 
-                foreach( $endpoints as $ep ) {
-                    $temp[] = $ep['sgup_journal_feed'];
-                }
-                
-                // now merge it to the full endpoints
-                $endpoints = $temp;
-                unset( $temp );
-            }
-            
             // loop the endpoints
             foreach( $endpoints as $endpoint ) {
 
@@ -122,7 +103,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 
                 // format the url endpoint
                 $url = sprintf( $endpoint, $key );
-                var_dump($url);
+                
                 // get the data
                 $ret[] = $this -> request_data( $url );
                 
@@ -237,10 +218,6 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                     // if we made it here, pull the flare keys and return them
                     return SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_keys ?: [ ];
                 } )( ),
-                'pj' => ( function( ) {
-                    // there's no keys necessary for this one
-                    return [];
-                } )( ),
                 'apod' => ( function( ) use( $cme_keys ) {
                     // see if we are using CME keys, and if so return them
                     $use_cme = filter_var( SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_cme ?: false, FILTER_VALIDATE_BOOLEAN );
@@ -279,7 +256,6 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 'neo' => ( array ) SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [ ],
                 'sf' => ( array ) SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [ ],
                 'sw' => ( array ) SGU_Static::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [ ],
-                'pj' => ( array ) SGU_Static::get_sgu_option( 'sgup_journal_settings' ) -> sgup_journal_feeds ?: [ ],
                 'apod' => ( array ) SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [ ],
                 default => [ ],
             };

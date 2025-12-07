@@ -14,17 +14,6 @@ defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
 if( ! class_exists( 'SGU_RSS_Parser' ) ) {
 
-    
-/**
- * SGU RSS Parser
- *
- * A generic XML parser that converts XML documents to PHP arrays.
- * Handles namespaces, CDATA sections, and multiple input sources.
- *
- * @package SGU
- * @since 1.0.0
- */
-
 class SGU_RSS_Parser {
 
 	/**
@@ -248,36 +237,40 @@ class SGU_RSS_Parser {
 		$text = trim( (string) $xml );
 		$children = array();
 
+		// Count ALL children first (including namespaced)
+		$child_counts = array();
+		
+		// Count regular children
+		foreach ( $xml->children() as $child_name => $child ) {
+			if ( ! isset( $child_counts[ $child_name ] ) ) {
+				$child_counts[ $child_name ] = 0;
+			}
+			$child_counts[ $child_name ]++;
+		}
+		
+		// Count namespaced children
+		foreach ( $namespaces as $prefix => $namespace ) {
+			foreach ( $xml->children( $namespace ) as $child_name => $child ) {
+				$prefixed_name = $prefix ? $prefix . ':' . $child_name : $child_name;
+				if ( ! isset( $child_counts[ $prefixed_name ] ) ) {
+					$child_counts[ $prefixed_name ] = 0;
+				}
+				$child_counts[ $prefixed_name ]++;
+			}
+		}
+
 		// Process child elements
 		foreach ( $xml->children() as $child_name => $child ) {
 			$child_array = $this->xml_to_array( $child );
 			
-			// Handle multiple children with same name - ALWAYS use array
-			if ( isset( $children[ $child_name ] ) ) {
-				// Convert to numeric array if not already
-				if ( ! isset( $children[ $child_name ][0] ) ) {
-					$children[ $child_name ] = array( $children[ $child_name ] );
+			// If there are multiple children with this name, always use array
+			if ( $child_counts[ $child_name ] > 1 ) {
+				if ( ! isset( $children[ $child_name ] ) ) {
+					$children[ $child_name ] = array();
 				}
 				$children[ $child_name ][] = $child_array;
 			} else {
-				// Check if there are multiple siblings with same name
-				$siblings = $xml->children();
-				$count = 0;
-				foreach ( $siblings as $sibling_name => $sibling ) {
-					if ( $sibling_name === $child_name ) {
-						$count++;
-					}
-				}
-				
-				// If multiple siblings, start as array immediately
-				if ( $count > 1 ) {
-					if ( ! isset( $children[ $child_name ] ) ) {
-						$children[ $child_name ] = array();
-					}
-					$children[ $child_name ][] = $child_array;
-				} else {
-					$children[ $child_name ] = $child_array;
-				}
+				$children[ $child_name ] = $child_array;
 			}
 		}
 
@@ -287,32 +280,14 @@ class SGU_RSS_Parser {
 				$prefixed_name = $prefix ? $prefix . ':' . $child_name : $child_name;
 				$child_array = $this->xml_to_array( $child );
 				
-				// Handle multiple children with same name - ALWAYS use array
-				if ( isset( $children[ $prefixed_name ] ) ) {
-					// Convert to numeric array if not already
-					if ( ! isset( $children[ $prefixed_name ][0] ) ) {
-						$children[ $prefixed_name ] = array( $children[ $prefixed_name ] );
+				// If there are multiple children with this name, always use array
+				if ( $child_counts[ $prefixed_name ] > 1 ) {
+					if ( ! isset( $children[ $prefixed_name ] ) ) {
+						$children[ $prefixed_name ] = array();
 					}
 					$children[ $prefixed_name ][] = $child_array;
 				} else {
-					// Check if there are multiple siblings with same name
-					$siblings = $xml->children( $namespace );
-					$count = 0;
-					foreach ( $siblings as $sibling_name => $sibling ) {
-						if ( $sibling_name === $child_name ) {
-							$count++;
-						}
-					}
-					
-					// If multiple siblings, start as array immediately
-					if ( $count > 1 ) {
-						if ( ! isset( $children[ $prefixed_name ] ) ) {
-							$children[ $prefixed_name ] = array();
-						}
-						$children[ $prefixed_name ][] = $child_array;
-					} else {
-						$children[ $prefixed_name ] = $child_array;
-					}
+					$children[ $prefixed_name ] = $child_array;
 				}
 			}
 		}

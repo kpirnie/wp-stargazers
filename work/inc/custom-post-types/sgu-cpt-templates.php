@@ -61,16 +61,6 @@ if( ! class_exists( 'SGU_CPT_Templates' ) ) {
         */
         public function cpt_template_loader( string $template ) : string {
     
-            // Handle Photo Journal single
-            if( is_singular( 'sgu_journal' ) ) {
-                return $this -> get_template( 'single-journal', $template );
-            }
-            
-            // Handle Photo Journal archive
-            if( is_post_type_archive( 'sgu_journal' ) ) {
-                return $this -> get_template( 'archive-journal', $template );
-            }
-            
             // Handle APOD single
             if( is_singular( 'sgu_apod' ) ) {
                 return $this -> get_template( 'single-apod', $template );

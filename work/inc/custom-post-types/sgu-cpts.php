@@ -69,12 +69,6 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
         */
         private function register_all_cpts( ) : void {
 
-            // get the journal archive slug
-            $journal_archive_slug = ( function( ) : string {
-                $page_id = SGU_Static::get_sgu_option( 'sgup_journal_settings' ) -> sgup_journal_archive ?: 0;
-                return get_page_uri( $page_id );
-            } )( );
-
             // get the apod archive slug
             $apod_archive_slug = ( function( ) : string {
                 $page_id = SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_archive ?: 0;
@@ -132,22 +126,6 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'menu_icon' => 'dashicons-rest-api',
                     'supports' => ['title', 'editor'],
                     'menu_position' => 5,
-                ],
-
-                'sgu_journal' => [
-                    'labels' => [ 
-                        'name' => __( 'NASA Photo Journal', 'sgup' ), 
-                        'singular_name' => __( 'Photo', 'sgup' ), 
-                        'menu_name' => __( 'NASA Journal', 'sgup' ), 
-                    ],
-                    'menu_icon' => 'dashicons-images-alt2',
-                    'supports' => ['title', 'editor', 'excerpt'],
-                    'menu_position' => 5,
-                    'publicly_queryable' => true,
-                    'has_archive' => $journal_archive_slug,
-                    'public' => true,
-                    'show_in_nav_menus' => true,
-                    'rewrite' => ['slug' => "$journal_archive_slug/journal", 'with_front' => false],
                 ],
 
                 'sgu_apod' => [

@@ -82,44 +82,6 @@ if( ! class_exists( 'SGU_CPT_Admin_Cols' ) ) {
 
             }
 
-            // setup photo journal columns with image preview
-            add_filter( 'manage_sgu_journal_posts_columns', function( $_cols ) {
-
-                // return columns including image preview
-                return [
-                    'cb' => __( 'Select All', 'sgup' ),
-                    'img' => __( 'Image', 'sgup' ),
-                    'title' => __( 'Title', 'sgup' ),
-                    'date' => __( 'Date', 'sgup' ),
-                ];
-
-            } );
-
-            // populate the custom image column for photo journals
-            add_action( 'manage_sgu_journal_posts_custom_column', function( $_col, $_pid ) {
-
-                // check if we're rendering the image column
-                if( 'img' === $_col ) {
-
-                    // get the image URL from post meta
-                    $_img = get_post_meta( $_pid, 'sgu_journal_local_image', true );
-
-                    // get the attachment ID from the URL
-                    $_img_id = attachment_url_to_postid( $_img );
-
-                    // get the thumbnail size image source
-                    $_back_img = wp_get_attachment_image_src( $_img_id, 'thumbnail' );
-
-                    // if we got an array, use the URL, otherwise fallback to meta value
-                    $_back_img = is_array( $_back_img ) ? $_back_img[0] : $_img;
-
-                    // output the image tag
-                    echo '<img src="' . esc_url( $_back_img ) . '" alt="' . esc_attr( get_the_title( $_pid ) ) . '" style="height:150px;" />';
-
-                }
-
-            }, 10, 2);
-
             // setup APOD columns with media preview
             add_filter( 'manage_sgu_apod_posts_columns', function( $_cols ) {
 
@@ -183,7 +145,7 @@ if( ! class_exists( 'SGU_CPT_Admin_Cols' ) ) {
         private function cpt_links( ) : void {
 
             // define CPTs that should have restricted admin links
-            $cpts = ['sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_journal', 'sgu_apod'];
+            $cpts = ['sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_apod'];
 
             // remove edit, view, and quick edit links from post rows
             add_filter( 'post_row_actions', function( $acts, $post ) use ( $cpts ) {

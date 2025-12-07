@@ -782,7 +782,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
         }
 
         /** 
-         * insert_photo_journal
+         * insert_apod
          * 
          * Process the data from the sync and insert it
          * 
@@ -796,39 +796,56 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
          * @return bool This method returns the if it was successful or not
          * 
         */
-        public function insert_photo_journal( array $data ) : bool {
+        public function insert_apod( array $data ) : bool {
 
             // first things first, if there's no data, just dump out
             if( ! $data ) { return false; }
 
-            // fire up the feed parser
-            $parser = new SGU_RSS_Parser( );
-            $rss = $parser -> parse( $data[0], 'string' ) ?: [];
-            
-            // grab the items
-            $items = $rss['channel']['item'];
+            // setup the data we need
+            $title = sanitize_text_field( $data['title'] );
+            $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $data['date'] ) ) );
+            $content = sanitize_text_field ($data['explanation'] );
+            $media = sanitize_url( $data['hdurl'] );
+            $copyright = sanitize_text_field( ( array_key_exists( 'copyright', $data ) ) ? $data['copyright'] : 'NASA/JPL');
+            $media_type = sanitize_text_field ($data['media_type'] );
 
-            // loop over the items
-            foreach( $items as $item ) {
+            // get an existing item
+            $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_apod' ) ) ?: 0;
 
-                // setup the data we need
-                $title = $item['title'];
+            // setup the insertable arguments
+            $args = array(
+                'post_status' => 'publish',
+                'post_title' => $title,
+                'post_content' => $content,
+                'post_type' => 'sgu_apod',
+                'post_author' => 16,
+                'post_date' => $date,
+            );
 
-                echo PHP_EOL . '************************************************************************' . PHP_EOL;
-                var_dump($title);
-                echo PHP_EOL . '************************************************************************' . PHP_EOL;
+            // if there isn't one yet, insert it
+            if( $existing_id == 0 ) {
+                // insert and get the ID
+                $existing_id = wp_insert_post( $args );
 
             }
-          
-            // clean up
-            unset( $parser, $rss, $items );
 
-            // return
-            return true;
+            // update the media type
+            update_post_meta( $existing_id, 'sgu_apod_local_media_type', $media_type );
+
+            // update the original image field
+            update_post_meta( $existing_id, 'sgu_apod_orignal_media', $media );
+
+            // update the local media field to blank for now
+            update_post_meta( $existing_id, 'sgu_apod_local_media', '' );
+
+            // update the copyright
+            update_post_meta( $existing_id, 'sgu_apod_copyright', $copyright );
+
+            // return the boolean value from the id on insert
+            return filter_var( $existing_id, FILTER_VALIDATE_BOOLEAN );
 
         }
-
-
+        
 
         /** 
          * clean_up
@@ -851,7 +868,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
             global $wpdb;
 
             // this one will remove the posts that are duplciated on the title
-            $_rem_p_sql = "DELETE c1 FROM $wpdb->posts c1 INNER JOIN $wpdb->posts c2 WHERE ( c1.post_type IN ( 'sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_journal', 'sgu_apod' ) ) AND ( c1.id > c2.id AND c1.post_title = c2.post_title );";
+            $_rem_p_sql = "DELETE c1 FROM $wpdb->posts c1 INNER JOIN $wpdb->posts c2 WHERE ( c1.post_type IN ( 'sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_apod' ) ) AND ( c1.id > c2.id AND c1.post_title = c2.post_title );";
 
             // this one will get rid of the orphaned post meta data
             $_rem_pm_sql = "DELETE pm FROM $wpdb->postmeta pm LEFT JOIN $wpdb->posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;";

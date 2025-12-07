@@ -51,7 +51,6 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                 'sw' => 'space_weather_alerts',
                 'cme' => 'cme_alerts',
                 'neo' => 'neos',
-                'pj' => 'photo_journals',
                 'apod' => 'apods',
             );
 
