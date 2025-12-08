@@ -504,10 +504,10 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
             $title = $product . ' - ' . $issued;
             
             // get a post ID by the title
-            $the_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_geo_alerts' ) ) ?: 0;
+            $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_geo_alerts' ) ) ?: 0;
 
             // if the post ID is equals 0
-            if( $the_id == 0 ) {
+            if( $existing_id == 0 ) {
 
                 // the post arguments
                 $args = array(
@@ -520,12 +520,12 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
                 );
 
                 // insert and get the ID
-                $the_id = wp_insert_post( $args );
+                $existing_id = wp_insert_post( $args );
 
             }
 
             // return the boolean value from the id on insert
-            return filter_var( $the_id, FILTER_VALIDATE_BOOLEAN );
+            return filter_var( $existing_id, FILTER_VALIDATE_BOOLEAN );
 
         }
 
@@ -583,10 +583,10 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
                         );
 
                         // insert and get the ID
-                        $the_id = wp_insert_post( $args );
+                        $existing_id = wp_insert_post( $args );
 
                         // update the hazardous field
-                        update_post_meta( $the_id, 'sgu_neo_hazardous', $hazardous );
+                        update_post_meta( $existing_id, 'sgu_neo_hazardous', $hazardous );
 
                     }
 
@@ -805,7 +805,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
             $title = sanitize_text_field( $data['title'] );
             $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $data['date'] ) ) );
             $content = sanitize_text_field ($data['explanation'] );
-            $media = sanitize_url( $data['hdurl'] );
+            $media = sanitize_url( ( $data['hdurl'] ) ?? $data['url'] );
             $copyright = sanitize_text_field( ( array_key_exists( 'copyright', $data ) ) ? $data['copyright'] : 'NASA/JPL');
             $media_type = sanitize_text_field ($data['media_type'] );
 
