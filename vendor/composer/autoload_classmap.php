@@ -18,6 +18,7 @@ return array(
     'SGU_RSS_Parser' => $baseDir . '/work/inc/sgu-rss-parser.php',
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
     'SGU_Space_Data' => $baseDir . '/work/inc/data/sgu-space-data.php',
+    'SGU_Space_Imagery' => $baseDir . '/work/inc/data/sgu-space-imagery.php',
     'SGU_Space_Requests' => $baseDir . '/work/inc/api/sgu-space-requests.php',
     'SGU_Static' => $baseDir . '/work/inc/sgu-static.php',
     'SGU_Sync' => $baseDir . '/work/inc/sgu-sync.php',

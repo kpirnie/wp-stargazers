@@ -64,6 +64,9 @@ if( ! class_exists( 'SGU_Sync' ) ) {
 
         }
 
+        public function sync_both( ) : void {}
+
+
         /**
          * sync_data
          * 
@@ -122,13 +125,21 @@ if( ! class_exists( 'SGU_Sync' ) ) {
         public function sync_the_imagery( ) : void {
 
             // show a message that we're starting
-            $this -> cli_line( null, 'Starting the image sync...' );
+            $this -> cli_line( null, WP_CLI::colorize("%YStarting the image sync...%N") );
 
+            $imagery = new SGU_Space_Imagery( );
+
+            // sync the apod imagery
+            $imagery -> sync_apod_imagery( );
+
+            // clean up
+            unset( $imagery );
 
             // end message
-            $this -> cli_line( 'All set.' );
+            $this -> cli_line( WP_CLI::colorize("%GGood to Go!%N") );
 
         }
+
 
         /**
          * cli_line

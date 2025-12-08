@@ -71,6 +71,8 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
 
         }
 
+        
+
         /** 
          * get_the_data
          * 

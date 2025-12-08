@@ -58,6 +58,8 @@ if( defined( 'WP_CLI' ) ) {
             ['shortdesc' => 'This method syncs the remote data to WordPress.  We then utilize WP to display.'] );
         WP_CLI::add_command( 'sgu sync imagery', ['SGU_Sync', 'sync_the_imagery'], 
             ['shortdesc' => 'This method syncs the remote imagery to WordPress.  We then utilize WP to display.'] );
+        WP_CLI::add_command( 'sgu sync both', ['SGU_Sync', 'sync_both'], 
+            ['shortdesc' => 'This method syncs both the data and the imagery.  We then utilize WP to display.'] );
 
     }, PHP_INT_MAX );
 

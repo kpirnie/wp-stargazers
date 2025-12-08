@@ -380,6 +380,41 @@ if( ! class_exists( 'SGU_Static' ) ) {
         }
 
         /** 
+         * attachment_url_to_path
+         * 
+         * This method is utilized for converting a URI to a local path
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param string $_uri The uri of the file to check
+         * 
+         * @return bool|string Returns either false or the path of the file
+         * 
+        */
+        public static function attachment_url_to_path( string $_uri ) {
+
+            // parse the uri
+            $_parsed = parse_url( $_uri );
+
+            // check if it's empty
+            if( empty( $_parsed['path'] ) ) return false;
+
+            // grab the full local file path
+            $_file = ABSPATH . ltrim( $_parsed['path'], '/');
+
+            // if it does exist, return the file path
+            if( file_exists( $_file ) ) return $_file;
+
+            // default return false
+            return false;
+
+        }
+
+        /** 
          * get_archive_url
          * 
          * Get the URL for the photo journal archive page
