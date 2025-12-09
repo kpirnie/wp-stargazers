@@ -296,7 +296,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
          * @return object|bool This method returns the post objects or false if none are found
          * 
         */
-        public function get_home_apod( ) : object|bool {
+        public function get_apod( ) : object|bool {
 
             // check the cache
             $_apod = wp_cache_get( 'ussg_todays_apod', 'ussg_todays_apod' );
@@ -318,7 +318,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
                 // force the return to a stdClass object
                 $_apod = ( object ) $_res;
 
-                // set it to cache for a week
+                // set it to cache for a day
                 wp_cache_add( 'ussg_todays_apod', $_apod, 'ussg_todays_apod', DAY_IN_SECONDS );
 
             }
@@ -402,7 +402,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
                 // setup our arguments for the query
                 $_args = array(
                     'post_type' => 'sgu_apod', 
-                    'posts_per_page' => 5, 
+                    'posts_per_page' => 6, 
                     'orderby'=> 'date',
                     'order' => 'DESC',
                     'paged' => $_paged ?: 1
@@ -421,54 +421,6 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
 
             // return
             return $_apods;
-
-        }
-
-        /** 
-         * get_photojournals
-         * 
-         * This method returns the post objects or false if none are found
-         * 
-         * @since 8.0
-         * @access public
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package Stargazers.us Theme
-         * 
-         * @param int $_paged The current page of records we are on
-         * 
-         * @return object|bool This method returns the post objects or false if none are found
-         * 
-        */
-        public function get_photojournals( int $_paged = 1 ) : object|bool {
-
-            // check the cache
-            $_pjs = wp_cache_get( 'ussg_pjs_' . $_paged, 'ussg_pjs_' . $_paged );
-
-            // see if we have something in the cache for this
-            if( ! $_pjs ) {
-
-                // setup our arguments for the query
-                $_args = array(
-                    'post_type' => 'sgu_journal', 
-                    'posts_per_page' => 5, 
-                    'orderby'=> 'date',
-                    'order' => 'DESC',
-                    'paged' => $_paged ?: 1
-                );
-
-                // hold the results
-                $_pjs = new WP_Query( $_args );
-
-                // force the return to a stdClass object
-                $_pjs = ( object ) $_pjs;
-
-                // set it to cache for a week
-                wp_cache_add( 'ussg_pjs_' . $_paged, $_pjs, 'ussg_pjs_' . $_paged, DAY_IN_SECONDS );
-
-            }
-
-            // return
-            return $_pjs;
 
         }
 
@@ -850,35 +802,72 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
         /** 
          * clean_up
          * 
-         * This method is utilized to clean up our data. 
-         * Even though we are checking and attempting to avoid duplicates,
-         * somehow we still get them...
+         * This method is utilized to clean up our data using optimized bulk queries.
          * 
          * @since 8.0
          * @access public
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers
          * 
-         * @return void This method returns nothing
+         * @return int Number of posts removed
          * 
         */
-        public function clean_up( ) : void {
-
-            // we need our database global because we're going to run a couple custom queries
+        public function clean_up( ) : int {
             global $wpdb;
 
-            // this one will remove the posts that are duplciated on the title
-            $_rem_p_sql = "DELETE c1 FROM $wpdb->posts c1 INNER JOIN $wpdb->posts c2 WHERE ( c1.post_type IN ( 'sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_apod' ) ) AND ( c1.id > c2.id AND c1.post_title = c2.post_title );";
+            // Get count before cleanup (optional - remove if you don't need the count)
+            $before_count = $wpdb -> get_var( 
+                "SELECT COUNT(*) FROM $wpdb->posts 
+                WHERE post_type IN ('sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_apod')"
+            );
 
-            // this one will get rid of the orphaned post meta data
-            $_rem_pm_sql = "DELETE pm FROM $wpdb->postmeta pm LEFT JOIN $wpdb->posts wp ON wp.ID = pm.post_id WHERE wp.ID IS NULL;";
+            // Find duplicate IDs to delete using a subquery (much faster than self-join)
+            // This keeps the oldest post (lowest ID) for each title
+            $delete_ids = $wpdb -> get_col(
+                "SELECT p1.ID 
+                FROM $wpdb->posts p1
+                WHERE p1.post_type IN ('sgu_cme_alerts', 'sgu_sw_alerts', 'sgu_geo_alerts', 'sgu_sf_alerts', 'sgu_neo', 'sgu_apod')
+                AND EXISTS (
+                    SELECT 1 
+                    FROM $wpdb->posts p2 
+                    WHERE p2.post_title = p1.post_title 
+                    AND p2.post_type = p1.post_type
+                    AND p2.ID < p1.ID
+                )"
+            );
 
-            // run the post query
-            $wpdb -> query( $_rem_p_sql );
+            $removed_count = 0;
 
-            // run the postmeta query
-            $wpdb -> query( $_rem_pm_sql );
+            if( ! empty( $delete_ids ) ) {
+                // Delete in batches of 100 to avoid query length limits
+                $batches = array_chunk( $delete_ids, 100 );
+                
+                foreach( $batches as $batch ) {
+                    $ids_string = implode( ',', array_map( 'absint', $batch ) );
+                    
+                    // Delete post meta first
+                    $wpdb -> query( 
+                        "DELETE FROM $wpdb->postmeta WHERE post_id IN ($ids_string)" 
+                    );
+                    
+                    // Delete posts
+                    $wpdb -> query( 
+                        "DELETE FROM $wpdb->posts WHERE ID IN ($ids_string)" 
+                    );
+                }
+                
+                $removed_count = count( $delete_ids );
+            }
 
+            // Clean up orphaned post meta (any meta without a post)
+            // This is much faster with a LEFT JOIN than the original query
+            $wpdb -> query(
+                "DELETE pm FROM $wpdb->postmeta pm 
+                LEFT JOIN $wpdb->posts p ON p.ID = pm.post_id 
+                WHERE p.ID IS NULL"
+            );
+
+            return $removed_count;
         }
         
     }

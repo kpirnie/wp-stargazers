@@ -46,6 +46,9 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // add the neos content
             add_shortcode( 'sgup_neos', [ $this, 'add_neos' ] );
 
+            // add the apod
+            add_shortcode( 'sgup_apod', [ $this, 'add_apod' ] );
+
         }
 
         /** 
@@ -231,10 +234,9 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
         }
 
         /** 
-         * add_hero_slider
+         * add_apod
          * 
-         * Render the Hero Slider
-         * It contains both APOD's and Photo Journals
+         * Add an Astronomy Photo of the Day
          * 
          * @since 8.4
          * @access public
@@ -242,9 +244,57 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        public function add_hero_slider( array $atts = [] ) : string {
+        public function add_apod( array $atts = [] ) : string {
 
+            // setup the data we need to use
+            $space_data = new SGU_Space_Data( );
 
+            // get the data we neeed
+            $data = $space_data -> get_apod( );
+
+            // setup all the data we'll need for the template
+            $id = $data -> posts[0] -> ID;
+            $title = $data -> posts[0] -> post_title;
+            $content = $data -> posts[0] -> post_content;
+            $post_meta = get_post_meta( $id );
+
+            // setup the shortcode data
+            $sc_data = array(
+                'id' => $id,
+                'title' => $title,
+                'content' => $content,
+                'meta' => $post_meta
+            );
+
+            // Check theme for override first
+            $theme_template = locate_template( [
+                "templates/apod-sc.php",
+                "templates/apod-shortcode.php",
+            ] );
+
+            if( $theme_template ) {
+                $template = $theme_template;
+            } else {
+                // Use plugin template
+                $template = SGUP_PATH . '/templates/apod-sc.php';
+            }
+
+            // Check if template exists
+            if( ! file_exists( $template ) ) {
+                return '';
+            }
+
+            // Start output buffering
+            ob_start( );
+
+            // Extract attributes to variables
+            extract( $sc_data );
+
+            // Include the template
+            include $template;
+
+            // Return the buffered content
+            return ob_get_clean( );
 
         }
 

@@ -13,9 +13,6 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
-// we also only want to allow CLI access
-// defined( 'WP_CLI' ) || die( 'Only CLI access allowed' );
-
 if( ! class_exists( 'SGU_Sync' ) ) {
 
     /** 
@@ -29,145 +26,182 @@ if( ! class_exists( 'SGU_Sync' ) ) {
     */
     class SGU_Sync {
 
-        // hold the internal actions and database class
-        private array $actions;
+        private array $sync_types;
         private ?SGU_Space_Data $space_data; 
         private ?SGU_Space_Requests $space_requests; 
+        private ?SGU_Space_Imagery $space_imagery;
 
-        // we need an empty method, so let's use this
         public function __init( ): void {}
 
-        // fire up the class
         public function __construct( ) {
-
-            // set our space database and requests objects
             $this -> space_data = new SGU_Space_Data( );
             $this -> space_requests = new SGU_Space_Requests( );
+            $this -> space_imagery = new SGU_Space_Imagery( );
 
-            // set the actions array
-            $this -> actions = array( 
-                'geo' => 'geomagentic_alerts',
-                'sf' => 'solar_flare_alerts',
-                'sw' => 'space_weather_alerts',
-                'cme' => 'cme_alerts',
-                'neo' => 'neos',
-                'apod' => 'apods',
-            );
-
+            // Define all sync types with their display names
+            $this -> sync_types = [
+                'geo' => 'Geomagnetic Alerts',
+                'sf' => 'Solar Flare Alerts',
+                'sw' => 'Space Weather Alerts',
+                'cme' => 'CME Alerts',
+                'neo' => 'Near Earth Objects',
+                'apod' => 'Astronomy Photo of the Day',
+            ];
         }
 
-        // destroyer!
         public function __destruct( ) {
-
-            // clean up
-            unset( $this -> space_data, $this -> space_requests, $this -> actions );
-
+            unset( $this -> space_data, $this -> space_requests, $this -> space_imagery, $this -> sync_types );
         }
-
-        public function sync_both( ) : void {}
-
 
         /**
-         * sync_data
+         * sync_both
          * 
-         * pulls together all syncing methods for the api data
+         * Sync both data and imagery in one command
          * 
          * @since 8.4
          * @access public
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Stargazers Plugin
          * 
-         * @return void This method returns nothing
+         * @return void
+         */
+        public function sync_both( ) : void {
+            $this -> cli_line( null, WP_CLI::colorize("%YStarting combined data and imagery sync...%N") );
+            
+            // Sync data first
+            $this -> sync_the_data( );
+            
+            // Then sync imagery
+            $this -> sync_the_imagery( );
+            
+            $this -> cli_line( WP_CLI::colorize("%GAll syncing complete!%N") );
+        }
+
+        /**
+         * sync_the_data
+         * 
+         * Pulls together all syncing methods for the api data
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @return void
          */
         public function sync_the_data( ) : void {
-
-            // show a message that we're starting
             $this -> cli_line( null, WP_CLI::colorize("%YStarting the data sync...%N") );
 
-            // loop over the actions
-            foreach( $this -> actions as $which => $action ) {
+            $successes = 0;
+            $skipped = 0;
+            
+            // Loop over the sync types and process each
+            foreach( $this -> sync_types as $type => $display_name ) {
+                WP_CLI::line( WP_CLI::colorize("%CProcessing: $display_name%N") );
+                
+                $synced = $this -> space_requests -> process_sync_data( $type );
 
-                // process the data
-                $synced = $this -> space_requests -> process_sync_data( $which );
-
-                // if the sync was NOT successful
-                if( ! $synced ) {
-                    WP_CLI::error( "The sync for: $which was not successful.", false );
+                if( $synced ) {
+                    $successes++;
+                    WP_CLI::success( "$display_name synced successfully" );
+                } else {
+                    $skipped++;
+                    // Silently skip - no error message needed for items that don't update
                 }
-
             }
 
-            // clean up the data
-            WP_CLI::line( WP_CLI::colorize("%YCleaning the data...%N") );
-            //$this -> space_data -> clean_up( );
+            // Post-sync cleanup
+            $this -> perform_cleanup( );
 
-            // optimize the database
-            WP_CLI::line( WP_CLI::colorize("%YOptimizing the database...%N") );
-            //$_ = WP_CLI::runcommand( 'db optimize', ['return' => 'all'] );
-
-            // end message
-            $this -> cli_line( WP_CLI::colorize("%GGood to Go!%N") );
-
+            // Display final status
+            $total = $successes + $skipped;
+            $this -> cli_line( WP_CLI::colorize("%GData sync completed!%N") );
+            WP_CLI::line( "  - Processed: $total type(s)" );
+            WP_CLI::line( "  - Synced: $successes" );
+            if( $skipped > 0 ) {
+                WP_CLI::line( "  - Skipped: $skipped (no updates needed)" );
+            }
         }
 
         /**
-         * sync_imagery
+         * sync_the_imagery
          * 
-         * pulls together all syncing methods for the api imagery
+         * Pulls together all syncing methods for the api imagery
          * 
          * @since 8.4
          * @access public
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Stargazers Plugin
          * 
-         * @return void This method returns nothing
+         * @return void
          */
         public function sync_the_imagery( ) : void {
+            $this -> cli_line( null, WP_CLI::colorize("%YStarting the imagery sync...%N") );
 
-            // show a message that we're starting
-            $this -> cli_line( null, WP_CLI::colorize("%YStarting the image sync...%N") );
+            WP_CLI::line( WP_CLI::colorize("%CProcessing: APOD Imagery%N") );
+            
+            try {
+                $this -> space_imagery -> sync_apod_imagery( );
+                WP_CLI::success( "APOD imagery synced successfully" );
+            } catch ( Exception $e ) {
+                WP_CLI::error( "Failed to sync APOD imagery: " . $e -> getMessage(), false );
+            }
 
-            $imagery = new SGU_Space_Imagery( );
-
-            // sync the apod imagery
-            $imagery -> sync_apod_imagery( );
-
-            // clean up
-            unset( $imagery );
-
-            // end message
-            $this -> cli_line( WP_CLI::colorize("%GGood to Go!%N") );
-
+            $this -> cli_line( WP_CLI::colorize("%GImagery sync completed!%N") );
         }
 
+        /**
+         * perform_cleanup
+         * 
+         * Perform post-sync cleanup operations
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @return void
+         */
+        private function perform_cleanup( ) : void {
+            WP_CLI::line( WP_CLI::colorize("%YPerforming post-sync cleanup...%N") );
+            
+            // Clean up duplicate data
+            WP_CLI::line( "  - Removing duplicates..." );
+            $removed = $this -> space_data -> clean_up( );
+            WP_CLI::line( "    Removed $removed duplicate post(s)" );
+            
+            // Optimize database
+            WP_CLI::line( "  - Optimizing database..." );
+            WP_CLI::runcommand( 'db optimize', ['return' => 'all', 'launch' => false, 'exit_error' => false] );
+            
+            WP_CLI::success( "Cleanup completed" );
+        }
 
         /**
          * cli_line
          * 
-         * this method only displays a blue line to separate notices
-         * if before or after are passed, it displays the relevant string
+         * Display a separator line with optional before/after messages
          * 
          * @since 8.4
-         * @access public
+         * @access private
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Stargazers Plugin
          * 
-         * @return void This method returns nothing
+         * @param string|null $before Optional message before line
+         * @param string|null $after Optional message after line
+         * 
+         * @return void
          */
         private function cli_line( ?string $before = null, ?string $after = null ) : void {
-
-            // if there's a string before
             if( $before ) {
                 WP_CLI::line( $before );
             }
-            // show the line
+            
             WP_CLI::line( WP_CLI::colorize( '%B' . str_repeat( '*', 76 ) . '%n' ) );
-            // if there's a string after
+            
             if( $after ) {
                 WP_CLI::line( $after );
             }
         }
-
     }
-
 }

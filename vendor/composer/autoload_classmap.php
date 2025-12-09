@@ -13,7 +13,6 @@ return array(
     'SGU_CPT_Settings' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-settings.php',
     'SGU_CPT_Templates' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-templates.php',
     'SGU_CPTs' => $baseDir . '/work/inc/custom-post-types/sgu-cpts.php',
-    'SGU_Hero_Slider_Shortcode' => $baseDir . '/work/inc/shortcodes/sgu-hero-slider-shortcode.php',
     'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
     'SGU_RSS_Parser' => $baseDir . '/work/inc/sgu-rss-parser.php',
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
