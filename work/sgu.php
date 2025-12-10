@@ -49,7 +49,7 @@ if( ! class_exists( 'SGUP' ) ) {
                 [ 'class' => 'SGU_CPT_Admin_Cols', 'method' => null],                
                 [ 'class' => 'SGU_Settings', 'method' => null],
                 [ 'class' => 'SGU_Sync', 'method' => '__init'],
-
+                [ 'class' => 'SGU_Blocks', 'method' => null],
                 [ 'class' => 'SGU_Alert_Shortcodes', 'method' => null],
                 [ 'class' => 'SGU_Astro_Shortcodes', 'method' => null],
                 [ 'class' => 'SGU_Hero_Slider_Shortcode', 'method' => null],

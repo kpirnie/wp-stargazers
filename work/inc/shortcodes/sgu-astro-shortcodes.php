@@ -246,6 +246,11 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
         */
         public function add_apod( array $atts = [] ) : string {
 
+            // Set default values
+            $atts = shortcode_atts( [
+                'title' => 'Astronomy Photo of the Day',
+            ], $atts, 'sgup_apod' );
+
             // setup the data we need to use
             $space_data = new SGU_Space_Data( );
 
@@ -254,6 +259,7 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
 
             // setup all the data we'll need for the template
             $id = $data -> posts[0] -> ID;
+            $block_title = esc_html( $atts['title'] );
             $title = $data -> posts[0] -> post_title;
             $content = $data -> posts[0] -> post_content;
             $post_meta = get_post_meta( $id );
@@ -261,6 +267,7 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // setup the shortcode data
             $sc_data = array(
                 'id' => $id,
+                'block_title' => $block_title,
                 'title' => $title,
                 'content' => $content,
                 'meta' => $post_meta

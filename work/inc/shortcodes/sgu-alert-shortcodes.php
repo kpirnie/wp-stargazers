@@ -30,6 +30,12 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
         private int $paged;
         private SGU_Space_Data $space_data;
 
+        // fire us up
+        public function __construct( ) {
+            $this -> paged = SGU_Static::safe_get_paged_var( ) ?: 1;
+            $this -> space_data = new SGU_Space_Data( );
+        }
+
         /** 
          * init
          * 
@@ -42,12 +48,6 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
          * 
         */
         public function init( ): void { 
-
-            // setup the internal paged
-            $this -> paged = SGU_Static::safe_get_paged_var( ) ?: 1;
-
-            // setup the internal data class (single instance)
-            $this -> space_data = new SGU_Space_Data( );
 
             // add the latest alerts
             add_shortcode( 'sgup_latest_alerts', [ $this, 'render_latest_alerts' ] );

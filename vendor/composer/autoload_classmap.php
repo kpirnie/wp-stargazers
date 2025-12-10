@@ -9,6 +9,7 @@ return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'SGU_Alert_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-alert-shortcodes.php',
     'SGU_Astro_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-astro-shortcodes.php',
+    'SGU_Blocks' => $baseDir . '/work/inc/sgu-blocks.php',
     'SGU_CPT_Admin_Cols' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-admin-cols.php',
     'SGU_CPT_Settings' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-settings.php',
     'SGU_CPT_Templates' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-templates.php',
@@ -18,7 +19,7 @@ return array(
     'SGU_Settings' => $baseDir . '/work/inc/sgu-settings.php',
     'SGU_Space_Data' => $baseDir . '/work/inc/data/sgu-space-data.php',
     'SGU_Space_Imagery' => $baseDir . '/work/inc/data/sgu-space-imagery.php',
-    'SGU_Space_Requests' => $baseDir . '/work/inc/api/sgu-space-requests.php',
+    'SGU_Space_Requests' => $baseDir . '/work/inc/sgu-space-requests.php',
     'SGU_Static' => $baseDir . '/work/inc/sgu-static.php',
     'SGU_Sync' => $baseDir . '/work/inc/sgu-sync.php',
 );

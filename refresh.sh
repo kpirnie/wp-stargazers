@@ -21,12 +21,12 @@ composer update;
 composer dumpautoload -o -n;
 
 # Reinstall node_modules with correct permissions
-#rm -rf $PWD/node_modules && npm install && npx update-browserslist-db@latest
+rm -rf $PWD/node_modules && npm install
 
 # now refresh NPM
-#npm run build;
+npm run build;
 
-# just inn case php is caching
+# just in case php is caching
 service php8.4-fpm restart && service nginx reload
 
 # clear out our redis cache

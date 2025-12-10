@@ -42,7 +42,7 @@ add_action( 'init', function( ) {
     // clean up
     unset( $sgu );
     
-}, 999 );
+}, 5 );
 
 // hook into WP CLI initialization, if it's being utilized
 if( defined( 'WP_CLI' ) ) {

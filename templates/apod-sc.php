@@ -9,6 +9,7 @@
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
 ?>
+<h1><?php _e( $block_title, 'sgup' ); ?></h1>
 <h2><?php _e( $title, 'sgup' ); ?></h2>
 <div>
     <?php
