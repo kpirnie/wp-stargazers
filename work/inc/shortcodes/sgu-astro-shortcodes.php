@@ -27,6 +27,14 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
     */
     class SGU_Astro_Shortcodes {
 
+        // hold the internals
+        private ?SGU_Space_Data $space_data = null;
+
+        // fire us up
+        public function __construct( ) {
+            $this -> space_data = new SGU_Space_Data( );
+        }
+
         /** 
          * init
          * 
@@ -52,6 +60,52 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
         }
 
         /** 
+         * render_template
+         * 
+         * Consolidated template rendering with theme override support
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param string $template_path Relative path to template file
+         * @param array $data Data to extract as variables in template
+         * 
+         * @return string Rendered template content
+         * 
+        */
+        private function render_template( string $template_path, array $data ) : string {
+
+            // Check theme for override first
+            $theme_template = locate_template( [
+                "templates/$template_path",
+                "sgu/$template_path",
+                "stargazers/$template_path",
+            ] );
+
+            // Use theme template if found, otherwise plugin template
+            $template = $theme_template ?: SGUP_PATH . "/templates/$template_path";
+
+            // Check if template exists
+            if( ! file_exists( $template ) ) {
+                return '';
+            }
+
+            // Start output buffering
+            ob_start( );
+
+            // Extract attributes to variables
+            extract( $data );
+
+            // Include the template
+            include $template;
+
+            // Return the buffered content
+            return ob_get_clean( );
+        }
+
+        /** 
          * add_astro_nav
          * 
          * Render the astronomy menu
@@ -69,9 +123,20 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
                 'which' => 'astro-menu',
             ], $atts, 'sgup_astro_menu' );
             
+            $menu_slug = sanitize_text_field( $atts['which'] );
+            
+            // Create cache key for this specific menu
+            $cache_key = "sgup_astro_menu_{$menu_slug}";
+            
+            // Try to get cached menu
+            $cached = wp_cache_get( $cache_key, 'sgup_menus' );
+            if( $cached !== false ) {
+                return $cached;
+            }
+
             // configure the menu from our themes menus
             $alert_nav_conf = [
-                'menu' => sanitize_text_field( $atts['which'] ),
+                'menu' => $menu_slug,
                 'items_wrap' => '%3$s',
                 'depth' => 1,
                 'container' => null,
@@ -82,47 +147,15 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // get the menu
             $the_menu = wp_nav_menu( $alert_nav_conf );
 
-            // hold the data we're going to pass to the template
-            $sc_data = [
+            // Render the template
+            $output = $this -> render_template( 'menu.php', [
                 'the_menu' => $the_menu
-            ];
-
-            unset( $the_menu );
-
-            // Check theme for override first
-            $theme_template = locate_template( [
-                "templates/menu.php",
-                "sgu/menu.php",
-                "stargazers/menu.php",
             ] );
 
-            if( $theme_template ) {
-                $template = $theme_template;
-            } else {
-                // Use plugin template
-                $template = SGUP_PATH . '/templates/menu.php';
-            }
+            // Cache for 12 hours (menus don't change often)
+            wp_cache_set( $cache_key, $output, 'sgup_menus', 12 * HOUR_IN_SECONDS );
 
-            // Check if template exists
-            if( ! file_exists( $template ) ) {
-                return '';
-            }
-
-            // Start output buffering
-            ob_start( );
-
-            // Extract attributes to variables
-            extract( $sc_data );
-
-            // Include the template
-            include $template;
-
-            // clean up
-            unset( $sc_data );
-
-            // Return the buffered content
-            return ob_get_clean( );            
-
+            return $output;
         }
 
         /** 
@@ -146,67 +179,23 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
                 'per_page' => 6,
             ], $atts, 'sgup_neos' );
 
-            // setup the paged
-            $paged = SGU_Static::safe_get_paged_var( ) ?: 1;
+            // get the neos (reusing class instance)
+            $neos = $this -> space_data -> get_neos( SGU_Static::safe_get_paged_var( ) ?: 1 );
 
-            // setup the data we need to use
-            $space_data = new SGU_Space_Data( );
-
-            // get the neos
-            $neos = $space_data -> get_neos( $paged );
-
-            // setup the data we will pass to the template
-            $sc_data = [
+            // Render the template
+            return $this -> render_template( 'neos.php', [
                 'show_paging' => filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN ),
                 'max_pages' => $neos -> max_num_pages ?: 1,
                 'per_page' => absint( $atts['per_page'] ) ?: 6,
                 'paging_location' => sanitize_text_field( $atts['paging_location'] ),
-                'paged' => $paged,
+                'paged' => SGU_Static::safe_get_paged_var( ) ?: 1,
                 'show_map' => filter_var( $atts['show_map'], FILTER_VALIDATE_BOOLEAN ),
                 'data' => $neos,
-            ];
-
-            // clean up
-            unset( $neos );
-
-            // Check theme for override first
-            $theme_template = locate_template( [
-                "templates/neos.php",
-                "sgu/neos.php",
-                "stargazers/neos.php",
             ] );
-
-            if( $theme_template ) {
-                $template = $theme_template;
-            } else {
-                // Use plugin template
-                $template = SGUP_PATH . '/templates/neos.php';
-            }
-
-            // Check if template exists
-            if( ! file_exists( $template ) ) {
-                return '';
-            }
-
-            // Start output buffering
-            ob_start( );
-
-            // Extract attributes to variables
-            extract( $sc_data );
-
-            // Include the template
-            include $template;
-
-            // clean up
-            unset( $sc_data );
-
-            // Return the buffered content
-            return ob_get_clean( );            
-
         }
 
         /** 
-         * add_apod
+         * add_latest_apod
          * 
          * Add an Astronomy Photo of the Day
          * 
@@ -223,55 +212,25 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
                 'title' => 'Astronomy Photo of the Day',
             ], $atts, 'sgup_apod' );
 
-            // setup the data we need to use
-            $space_data = new SGU_Space_Data( );
+            // get the data we need (reusing class instance)
+            $data = $this -> space_data -> get_apod( );
 
-            // get the data we neeed
-            $data = $space_data -> get_apod( );
-
-            // setup the shortcode data
-            $sc_data = array(
-                'id' => $data -> posts[0] -> ID,
-                'block_title' => esc_html( $atts['title'] ),
-                'title' => $data -> posts[0] -> post_title,
-                'content' => $data -> posts[0] -> post_content,
-                'meta' => get_post_meta( $data -> posts[0] -> ID )
-            );
-
-            // Check theme for override first
-            $theme_template = locate_template( [
-                "templates/apod/home.php",
-                "sgu/apod/home.php",
-                "stargazers/apod/home.php",
-            ] );
-
-            if( $theme_template ) {
-                $template = $theme_template;
-            } else {
-                // Use plugin template
-                $template = SGUP_PATH . '/templates/apod/home.php';
-            }
-
-            // Check if template exists
-            if( ! file_exists( $template ) ) {
+            // Early return if no data
+            if( ! $data || empty( $data -> posts ) ) {
                 return '';
             }
 
-            // Start output buffering
-            ob_start( );
+            // setup the post
+            $post = $data -> posts[0];
 
-            // Extract attributes to variables
-            extract( $sc_data );
-
-            // Include the template
-            include $template;
-
-            // clean up
-            unset( $sc_data );
-
-            // Return the buffered content
-            return ob_get_clean( );
-
+            // Render the template
+            return $this -> render_template( 'apod/home.php', [
+                'id' => $post -> ID,
+                'block_title' => esc_html( $atts['title'] ),
+                'title' => $post -> post_title,
+                'content' => $post -> post_content,
+                'meta' => get_post_meta( $post -> ID )
+            ] );
         }
 
     }

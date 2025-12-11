@@ -2,7 +2,9 @@
 /** 
  * Space Requests
  * 
- * This file contains the space api requests
+ * This file contains the space API request methods for fetching astronomy data
+ * from external APIs (NASA DONKI, NOAA SWPC, etc.). Handles API authentication,
+ * request construction, response parsing, and delegates data storage to SGU_Space_Data.
  * 
  * @since 8.0
  * @author Kevin Pirnie <me@kpirnie.com>
@@ -19,7 +21,15 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
     /** 
      * Class SGU_Space_Requests
      * 
-     * The actual class making the space api requests
+     * Manages API requests to external space weather and astronomy services.
+     * Coordinates between API endpoints, authentication keys, and data storage.
+     * Implements caching for API keys and endpoints to reduce repeated option queries.
+     * 
+     * Key responsibilities:
+     * - Fetch data from NASA and NOAA APIs
+     * - Manage API key rotation and endpoint configuration
+     * - Parse JSON and plain text API responses
+     * - Delegate data storage to SGU_Space_Data class
      * 
      * @since 8.0
      * @access public
@@ -29,245 +39,327 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
     */
     class SGU_Space_Requests {
 
-        // hold the database object
+        /** 
+         * @var SGU_Space_Data|null Database handler instance for storing fetched data
+         */
         private ?SGU_Space_Data $space_data;
+        
+        /** 
+         * @var array In-memory cache of API keys to avoid repeated database queries
+         *            Keys are indexed by data type (cme, sf, neo, apod, etc.)
+         */
+        private array $keys_cache = [];
+        
+        /** 
+         * @var array In-memory cache of API endpoints to avoid repeated database queries
+         *            Endpoints are indexed by data type (cme, sf, neo, apod, etc.)
+         */
+        private array $endpoints_cache = [];
 
-        // fire us up
+        /** 
+         * __construct
+         * 
+         * Initialize the space requests handler.
+         * Creates the SGU_Space_Data instance that will handle all database operations.
+         * 
+         * @since 8.0
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+        */
         public function __construct( ) {
-
-            // setup the internal space data class object
+            // Initialize data handler for storing API responses
             $this -> space_data = new SGU_Space_Data( );
         }
 
         /** 
          * process_sync_data
          * 
-         * Process the data from the API's and 
-         * sync it to the database
+         * Main entry point for fetching and storing data from external APIs.
+         * Coordinates the complete workflow: fetch from API, parse response,
+         * and delegate to appropriate storage method.
+         * 
+         * Workflow:
+         * 1. Fetch raw data from API via get_the_data()
+         * 2. Match data type to appropriate insert method
+         * 3. Return success/failure status
          * 
          * @since 8.0
          * @access public
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package Stargazers.us Theme
          * 
-         * @return bool This method returns if the data was synced or not
+         * @param string $which Data type identifier (geo, neo, sf, sw, apod, cme)
+         * 
+         * @return bool True if data successfully stored, false on failure
          * 
         */
         public function process_sync_data( string $which ) : bool {
-
-            // get the data we need to process
+            
+            // Fetch raw data from appropriate API
             $data = $this -> get_the_data( $which );
 
-            // return the results from the match of the type
+            // Route data to correct storage method based on type
             return match( $which ) {
-                'geo' => $this -> space_data -> insert_geo( $data ),
-                'neo' => $this -> space_data -> insert_neo( $data ),
-                'sf' => $this -> space_data -> insert_solar_flare( $data ),
-                'sw' => $this -> space_data -> insert_space_weather( $data ),
-                'apod' => $this -> space_data -> insert_apod( $data ),
-                'cme' => $this -> space_data -> insert_cme( $data ),
-                default => true,
+                'geo' => $this -> space_data -> insert_geo( $data ),           // Geomagnetic forecasts
+                'neo' => $this -> space_data -> insert_neo( $data ),           // Near Earth Objects
+                'sf' => $this -> space_data -> insert_solar_flare( $data ),    // Solar flares
+                'sw' => $this -> space_data -> insert_space_weather( $data ),  // Space weather alerts
+                'apod' => $this -> space_data -> insert_apod( $data ),         // Astronomy Photo of the Day
+                'cme' => $this -> space_data -> insert_cme( $data ),           // Coronal Mass Ejections
+                default => true,                                                // Unknown type - skip silently
             };
-
         }
-
-        
 
         /** 
          * get_the_data
          * 
-         * Request the api data we'll need for processing
+         * Fetches raw data from external API endpoints.
+         * Handles API key rotation and constructs proper request URLs.
+         * 
+         * Process:
+         * 1. Load API keys for this data type
+         * 2. Load configured endpoints
+         * 3. For each endpoint:
+         *    - Select random API key (for rate limit distribution)
+         *    - Format URL with key
+         *    - Make HTTP request
+         * 4. Return first successful response
          * 
          * @since 8.4
          * @access private
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers
          * 
-         * @return array Returns an array containing the api data
+         * @param string $which Data type identifier (geo, neo, sf, sw, apod, cme)
+         * 
+         * @return array Parsed API response data, or empty array on failure
          * 
         */
         private function get_the_data( string $which ) : array {
-
-            // setup the return
-            $ret = [];
-
-            // get our api keys
+            
+            // Load API keys (cached after first call)
             $keys = $this -> get_keys( $which );
-
-            // now get our endpoints
+            
+            // Load endpoints (cached after first call)
             $endpoints = $this -> get_endpoints( $which );
+            
+            // Array to store responses
+            $ret = [];
         
-            // loop the endpoints
+            // Loop through configured endpoints (usually just one)
             foreach( $endpoints as $endpoint ) {
-
-                // get a random key from the list of our keys
-                $key = ( in_array( $which, ['cme', 'sf', 'neo', 'apod'] ) ) ? $keys[ array_rand( $keys, 1 ) ] : '';
                 
-                // format the url endpoint
+                // Select random API key if keys are required for this endpoint
+                // Some endpoints (NOAA) don't require keys, others (NASA) do
+                $key = ( in_array( $which, ['cme', 'sf', 'neo', 'apod'] ) ) 
+                    ? $keys[ array_rand( $keys, 1 ) ]  // Random key from pool
+                    : '';                               // No key needed
+                
+                // Format endpoint URL with API key
+                // Endpoint should contain %s placeholder for key
                 $url = sprintf( $endpoint, $key );
                 
-                // get the data
+                // Make HTTP request and parse response
                 $ret[] = $this -> request_data( $url );
-                
             }
 
-            // return the data
+            // Return first response (or empty array if all failed)
             return ( $ret[0] ) ?: [];
-
         }
 
         /** 
          * request_data
          * 
-         * Make the actual request
+         * Executes HTTP request to external API and parses response.
+         * Handles both JSON and plain text responses.
+         * 
+         * Process:
+         * 1. Make HTTP GET request with proper headers
+         * 2. Check for HTTP errors
+         * 3. Attempt JSON decode
+         * 4. Fall back to plain text if JSON decode fails
          * 
          * @since 8.4
          * @access private
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers
          * 
-         * @return array Returns an array containing the api data
+         * @param string $endpoint Full URL to request including any query parameters
+         * 
+         * @return array Parsed response data (JSON decoded or plain text), empty array on failure
          * 
         */
         private function request_data( string $endpoint ) : array {
+            
+            // Configure HTTP request parameters
+            $headers = [
+                'timeout' => 30,                                    // 30 second timeout for slow APIs
+                'redirection' => 1,                                 // Follow up to 1 redirect
+                'user-agent' => 'US Star Gazers ( iam@kevinpirnie.com )'  // Identify our application to API
+            ];
 
-            // setup some headers to pass along with the request
-            $headers = array(
-                'timeout' => 30,
-                'redirection' => 1,
-                'user-agent' => 'US Star Gazers ( iam@kevinpirnie.com )' // I use this to make requests from NASA's API, and they like to know who they are dealing with... feel free to change it
-            );
-
-            // hold the return
-            $ret = [];
-
-            // perform the request
+            // Execute WordPress HTTP GET request
             $request = wp_safe_remote_get( $endpoint, $headers );
 
-            // see if there's an error thrown
-            if ( is_wp_error( $request ) ) { return $ret; }
-
-            // hold the response
-            $resp = wp_remote_retrieve_body( $request );
-
-            // make sure we actually have a response body...
-            if( $resp ) {
-            
-                // try to decode the response
-                $ret = json_decode( $resp, true );
-                
-                // let's check for an error in the decoding
-                if( json_last_error( ) !== JSON_ERROR_NONE ) {
-                
-                    // there was an error, so the response is plain text
-                    $ret[] = $resp;
-                
-                }
-                
+            // Check for request errors (network failure, timeout, etc.)
+            if ( is_wp_error( $request ) ) { 
+                return []; 
             }
 
-            // cleanup
-            unset( $request, $resp, $headers );
+            // Extract response body
+            $resp = wp_remote_retrieve_body( $request );
 
-            // return the object
+            // Return empty if no body received
+            if( ! $resp ) {
+                return [];
+            }
+        
+            // Attempt to decode as JSON (most APIs use JSON)
+            $ret = json_decode( $resp, true );
+            
+            // Check if JSON decode failed (returns NULL on error)
+            if( json_last_error( ) !== JSON_ERROR_NONE ) {
+                // Not JSON - probably plain text (NOAA uses plain text)
+                // Wrap in array for consistent return type
+                $ret = [$resp];
+            }
+
             return $ret;
-
         }
 
         /** 
          * get_keys
          * 
-         * Get our API keys
+         * Retrieves API keys for the specified data type.
+         * Implements intelligent key management:
+         * - Some data types use shared CME keys (if configured)
+         * - Some data types don't require keys at all (NOAA)
+         * - Keys are cached in memory to avoid repeated database queries
+         * 
+         * API Key Strategy:
+         * - CME keys are the "master" key pool
+         * - SF, NEO, APOD can optionally share CME keys (saves API quota)
+         * - GEO and SW don't use keys (NOAA endpoints are open)
          * 
          * @since 8.0
          * @access private
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers
          * 
-         * @return array Returns an array of the configured keys
+         * @param string $type Data type identifier (geo, neo, sf, sw, apod, cme)
+         * 
+         * @return array Array of API keys (empty array if keys not required)
          * 
         */
         private function get_keys( string $type = '' ) : array {
+            
+            // Return cached keys if already loaded
+            if( isset( $this -> keys_cache[$type] ) ) {
+                return $this -> keys_cache[$type];
+            }
 
-            // get the CME keys by default
-            $cme_keys = SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_keys ?: [ ];
+            // Load CME keys as base - these might be shared by other types
+            $cme_keys = SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_keys ?: [];
 
-            // hold the return
-            $ret = match( $type ) {
-                'geo' => ( function( ) {
-                    // there's no keys necessary for this one
-                    return [];
-                } )( ),
+            // Determine which keys to use based on type and configuration
+            $this -> keys_cache[$type] = match( $type ) {
+                
+                // NOAA endpoints don't require API keys
+                'geo', 'sw' => [],
+                
+                // Solar Flare keys - check if user wants to share CME keys
                 'sf' => ( function( ) use( $cme_keys ) {
-                    // see if we are using CME keys, and if so return them
-                    $use_cme = filter_var( SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_use_cme ?: false, FILTER_VALIDATE_BOOLEAN );
-                    if( $use_cme ) {
-                        return $cme_keys;
-                    }
-                    // if we made it here, pull the flare keys and return them
-                    return SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_keys ?: [ ];
+                    // Get the "use CME keys" checkbox value
+                    $use_cme = filter_var( 
+                        SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_use_cme ?: false, 
+                        FILTER_VALIDATE_BOOLEAN 
+                    );
+                    
+                    // Return CME keys if sharing, otherwise get dedicated flare keys
+                    return $use_cme 
+                        ? $cme_keys 
+                        : ( SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_keys ?: [] );
                 } )( ),
-                'sw' => ( function( ) {
-                    // there's no keys necessary for this one
-                    return [];
-                } )( ),
+                
+                // NEO keys - check if user wants to share CME keys
                 'neo' => ( function( ) use( $cme_keys ) {
-                    // see if we are using CME keys, and if so return them
-                    $use_cme = filter_var( SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_cme ?: false, FILTER_VALIDATE_BOOLEAN );
-                    if( $use_cme ) {
-                        return $cme_keys;
-                    }
-                    // if we made it here, pull the flare keys and return them
-                    return SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_keys ?: [ ];
+                    // Get the "use CME keys" checkbox value
+                    $use_cme = filter_var( 
+                        SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_cme ?: false, 
+                        FILTER_VALIDATE_BOOLEAN 
+                    );
+                    
+                    // Return CME keys if sharing, otherwise get dedicated NEO keys
+                    return $use_cme 
+                        ? $cme_keys 
+                        : ( SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_keys ?: [] );
                 } )( ),
+                
+                // APOD keys - check if user wants to share CME keys
                 'apod' => ( function( ) use( $cme_keys ) {
-                    // see if we are using CME keys, and if so return them
-                    $use_cme = filter_var( SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_cme ?: false, FILTER_VALIDATE_BOOLEAN );
-                    if( $use_cme ) {
-                        return $cme_keys;
-                    }
-                    // if we made it here, pull the flare keys and return them
-                    return SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_keys ?: [ ];
+                    // Get the "use CME keys" checkbox value
+                    $use_cme = filter_var( 
+                        SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_cme ?: false, 
+                        FILTER_VALIDATE_BOOLEAN 
+                    );
+                    
+                    // Return CME keys if sharing, otherwise get dedicated APOD keys
+                    return $use_cme 
+                        ? $cme_keys 
+                        : ( SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_keys ?: [] );
                 } )( ),
+                
+                // CME and unknown types use CME keys by default
                 default => $cme_keys,
             };
 
-            // return them
-            return $ret;
+            return $this -> keys_cache[$type];
         }
 
         /** 
          * get_endpoints
          * 
-         * Get our API endpoints
+         * Retrieves API endpoint URLs for the specified data type.
+         * Endpoints are configured by users in WordPress admin settings.
+         * Results are cached in memory to avoid repeated database queries.
+         * 
+         * Endpoint Format:
+         * - Should contain %s placeholder for API key insertion
+         * - Example: "https://api.nasa.gov/DONKI/CME?api_key=%s"
+         * - NOAA endpoints don't need the placeholder (no keys)
          * 
          * @since 8.0
          * @access private
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers
          * 
-         * @return array Returns an array of the configured endpoints
+         * @param string $type Data type identifier (geo, neo, sf, sw, apod, cme)
+         * 
+         * @return array Array of endpoint URLs (empty array if none configured)
          * 
         */
         private function get_endpoints( string $type ) : array {
+            
+            // Return cached endpoints if already loaded
+            if( isset( $this -> endpoints_cache[$type] ) ) {
+                return $this -> endpoints_cache[$type];
+            }
 
-            // setup the return match
-            $ret = match( $type ) {
-                'cme' =>  ( array ) SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [ ],
-                'geo' => ( array ) SGU_Static::get_sgu_option( 'sgup_geomag_settings' ) -> sgup_geomag_endpoint ?: [ ],
-                'neo' => ( array ) SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [ ],
-                'sf' => ( array ) SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [ ],
-                'sw' => ( array ) SGU_Static::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [ ],
-                'apod' => ( array ) SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [ ],
-                default => [ ],
+            // Load endpoints from WordPress options based on type
+            // Each data type has its own settings page in admin
+            $this -> endpoints_cache[$type] = match( $type ) {
+                'cme' => (array) SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [],
+                'geo' => (array) SGU_Static::get_sgu_option( 'sgup_geomag_settings' ) -> sgup_geomag_endpoint ?: [],
+                'neo' => (array) SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [],
+                'sf' => (array) SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [],
+                'sw' => (array) SGU_Static::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [],
+                'apod' => (array) SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [],
+                default => [],  // Unknown type - return empty array
             };
 
-            // return the endpoint array
-            return $ret;
-
+            return $this -> endpoints_cache[$type];
         }
-
-
     }
-
 }
