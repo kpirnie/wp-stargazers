@@ -8,7 +8,7 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
-get_header( );
+get_header( );var_dump("APOD SINGLE");
 
 $title = esc_html( $post -> post_title );
 $content = apply_filters( 'the_content', $post -> post_content );

@@ -41,18 +41,18 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
         public function init( ): void { 
 
             // add the astronomy menu
-            add_shortcode( 'sgup_astro_menu', [ $this, 'add_main_astro_nav' ] );
+            add_shortcode( 'sgup_astro_menu', [ $this, 'add_astro_nav' ] );
 
             // add the neos content
             add_shortcode( 'sgup_neos', [ $this, 'add_neos' ] );
 
             // add the apod
-            add_shortcode( 'sgup_apod', [ $this, 'add_apod' ] );
+            add_shortcode( 'sgup_latest_apod', [ $this, 'add_latest_apod' ] );
 
         }
 
         /** 
-         * add_main_astro_nav
+         * add_astro_nav
          * 
          * Render the astronomy menu
          * 
@@ -62,11 +62,11 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        public function add_main_astro_nav( array $atts = [] ) : string {
+        public function add_astro_nav( array $atts = [] ) : string {
 
             // Set default values
             $atts = shortcode_atts( [
-                'which' => 'alert-menu',
+                'which' => 'astro-menu',
             ], $atts, 'sgup_astro_menu' );
             
             // configure the menu from our themes menus
@@ -82,16 +82,46 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // get the menu
             $the_menu = wp_nav_menu( $alert_nav_conf );
 
-            // return the html string
-            return <<<HTML
-            <nav class="uk-navbar-container uk-navbar-transparent uk-margin-bottom uk-overflow-auto" uk-navbar>
-                <div class="uk-navbar-center">
-                    <ul class="uk-navbar-nav page-nav-divider">
-                        $the_menu
-                    </ul>
-                </div>
-            </nav>
-            HTML;
+            // hold the data we're going to pass to the template
+            $sc_data = [
+                'the_menu' => $the_menu
+            ];
+
+            unset( $the_menu );
+
+            // Check theme for override first
+            $theme_template = locate_template( [
+                "templates/menu.php",
+                "sgu/menu.php",
+                "stargazers/menu.php",
+            ] );
+
+            if( $theme_template ) {
+                $template = $theme_template;
+            } else {
+                // Use plugin template
+                $template = SGUP_PATH . '/templates/menu.php';
+            }
+
+            // Check if template exists
+            if( ! file_exists( $template ) ) {
+                return '';
+            }
+
+            // Start output buffering
+            ob_start( );
+
+            // Extract attributes to variables
+            extract( $sc_data );
+
+            // Include the template
+            include $template;
+
+            // clean up
+            unset( $sc_data );
+
+            // Return the buffered content
+            return ob_get_clean( );            
 
         }
 
@@ -116,174 +146,41 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
                 'per_page' => 6,
             ], $atts, 'sgup_neos' );
 
-            // show the nasa asteroid map?
-            $show_map = filter_var( $atts['show_map'], FILTER_VALIDATE_BOOLEAN );
-
-            // show the pagination links?
-            $show_pagination = filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN );
-
-            // hold the paging location
-            $paging_loc = sanitize_text_field( $atts['paging_location'] );
-
-            // how many per page
-            $per_page = absint( $atts['per_page'] ) ?: 6;
-
-            // setup the paged 
-            $npaged = SGU_Static::safe_get_paged_var( ) ?: 1;
+            // setup the paged
+            $paged = SGU_Static::safe_get_paged_var( ) ?: 1;
 
             // setup the data we need to use
             $space_data = new SGU_Space_Data( );
 
             // get the neos
-            $neos = $space_data -> get_neos( $npaged );
+            $neos = $space_data -> get_neos( $paged );
+
+            // setup the data we will pass to the template
+            $sc_data = [
+                'show_paging' => filter_var( $atts['show_paging'], FILTER_VALIDATE_BOOLEAN ),
+                'max_pages' => $neos -> max_num_pages ?: 1,
+                'per_page' => absint( $atts['per_page'] ) ?: 6,
+                'paging_location' => sanitize_text_field( $atts['paging_location'] ),
+                'paged' => $paged,
+                'show_map' => filter_var( $atts['show_map'], FILTER_VALIDATE_BOOLEAN ),
+                'data' => $neos,
+            ];
 
             // clean up
-            unset( $space_data );
-
-            // if there is no data, just dump out
-            if( ! $neos ) { return ''; }
-
-            // hold the max pages
-            $max = $neos -> max_num_pages ?: 1;
-
-            // if we're showing the paging links, and it's either top or both
-            if( $show_pagination && in_array( $paging_loc, ['top', 'both'] ) ) {
-                $out[] = SGU_Static::cpt_pagination( $max, $npaged );
-            }
-
-            // open the display grid
-            $out[] = <<<HTML
-            <div uk-grid class="uk-child-width-1-2@s">
-            HTML;
-
-            // loop the data
-            foreach( $neos -> posts as $neo ) {
-
-                // setup the data needed
-                $content = maybe_unserialize( $neo -> post_content );
-                $title = esc_html( $neo -> post_title );
-                $date = esc_html( date( 'Y-m-d', strtotime( $neo -> post_date ) ) );
-                $magnitude = esc_html( $content -> magnitude );
-                $mindia = number_format( $content -> diameter -> kilometers['estimated_diameter_min'], 4 );
-                $maxdia = number_format( $content -> diameter -> kilometers['estimated_diameter_max'], 4 );
-                $hazard = SGU_Static::y_or_n( esc_html( $content -> hazardous ) );
-                $approach_date = esc_html( $content -> approach_data -> close_approach_date_full );
-                $approach_distance = number_format( $content -> approach_data -> miss_distance['kilometers'], 4 );
-                $approach_velocity = number_format( $content -> approach_data -> relative_velocity['kilometers_per_second'], 4 );
-                $approach_oribiting = esc_html( $content -> approach_data -> orbiting_body );
-                $link = esc_url( $content -> jpl_url );
-
-                // render the card
-                $out[] = <<<HTML
-                <div class="uk-card uk-card-small">
-                    <div class="uk-card-header uk-padding-small">
-                        <h3 class="uk-heading-divider uk-card-title">$title - <small>$date</small></h3>
-                    </div>
-                    <div class="uk-body uk-padding-small">
-                        <ul class="uk-list uk-list-disc">
-                            <li><strong>Magnitude:</strong> $magnitude</li>
-                            <li>
-                                <strong>Diameter:</strong>
-                                <ul class="uk-list uk-list-square uk-margin-remove-top">
-                                    <li><strong>Min:</strong> $mindia km</li>
-                                    <li><strong>Max:</strong> $maxdia km</li>
-                                </ul>
-                            </li>
-                            <li><strong>Hazardous:</strong> $hazard</li>
-                            <li>
-                                <strong>Approach Data:</strong>
-                                <ul class="uk-list uk-list-square uk-margin-remove-top">
-                                    <li><strong>Closest At:</strong> $approach_date</li>
-                                    <li><strong>Distance:</strong> $approach_distance km</li>
-                                    <li><strong>Velocity:</strong> $approach_velocity km/s</li>
-                                    <li><strong>Orbiting:</strong> $approach_oribiting</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <a href="$link" class="uk-button uk-button-secondary uk-align-right" target="_blank" title="$title">More Info</a>
-                    </div>
-                </div>
-                HTML;
-
-            }
-
-            // close the output
-            $out[] = <<<HTML
-            </div>
-            HTML;
-
-            // if we're showing the paging links, and it's either bottom or both
-            if( $show_pagination && in_array( $paging_loc, ['bottom', 'both'] ) ) {
-                $out[] = SGU_Static::cpt_pagination( $max, $npaged );
-            }
-
-            // if we're going to show the nasa map
-            if( $show_map ) {
-                $out[] = <<<HTML
-                <div class="uk-visible@s">
-                    <h2 class="uk-heading-divider">NASA Eyes on Asteroids</h2>
-                    <p>Fully interactive real-time map of all asteroids and NEO's in our Solar System.</p>
-                    <iframe src="https://eyes.nasa.gov/apps/asteroids/#/asteroids" style="width:100%;min-height:750px;"></iframe>
-                </div>
-                HTML;
-            }
-
-            // return the output
-            return implode( '', $out );
-
-        }
-
-        /** 
-         * add_apod
-         * 
-         * Add an Astronomy Photo of the Day
-         * 
-         * @since 8.4
-         * @access public
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Stargazers Plugin
-         * 
-        */
-        public function add_apod( array $atts = [] ) : string {
-
-            // Set default values
-            $atts = shortcode_atts( [
-                'title' => 'Astronomy Photo of the Day',
-            ], $atts, 'sgup_apod' );
-
-            // setup the data we need to use
-            $space_data = new SGU_Space_Data( );
-
-            // get the data we neeed
-            $data = $space_data -> get_apod( );
-
-            // setup all the data we'll need for the template
-            $id = $data -> posts[0] -> ID;
-            $block_title = esc_html( $atts['title'] );
-            $title = $data -> posts[0] -> post_title;
-            $content = $data -> posts[0] -> post_content;
-            $post_meta = get_post_meta( $id );
-
-            // setup the shortcode data
-            $sc_data = array(
-                'id' => $id,
-                'block_title' => $block_title,
-                'title' => $title,
-                'content' => $content,
-                'meta' => $post_meta
-            );
+            unset( $neos );
 
             // Check theme for override first
             $theme_template = locate_template( [
-                "templates/apod-sc.php",
-                "templates/apod-shortcode.php",
+                "templates/neos.php",
+                "sgu/neos.php",
+                "stargazers/neos.php",
             ] );
 
             if( $theme_template ) {
                 $template = $theme_template;
             } else {
                 // Use plugin template
-                $template = SGUP_PATH . '/templates/apod-sc.php';
+                $template = SGUP_PATH . '/templates/neos.php';
             }
 
             // Check if template exists
@@ -299,6 +196,78 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
 
             // Include the template
             include $template;
+
+            // clean up
+            unset( $sc_data );
+
+            // Return the buffered content
+            return ob_get_clean( );            
+
+        }
+
+        /** 
+         * add_apod
+         * 
+         * Add an Astronomy Photo of the Day
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        public function add_latest_apod( array $atts = [] ) : string {
+
+            // Set default values
+            $atts = shortcode_atts( [
+                'title' => 'Astronomy Photo of the Day',
+            ], $atts, 'sgup_apod' );
+
+            // setup the data we need to use
+            $space_data = new SGU_Space_Data( );
+
+            // get the data we neeed
+            $data = $space_data -> get_apod( );
+
+            // setup the shortcode data
+            $sc_data = array(
+                'id' => $data -> posts[0] -> ID,
+                'block_title' => esc_html( $atts['title'] ),
+                'title' => $data -> posts[0] -> post_title,
+                'content' => $data -> posts[0] -> post_content,
+                'meta' => get_post_meta( $data -> posts[0] -> ID )
+            );
+
+            // Check theme for override first
+            $theme_template = locate_template( [
+                "templates/apod/home.php",
+                "sgu/apod/home.php",
+                "stargazers/apod/home.php",
+            ] );
+
+            if( $theme_template ) {
+                $template = $theme_template;
+            } else {
+                // Use plugin template
+                $template = SGUP_PATH . '/templates/apod/home.php';
+            }
+
+            // Check if template exists
+            if( ! file_exists( $template ) ) {
+                return '';
+            }
+
+            // Start output buffering
+            ob_start( );
+
+            // Extract attributes to variables
+            extract( $sc_data );
+
+            // Include the template
+            include $template;
+
+            // clean up
+            unset( $sc_data );
 
             // Return the buffered content
             return ob_get_clean( );

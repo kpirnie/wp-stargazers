@@ -60,17 +60,43 @@ if( ! class_exists( 'SGU_CPT_Templates' ) ) {
          * 
         */
         public function cpt_template_loader( string $template ) : string {
-    
-            // Handle APOD single
-            if( is_singular( 'sgu_apod' ) ) {
-                return $this -> get_template( 'single-apod', $template );
+
+            // we'll need the global post
+            global $post;
+
+            // current post type
+            $currrent_post_type = $post -> post_type;
+
+            // hold an array of our CPTs that should have an archive and single post template
+            // i'm actually going to use this array for more than just the CPTs
+            $cpts = [
+                'apod' => 'sgu_apod',
+            ];
+
+            // now loop them
+            foreach( $cpts as $path => $cpt) {
+
+                // if the current post type matches
+                if( $cpt === $currrent_post_type ) {
+                    
+                    // Handle single for a single
+                    if( is_singular( $cpt ) ) {
+                        return $this -> get_template( "$path/single", $template );
+                    }
+
+                    // only load this if we're on the archive page for the CPT
+                    if( is_post_type_archive( $cpt ) ) {
+                        return $this -> get_template( "$path/archive", $template );
+                    }
+
+                    // default
+                    return $template;
+
+                }
+
             }
-            
-            // Handle APOD archive
-            if( is_post_type_archive( 'sgu_apod' ) ) {
-                return $this -> get_template( 'archive-apod', $template );
-            }
-            
+
+            // default return
             return $template;
         }
 
@@ -94,18 +120,17 @@ if( ! class_exists( 'SGU_CPT_Templates' ) ) {
     
             // Check theme for override first
             $theme_template = locate_template( [
-                "sgu-{$template_name}.php",
-                "templates/sgu-{$template_name}.php",
-                "partials/sgu-{$template_name}.php",
+                "templates/{$template_name}.php",
                 "sgu/{$template_name}.php",
-            ] );            
+                "stargazers/{$template_name}.php",
+            ] );          
             if( $theme_template ) {
                 return $theme_template;
             }
             
             // Use plugin template if it exists
             $plugin_template = SGUP_PATH . "/templates/{$template_name}.php";
-            if( file_exists( $plugin_template ) ) {
+            if( file_exists( $plugin_template ) ) { 
                 return $plugin_template;
             }
             

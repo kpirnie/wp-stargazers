@@ -136,13 +136,14 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/latest-alerts', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
-                    // Build shortcode string with title attribute
-                    $output = '[sgup_latest_alerts title="' . ($attributes['title'] ?? 'Latest Astronomy Alerts') . '"]';
-                    
-                    // Process shortcode and return rendered HTML
-                    $result = do_shortcode($output);
-                    
-                    return $result;
+
+                    // Instantiate shortcode handler
+                    $sc = new SGU_Alert_Shortcodes( );
+
+                    // Delegate to existing shortcode render method
+                    return $sc -> render_latest_alerts( [ 'title' => $attributes['title'] ?? 'Latest Astronomy Alerts', ], 
+                        '', 'sgup_latest_alerts' );
+
                 },
                 'attributes' => [
                     'title' => ['type' => 'string', 'default' => 'Latest Astronomy Alerts']
@@ -154,6 +155,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/cme-alerts', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate shortcode handler
                     $sc = new SGU_Alert_Shortcodes();
                     
@@ -177,6 +179,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/flare-alerts', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate shortcode handler
                     $sc = new SGU_Alert_Shortcodes();
                     
@@ -199,6 +202,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/sw-alerts', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate shortcode handler
                     $sc = new SGU_Alert_Shortcodes();
                     
@@ -221,6 +225,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/geomag-alerts', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate shortcode handler
                     $sc = new SGU_Alert_Shortcodes();
                     
@@ -244,11 +249,12 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/astro-menu', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate astronomy shortcode handler
                     $sc = new SGU_Astro_Shortcodes();
                     
                     // Delegate to menu generation method
-                    return $sc -> add_main_astro_nav( ['which' => $attributes['which'] ?? 'alert-menu'] );
+                    return $sc -> add_astro_nav( ['which' => $attributes['which'] ?? 'alert-menu'] );
                 },
                 'attributes' => [
                     'which' => ['type' => 'string', 'default' => 'alert-menu']
@@ -260,6 +266,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/neos', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate astronomy shortcode handler
                     $sc = new SGU_Astro_Shortcodes();
                     
@@ -285,11 +292,12 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             register_block_type( 'sgup/apod', [
                 'api_version' => 2,
                 'render_callback' => function( $attributes ) {
+
                     // Instantiate astronomy shortcode handler
                     $sc = new SGU_Astro_Shortcodes();
                     
                     // Delegate to APOD display method with title
-                    return $sc -> add_apod( ['title' => $attributes['title'] ?? 'Astronomy Picture of the Day'] );
+                    return $sc -> add_latest_apod( ['title' => $attributes['title'] ?? 'Astronomy Picture of the Day'] );
                 },
                 'attributes' => [
                     'title' => ['type' => 'string', 'default' => 'Astronomy Picture of the Day']

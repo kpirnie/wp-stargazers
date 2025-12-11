@@ -8,7 +8,7 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
-get_header( );
+get_header( );var_dump("APOD ARCHIVE");
 
 $space_data = new SGU_Space_Data();
 
