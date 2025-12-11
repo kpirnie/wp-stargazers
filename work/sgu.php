@@ -54,6 +54,9 @@ if( ! class_exists( 'SGUP' ) ) {
                 [ 'class' => 'SGU_Astro_Shortcodes', 'method' => null],
                 [ 'class' => 'SGU_Hero_Slider_Shortcode', 'method' => null],
                 [ 'class' => 'SGU_CPT_Templates', 'method' => null],
+                [ 'class' => 'SGU_Weather_Location', 'method' => null],
+                [ 'class' => 'SGU_Weather_Shortcodes', 'method' => null],
+                [ 'class' => 'SGU_Weather_Blocks', 'method' => null],
             );
 
             // loop over each item

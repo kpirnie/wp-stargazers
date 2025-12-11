@@ -7,3 +7,5 @@ import './geomag-alerts';
 import './latest-alerts';
 import './neos';
 import './sw-alerts';
+import './weather';
+

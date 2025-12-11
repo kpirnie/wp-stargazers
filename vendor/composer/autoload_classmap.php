@@ -22,4 +22,8 @@ return array(
     'SGU_Space_Requests' => $baseDir . '/work/inc/sgu-space-requests.php',
     'SGU_Static' => $baseDir . '/work/inc/sgu-static.php',
     'SGU_Sync' => $baseDir . '/work/inc/sgu-sync.php',
+    'SGU_Weather_Blocks' => $baseDir . '/work/inc/weather/sgu-weather-blocks.php',
+    'SGU_Weather_Data' => $baseDir . '/work/inc/weather/sgu-weather-data.php',
+    'SGU_Weather_Location' => $baseDir . '/work/inc/weather/sgu-weather-location.php',
+    'SGU_Weather_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-weather-shortcodes.php',
 );

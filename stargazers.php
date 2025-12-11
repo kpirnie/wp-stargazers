@@ -27,6 +27,9 @@ define( 'SGUP_DIRNAME', basename( dirname( __FILE__ ) ) );
 // setup the primary plugin file name
 define( 'SGUP_FILENAME', basename( __FILE__ ) );
 
+// let's define our plugin URI
+defined( 'SGUP_URI' ) || define( 'SGUP_URI', plugins_url( '', __FILE__ ) . '/' );
+
 // fire us up on initialization
 add_action( 'init', function( ) {
 
