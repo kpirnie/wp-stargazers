@@ -308,6 +308,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
                 'show_daily' => true,
                 'show_alerts' => true,
                 'show_noaa' => true,
+                'show_location_picker' => true,
             ], $atts, 'sgup_weather_full' );
 
             // Get location
@@ -321,6 +322,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
                 'show_daily' => filter_var( $atts['show_daily'], FILTER_VALIDATE_BOOLEAN ),
                 'show_alerts' => filter_var( $atts['show_alerts'], FILTER_VALIDATE_BOOLEAN ),
                 'show_noaa' => filter_var( $atts['show_noaa'], FILTER_VALIDATE_BOOLEAN ),
+                'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
                 'has_location' => (bool) $location,
                 'location' => $location,
                 'current_weather' => null,

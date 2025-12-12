@@ -272,6 +272,11 @@ registerBlockType('sgup/weather-full', {
                             checked={attributes.showNoaa}
                             onChange={(value) => setAttributes({ showNoaa: value })}
                         />
+                        <ToggleControl
+                            label="Show Location Picker"
+                            checked={attributes.showLocationPicker}
+                            onChange={(value) => setAttributes({ showLocationPicker: value })}
+                        />
                     </PanelBody>
                 </InspectorControls>
 

@@ -158,6 +158,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                         'show_daily' => $attributes['showDaily'] ?? true,
                         'show_alerts' => $attributes['showAlerts'] ?? true,
                         'show_noaa' => $attributes['showNoaa'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
                     ] );
                 },
                 'attributes' => [
@@ -167,6 +168,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     'showDaily' => [ 'type' => 'boolean', 'default' => true ],
                     'showAlerts' => [ 'type' => 'boolean', 'default' => true ],
                     'showNoaa' => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ], 
                 ]
             ] );
 
