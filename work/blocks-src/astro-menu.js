@@ -20,10 +20,17 @@ registerBlockType('sgup/astro-menu', {
                             onChange={(value) => setAttributes({ which: value })}
                             help="Enter the menu identifier (e.g., alert-menu)"
                         />
+                        <TextControl
+                            label="Text Align"
+                            value={attributes.text_align}
+                            onChange={(value) => setAttributes({ text_align: value })}
+                            help="Left or Right?"
+                        />
                         <ToggleControl
                             label="Is Inline?"
                             checked={attributes.is_inline}
                             onChange={(value) => setAttributes({ is_inline: value })}
+                            help="Should the menu be inline?"
                         />
                     </PanelBody>
                 </InspectorControls>
@@ -32,6 +39,8 @@ registerBlockType('sgup/astro-menu', {
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#f5f5f5', borderRadius: '4px' }}>
                         <h3 style={{ margin: '0 0 10px 0' }}>📋 Astronomy Menu</h3>
                         <p style={{ margin: 0, color: '#666' }}>Menu: {attributes.which}</p>
+                        <p style={{ margin: 0, color: '#666' }}>Text Alignment: {attributes.text_align}</p>
+                        <p style={{ margin: 0, color: '#666' }}>Is Inline: {attributes.is_inline}</p>
                     </div>
                 </div>
             </>

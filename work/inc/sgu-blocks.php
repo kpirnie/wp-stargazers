@@ -254,10 +254,14 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
                     $sc = new SGU_Astro_Shortcodes();
                     
                     // Delegate to menu generation method
-                    return $sc -> add_astro_nav( ['which' => $attributes['which'] ?? 'alert-menu', 'is_inline' => $attributes['is_inline'] ?? false, ] );
+                    return $sc -> add_astro_nav( [
+                        'which' => $attributes['which'] ?? 'alert-menu', 
+                        'is_inline' => $attributes['is_inline'] ?? false, 
+                        'text_align' => $attributes['text_align'] ?? 'left'] );
                 },
                 'attributes' => [
                     'which' => ['type' => 'string', 'default' => 'alert-menu'],
+                    'text_align' => ['type' => 'string', 'default' => 'left'],
                     'is_inline' => ['type' => 'boolean', 'default' => false],
                 ]
             ] );
