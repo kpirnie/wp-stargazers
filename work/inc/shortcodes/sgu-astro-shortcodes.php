@@ -121,9 +121,11 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'which' => 'astro-menu',
+                'is_inline' => false,
             ], $atts, 'sgup_astro_menu' );
             
             $menu_slug = sanitize_text_field( $atts['which'] );
+            $is_inline = filter_var( $atts['is_inline'], FILTER_VALIDATE_BOOLEAN );
             
             // Create cache key for this specific menu
             $cache_key = "sgup_astro_menu_{$menu_slug}";
@@ -149,7 +151,8 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
 
             // Render the template
             $output = $this -> render_template( 'menu.php', [
-                'the_menu' => $the_menu
+                'the_menu' => $the_menu,
+                'is_inline' => $is_inline
             ] );
 
             // Cache for 12 hours (menus don't change often)

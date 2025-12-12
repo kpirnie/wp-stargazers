@@ -1,6 +1,6 @@
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { registerBlockType } from '@wordpress/blocks';
-import { PanelBody, TextControl } from '@wordpress/components';
+import { PanelBody, TextControl, ToggleControl } from '@wordpress/components';
 
 registerBlockType('sgup/astro-menu', {
     title: 'Astronomy Menu',
@@ -19,6 +19,11 @@ registerBlockType('sgup/astro-menu', {
                             value={attributes.which}
                             onChange={(value) => setAttributes({ which: value })}
                             help="Enter the menu identifier (e.g., alert-menu)"
+                        />
+                        <ToggleControl
+                            label="Is Inline?"
+                            checked={attributes.is_inline}
+                            onChange={(value) => setAttributes({ is_inline: value })}
                         />
                     </PanelBody>
                 </InspectorControls>

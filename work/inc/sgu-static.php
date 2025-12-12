@@ -249,8 +249,8 @@ if( ! class_exists( 'SGU_Static' ) ) {
 
             // build our pagination links
             $page_links = paginate_links( [
-                'prev_text'          => ' <span uk-icon="icon: chevron-left"></span> ', 
-                'next_text'          => ' <span uk-icon="icon: chevron-right"></span> ', 
+                'prev_text'          => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>', 
+                'next_text'          => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>', 
                 'screen_reader_text' => ' ', 
                 'current'            => $current_page, 
                 'total'              => $max_pages, 
@@ -265,28 +265,36 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 return '';
             }
 
-            // open the pagination list
-            $out[] = '<ul class="uk-pagination uk-flex-center uk-margin-medium-top">';
+            // open the pagination container
+            $out[] = '<nav class="flex justify-center items-center gap-2 mt-8" role="navigation" aria-label="Pagination">';
 
             // add first page link if we're not on page 1
             if( $current_page > 1 ) {
                 $first_url = esc_url( get_pagenum_link( 1 ) );
-                $out[] = '<li><a href="' . $first_url . '"><span uk-icon="icon: chevron-double-left"></span></a></li>';
+                $out[] = '<a href="' . $first_url . '" class="inline-flex items-center justify-center w-10 h-10 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700" aria-label="First page">';
+                $out[] = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>';
+                $out[] = '</a>';
             }
 
-            // add each page link as a list item
+            // add each page link
             foreach( $page_links as $link ) {
-                $out[] = "<li>$link</li>";
+                // replace WordPress classes with Tailwind classes
+                $link = str_replace( 'page-numbers', 'inline-flex items-center justify-center min-w-10 h-10 px-3 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700', $link );
+                $link = str_replace( 'current', 'inline-flex items-center justify-center min-w-10 h-10 px-3 bg-cyan-600 text-white rounded-lg border border-cyan-500', $link );
+                $link = str_replace( 'dots', 'inline-flex items-center justify-center w-10 h-10 text-slate-400', $link );
+                $out[] = $link;
             }
 
             // add last page link if we're not on the last page
             if( $current_page < $max_pages ) {
                 $last_url = esc_url( get_pagenum_link( $max_pages ) );
-                $out[] = '<li><a href="' . $last_url . '"><span uk-icon="icon: chevron-double-right"></span></a></li>';
+                $out[] = '<a href="' . $last_url . '" class="inline-flex items-center justify-center w-10 h-10 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700" aria-label="Last page">';
+                $out[] = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>';
+                $out[] = '</a>';
             }
 
-            // close the pagination list
-            $out[] = '</ul>';
+            // close the pagination container
+            $out[] = '</nav>';
 
             // return the complete pagination HTML
             return implode( '', $out );
