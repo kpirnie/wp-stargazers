@@ -5,7 +5,7 @@ import { PanelBody, RangeControl, SelectControl, ToggleControl } from '@wordpres
 registerBlockType('sgup/geomag-alerts', {
     title: 'Geomagnetic Alerts',
     icon: 'warning',
-    category: 'widgets',
+    category: 'space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

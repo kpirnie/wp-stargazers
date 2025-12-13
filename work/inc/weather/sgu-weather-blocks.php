@@ -71,6 +71,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
             // Register Current Weather block
             register_block_type( 'sgup/weather-current', [
                 'api_version' => 2,
+                'category' => 'sgup_weather',
                 'render_callback' => function( $attributes ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_current_weather( [
@@ -89,6 +90,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
             // Register Daily Forecast block
             register_block_type( 'sgup/weather-daily', [
                 'api_version' => 2,
+                'category' => 'sgup_weather',
                 'render_callback' => function( $attributes ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_daily_forecast( [
@@ -111,6 +113,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
             // Register Weekly Forecast block
             register_block_type( 'sgup/weather-weekly', [
                 'api_version' => 2,
+                'category' => 'sgup_weather',
                 'render_callback' => function( $attributes ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_weekly_forecast( [
@@ -131,6 +134,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
             // Register Weather Alerts block
             register_block_type( 'sgup/weather-alerts', [
                 'api_version' => 2,
+                'category' => 'sgup_weather',
                 'render_callback' => function( $attributes ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_weather_alerts( [
@@ -149,6 +153,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
             // Register Full Weather Dashboard block
             register_block_type( 'sgup/weather-full', [
                 'api_version' => 2,
+                'category' => 'sgup_weather',
                 'render_callback' => function( $attributes ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_full_dashboard( [
@@ -175,6 +180,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
             // Register Location Picker block
             register_block_type( 'sgup/weather-location', [
                 'api_version' => 2,
+                'category' => 'sgup_weather',
                 'render_callback' => function( $attributes ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_location_picker( [

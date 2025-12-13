@@ -5,7 +5,7 @@ import { PanelBody, RangeControl, SelectControl, ToggleControl } from '@wordpres
 registerBlockType('sgup/flare-alerts', {
     title: 'Solar Flare Alerts',
     icon: 'warning',
-    category: 'widgets',
+    category: 'space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

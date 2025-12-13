@@ -5,7 +5,7 @@ import { PanelBody, TextControl } from '@wordpress/components';
 registerBlockType('sgup/latest-alerts', {
     title: 'Latest Astronomy Alerts',
     icon: 'warning',
-    category: 'widgets',
+    category: 'space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

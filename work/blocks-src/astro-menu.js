@@ -5,7 +5,7 @@ import { PanelBody, TextControl, ToggleControl } from '@wordpress/components';
 registerBlockType('sgup/astro-menu', {
     title: 'Astronomy Menu',
     icon: 'menu',
-    category: 'widgets',
+    category: 'space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

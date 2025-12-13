@@ -67,6 +67,10 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Enqueue JavaScript for block editor previews and controls
             // Only loads in wp-admin block editor, not on front-end
             add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ] );
+
+            // Hook into the filter
+            add_filter( 'block_categories_all', [ $this, 'register_block_categories' ], 5, 2 );
+
         }
 
         /** 
@@ -135,6 +139,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays the most recent astronomy alerts with a customizable title
             register_block_type( 'sgup/latest-alerts', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate shortcode handler
@@ -154,6 +159,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays CME alerts with optional pagination controls
             register_block_type( 'sgup/cme-alerts', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate shortcode handler
@@ -178,6 +184,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays solar flare event data with optional pagination
             register_block_type( 'sgup/flare-alerts', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate shortcode handler
@@ -201,6 +208,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays general space weather notifications with pagination
             register_block_type( 'sgup/sw-alerts', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate shortcode handler
@@ -224,6 +232,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays geomagnetic activity alerts with pagination options
             register_block_type( 'sgup/geomag-alerts', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate shortcode handler
@@ -248,6 +257,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // 'which' attribute determines which menu variation to show
             register_block_type( 'sgup/astro-menu', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate astronomy shortcode handler
@@ -270,6 +280,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays NEO tracking data with optional map visualization and pagination
             register_block_type( 'sgup/neos', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate astronomy shortcode handler
@@ -296,6 +307,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             // Displays NASA's APOD with image and description
             register_block_type( 'sgup/apod', [
                 'api_version' => 2,
+                'category' => 'sgup_space',
                 'render_callback' => function( $attributes ) {
 
                     // Instantiate astronomy shortcode handler
@@ -310,5 +322,40 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             ] );
 
         }
+
+        /** 
+         * register_block_categories
+         * 
+         * Register custom block categories
+         * 
+         * @since 0.0.1
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param array $categories Existing block categories
+         * 
+         * @return array Modified block categories
+         * 
+        */
+        public function register_block_categories( array $categories ) : array {
+
+            $all_categories = array_merge(
+                $categories,
+                [
+                    [
+                        'slug'  => 'sgup_space',
+                        'title' => __( 'Space', 'sgup' ),
+                    ],
+                    [
+                        'slug'  => 'sgup_weather',
+                        'title' => __( 'Weather', 'sgup' ),
+                    ],
+                ]
+            );
+
+            return $all_categories;
+        }
+
     }
 }

@@ -7,7 +7,7 @@ import { PanelBody, RangeControl, TextControl, ToggleControl } from '@wordpress/
 registerBlockType('sgup/weather-current', {
     title: 'Current Weather',
     icon: 'cloud',
-    category: 'widgets',
+    category: 'weather',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();
@@ -56,7 +56,7 @@ registerBlockType('sgup/weather-current', {
 registerBlockType('sgup/weather-daily', {
     title: 'Daily Weather Forecast',
     icon: 'calendar',
-    category: 'widgets',
+    category: 'weather',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();
@@ -125,7 +125,7 @@ registerBlockType('sgup/weather-daily', {
 registerBlockType('sgup/weather-weekly', {
     title: 'Weekly Weather Forecast',
     icon: 'calendar-alt',
-    category: 'widgets',
+    category: 'weather',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();
@@ -182,7 +182,7 @@ registerBlockType('sgup/weather-weekly', {
 registerBlockType('sgup/weather-alerts', {
     title: 'Weather Alerts',
     icon: 'warning',
-    category: 'widgets',
+    category: 'weather',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();
@@ -231,7 +231,7 @@ registerBlockType('sgup/weather-alerts', {
 registerBlockType('sgup/weather-full', {
     title: 'Weather Dashboard',
     icon: 'admin-site-alt3',
-    category: 'widgets',
+    category: 'weather',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();
@@ -307,7 +307,7 @@ registerBlockType('sgup/weather-full', {
 registerBlockType('sgup/weather-location', {
     title: 'Weather Location Picker',
     icon: 'location',
-    category: 'widgets',
+    category: 'weather',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

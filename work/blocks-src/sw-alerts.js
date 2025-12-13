@@ -5,7 +5,7 @@ import { PanelBody, RangeControl, SelectControl, ToggleControl } from '@wordpres
 registerBlockType('sgup/sw-alerts', {
     title: 'Space Weather Alerts',
     icon: 'warning',
-    category: 'widgets',
+    category: 'space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

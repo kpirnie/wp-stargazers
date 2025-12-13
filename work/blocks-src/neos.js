@@ -5,7 +5,7 @@ import { PanelBody, RangeControl, SelectControl, ToggleControl } from '@wordpres
 registerBlockType('sgup/neos', {
     title: 'Near Earth Objects',
     icon: 'admin-site',
-    category: 'widgets',
+    category: 'space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();
