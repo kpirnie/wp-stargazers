@@ -338,10 +338,10 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
          * @return array Modified block categories
          * 
         */
-        public function register_block_categories( array $categories ) : array {
+        public function register_block_categories( $categories, $post ) : array {
 
+            // merge our new categories in with the existing ones
             $all_categories = array_merge(
-                $categories,
                 [
                     [
                         'slug'  => 'sgup_space',
@@ -351,9 +351,11 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
                         'slug'  => 'sgup_weather',
                         'title' => __( 'Weather', 'sgup' ),
                     ],
-                ]
+                ],
+                $categories
             );
 
+            // return them
             return $all_categories;
         }
 
