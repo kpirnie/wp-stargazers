@@ -306,11 +306,21 @@ if( ! class_exists( 'SGU_Weather_Location' ) ) {
                 'weekly' => $weather_data -> get_daily_forecast( $lat, $lon ),
                 'noaa' => $weather_data -> get_noaa_forecast( $lat, $lon ),
                 'alerts' => $weather_data -> get_noaa_alerts( $lat, $lon ),
-                default => false,
+                default => null,
             };
 
-            if( ! $data ) {
-                wp_send_json_error( [ 'message' => 'Could not retrieve weather data' ] );
+            // Handle different return types - alerts returns array, others return object|bool
+            if( $type === 'alerts' ) {
+                // Alerts returns an array, empty array is valid (no alerts)
+                wp_send_json_success( [
+                    'weather' => $data,
+                    'type' => $type,
+                ] );
+            }
+
+            // For other types, check if we got valid data
+            if( $data === false || $data === null ) {
+                wp_send_json_error( [ 'message' => 'Could not retrieve weather data. Please check your API keys are configured.' ] );
             }
 
             wp_send_json_success( [

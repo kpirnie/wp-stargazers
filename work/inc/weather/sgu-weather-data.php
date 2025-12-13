@@ -3,7 +3,7 @@
  * Weather Data
  * 
  * This file contains the weather data methods for fetching and processing
- * weather information from OpenWeather and NOAA APIs.
+ * weather information from NOAA APIs.
  * 
  * @since 8.4
  * @author Kevin Pirnie <me@kpirnie.com>
@@ -14,14 +14,12 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
-// make sure this class does not already exist
 if( ! class_exists( 'SGU_Weather_Data' ) ) {
 
     /** 
      * Class SGU_Weather_Data
      * 
-     * Handles all weather data operations including API requests,
-     * data caching, and response formatting for display.
+     * Handles all weather data operations using NOAA APIs exclusively.
      * 
      * @since 8.4
      * @access public
@@ -32,19 +30,14 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
     class SGU_Weather_Data {
 
         /** 
-         * @var array In-memory cache of API keys
+         * @var array In-memory cache of grid point data
          */
-        private array $keys_cache = [];
-
-        /** 
-         * @var array In-memory cache of endpoints
-         */
-        private array $endpoints_cache = [];
+        private array $grid_cache = [];
 
         /** 
          * get_current_weather
          * 
-         * Get current weather conditions from OpenWeather API
+         * Get current weather conditions from NOAA API
          * 
          * @since 8.4
          * @access public
@@ -59,38 +52,78 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         */
         public function get_current_weather( float $lat, float $lon ) : object|bool {
 
-            // Build cache key based on location (rounded to 2 decimal places for cache efficiency)
-            $cache_key = sprintf( 'sgu_current_weather_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
+            // Build cache key
+            $cache_key = sprintf( 'sgu_noaa_current_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
             
-            // Check cache first (current weather cached for 30 minutes)
+            // Check cache (30 minutes)
             $cached = wp_cache_get( $cache_key, 'sgu_weather' );
             if( $cached !== false ) {
                 return $cached;
             }
 
-            // Get API key
-            $api_key = $this -> get_openweather_key( );
-            if( ! $api_key ) {
+            // Get grid point info first
+            $grid = $this -> get_grid_point( $lat, $lon );
+            if( ! $grid ) {
                 return false;
             }
 
-            // Build the OpenWeather API URL for current weather
-            $url = sprintf(
-                'https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s&units=imperial',
-                $lat,
-                $lon,
-                $api_key
-            );
-
-            // Make the request
-            $response = $this -> make_api_request( $url );
-
-            if( ! $response ) {
+            // Get observation stations
+            $stations_url = $grid['observationStations'] ?? null;
+            if( ! $stations_url ) {
                 return false;
             }
 
-            // Convert to object
-            $weather = (object) $response;
+            $stations_response = $this -> make_api_request( $stations_url );
+            if( ! $stations_response || empty( $stations_response['features'] ) ) {
+                return false;
+            }
+
+            // Get the nearest station
+            $station_id = $stations_response['features'][0]['properties']['stationIdentifier'] ?? null;
+            if( ! $station_id ) {
+                return false;
+            }
+
+            // Get latest observation from the station
+            $obs_url = sprintf( 'https://api.weather.gov/stations/%s/observations/latest', $station_id );
+            $obs_response = $this -> make_api_request( $obs_url );
+
+            if( ! $obs_response || ! isset( $obs_response['properties'] ) ) {
+                return false;
+            }
+
+            $props = $obs_response['properties'];
+
+            // Convert to object matching expected format
+            $weather = (object) [
+                'main' => (object) [
+                    'temp' => $this -> celsius_to_fahrenheit( $props['temperature']['value'] ?? null ),
+                    'feels_like' => $this -> celsius_to_fahrenheit( $props['windChill']['value'] ?? $props['temperature']['value'] ?? null ),
+                    'humidity' => $props['relativeHumidity']['value'] ?? 0,
+                    'pressure' => $props['barometricPressure']['value'] ? round( $props['barometricPressure']['value'] / 100 ) : 0,
+                ],
+                'weather' => [
+                    (object) [
+                        'description' => $props['textDescription'] ?? '',
+                        'icon' => $this -> noaa_icon_to_code( $props['icon'] ?? '' ),
+                    ]
+                ],
+                'wind' => (object) [
+                    'speed' => $this -> mps_to_mph( $props['windSpeed']['value'] ?? 0 ),
+                    'deg' => $props['windDirection']['value'] ?? 0,
+                ],
+                'visibility' => $props['visibility']['value'] ?? null,
+                'clouds' => (object) [
+                    'all' => $this -> extract_cloud_cover( $props['cloudLayers'] ?? [] ),
+                ],
+                'dt' => strtotime( $props['timestamp'] ?? 'now' ),
+                'sys' => (object) [
+                    'sunrise' => null,
+                    'sunset' => null,
+                ],
+                'name' => $grid['location']['city'] ?? '',
+                'state' => $grid['location']['state'] ?? '',
+            ];
 
             // Cache for 30 minutes
             wp_cache_set( $cache_key, $weather, 'sgu_weather', 30 * MINUTE_IN_SECONDS );
@@ -101,7 +134,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         /** 
          * get_hourly_forecast
          * 
-         * Get hourly forecast (up to 48 hours) from OpenWeather One Call API
+         * Get hourly forecast from NOAA API
          * 
          * @since 8.4
          * @access public
@@ -117,37 +150,53 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         public function get_hourly_forecast( float $lat, float $lon ) : object|bool {
 
             // Build cache key
-            $cache_key = sprintf( 'sgu_hourly_forecast_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
+            $cache_key = sprintf( 'sgu_noaa_hourly_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
             
-            // Check cache (hourly forecast cached for 1 hour)
+            // Check cache (1 hour)
             $cached = wp_cache_get( $cache_key, 'sgu_weather' );
             if( $cached !== false ) {
                 return $cached;
             }
 
-            // Get API key
-            $api_key = $this -> get_openweather_key( );
-            if( ! $api_key ) {
+            // Get grid point info
+            $grid = $this -> get_grid_point( $lat, $lon );
+            if( ! $grid ) {
                 return false;
             }
 
-            // Build the OpenWeather One Call API 3.0 URL
-            $url = sprintf(
-                'https://api.openweathermap.org/data/3.0/onecall?lat=%s&lon=%s&appid=%s&units=imperial&exclude=minutely,alerts',
-                $lat,
-                $lon,
-                $api_key
-            );
-
-            // Make the request
-            $response = $this -> make_api_request( $url );
-
-            if( ! $response ) {
+            // Get hourly forecast URL
+            $hourly_url = $grid['forecastHourly'] ?? null;
+            if( ! $hourly_url ) {
                 return false;
             }
 
-            // Convert to object
-            $forecast = (object) $response;
+            $response = $this -> make_api_request( $hourly_url );
+            if( ! $response || ! isset( $response['properties']['periods'] ) ) {
+                return false;
+            }
+
+            // Convert to expected format
+            $hourly = [];
+            foreach( $response['properties']['periods'] as $period ) {
+                $hourly[] = [
+                    'dt' => strtotime( $period['startTime'] ),
+                    'temp' => $period['temperature'],
+                    'weather' => [
+                        [
+                            'description' => $period['shortForecast'],
+                            'icon' => $this -> noaa_icon_to_code( $period['icon'] ?? '' ),
+                        ]
+                    ],
+                    'pop' => $this -> extract_precipitation_chance( $period['detailedForecast'] ?? '' ),
+                    'wind_speed' => $this -> extract_wind_speed( $period['windSpeed'] ?? '' ),
+                    'wind_deg' => $this -> wind_direction_to_degrees( $period['windDirection'] ?? '' ),
+                ];
+            }
+
+            $forecast = (object) [
+                'hourly' => $hourly,
+                'daily' => [], // Will be populated separately if needed
+            ];
 
             // Cache for 1 hour
             wp_cache_set( $cache_key, $forecast, 'sgu_weather', HOUR_IN_SECONDS );
@@ -158,7 +207,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         /** 
          * get_daily_forecast
          * 
-         * Get daily forecast (up to 8 days) from OpenWeather One Call API
+         * Get daily forecast from NOAA API
          * 
          * @since 8.4
          * @access public
@@ -174,40 +223,68 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         public function get_daily_forecast( float $lat, float $lon ) : object|bool {
 
             // Build cache key
-            $cache_key = sprintf( 'sgu_daily_forecast_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
+            $cache_key = sprintf( 'sgu_noaa_daily_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
             
-            // Check cache (daily forecast cached for 3 hours)
+            // Check cache (3 hours)
             $cached = wp_cache_get( $cache_key, 'sgu_weather' );
             if( $cached !== false ) {
                 return $cached;
             }
 
-            // Get API key
-            $api_key = $this -> get_openweather_key( );
-            if( ! $api_key ) {
+            // Get grid point info
+            $grid = $this -> get_grid_point( $lat, $lon );
+            if( ! $grid ) {
                 return false;
             }
 
-            // Build the OpenWeather One Call API 3.0 URL
-            $url = sprintf(
-                'https://api.openweathermap.org/data/3.0/onecall?lat=%s&lon=%s&appid=%s&units=imperial&exclude=minutely,hourly,alerts',
-                $lat,
-                $lon,
-                $api_key
-            );
-
-            // Make the request
-            $response = $this -> make_api_request( $url );
-
-            if( ! $response ) {
+            // Get forecast URL
+            $forecast_url = $grid['forecast'] ?? null;
+            if( ! $forecast_url ) {
                 return false;
             }
 
-            // Convert to object
-            $forecast = (object) $response;
+            $response = $this -> make_api_request( $forecast_url );
+            if( ! $response || ! isset( $response['properties']['periods'] ) ) {
+                return false;
+            }
+
+            // NOAA returns day/night periods, we need to combine them into daily forecasts
+            $daily = [];
+            $periods = $response['properties']['periods'];
+            
+            for( $i = 0; $i < count( $periods ); $i += 2 ) {
+                $day_period = $periods[$i] ?? null;
+                $night_period = $periods[$i + 1] ?? null;
+
+                if( ! $day_period ) continue;
+
+                $daily[] = [
+                    'dt' => strtotime( $day_period['startTime'] ),
+                    'temp' => [
+                        'max' => $day_period['temperature'] ?? 0,
+                        'min' => $night_period['temperature'] ?? $day_period['temperature'] ?? 0,
+                    ],
+                    'weather' => [
+                        [
+                            'description' => $day_period['shortForecast'],
+                            'icon' => $this -> noaa_icon_to_code( $day_period['icon'] ?? '' ),
+                        ]
+                    ],
+                    'pop' => $this -> extract_precipitation_chance( $day_period['detailedForecast'] ?? '' ),
+                    'summary' => $day_period['detailedForecast'] ?? '',
+                    'sunrise' => 0,
+                    'sunset' => 0,
+                    'uvi' => 0,
+                ];
+            }
+
+            $forecast = (object) [
+                'daily' => $daily,
+                'hourly' => [],
+            ];
 
             // Cache for 3 hours
-            wp_cache_set( $cache_key, $forecast, 'sgu_weather', 4 * HOUR_IN_SECONDS );
+            wp_cache_set( $cache_key, $forecast, 'sgu_weather', 3 * HOUR_IN_SECONDS );
 
             return $forecast;
         }
@@ -216,7 +293,6 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
          * get_noaa_forecast
          * 
          * Get detailed forecast from NOAA Weather API
-         * NOAA provides more detailed text forecasts for US locations
          * 
          * @since 8.4
          * @access public
@@ -234,61 +310,42 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
             // Build cache key
             $cache_key = sprintf( 'sgu_noaa_forecast_%s_%s', round( $lat, 4 ), round( $lon, 4 ) );
             
-            // Check cache (NOAA forecast cached for 1 hour)
+            // Check cache (1 hour)
             $cached = wp_cache_get( $cache_key, 'sgu_weather' );
             if( $cached !== false ) {
                 return $cached;
             }
 
-            // Step 1: Get the grid point from NOAA
-            $points_url = sprintf(
-                'https://api.weather.gov/points/%s,%s',
-                round( $lat, 4 ),
-                round( $lon, 4 )
-            );
-
-            $points_response = $this -> make_api_request( $points_url, true );
-
-            if( ! $points_response || ! isset( $points_response['properties'] ) ) {
+            // Get grid point info
+            $grid = $this -> get_grid_point( $lat, $lon );
+            if( ! $grid ) {
                 return false;
             }
 
-            // Step 2: Get the forecast URL from the points response
-            $forecast_url = $points_response['properties']['forecast'] ?? null;
-            $forecast_hourly_url = $points_response['properties']['forecastHourly'] ?? null;
-
+            // Get forecast URL
+            $forecast_url = $grid['forecast'] ?? null;
             if( ! $forecast_url ) {
                 return false;
             }
 
-            // Step 3: Get the actual forecast
-            $forecast_response = $this -> make_api_request( $forecast_url, true );
-
+            $forecast_response = $this -> make_api_request( $forecast_url );
             if( ! $forecast_response || ! isset( $forecast_response['properties'] ) ) {
                 return false;
             }
 
-            // Build comprehensive forecast object
+            // Build forecast object
             $forecast = (object) [
                 'location' => (object) [
-                    'city' => $points_response['properties']['relativeLocation']['properties']['city'] ?? '',
-                    'state' => $points_response['properties']['relativeLocation']['properties']['state'] ?? '',
-                    'gridId' => $points_response['properties']['gridId'] ?? '',
-                    'gridX' => $points_response['properties']['gridX'] ?? '',
-                    'gridY' => $points_response['properties']['gridY'] ?? '',
+                    'city' => $grid['location']['city'] ?? '',
+                    'state' => $grid['location']['state'] ?? '',
+                    'gridId' => $grid['gridId'] ?? '',
+                    'gridX' => $grid['gridX'] ?? '',
+                    'gridY' => $grid['gridY'] ?? '',
                 ],
                 'periods' => $forecast_response['properties']['periods'] ?? [],
                 'generatedAt' => $forecast_response['properties']['generatedAt'] ?? '',
                 'updateTime' => $forecast_response['properties']['updateTime'] ?? '',
             ];
-
-            // Optionally get hourly forecast
-            if( $forecast_hourly_url ) {
-                $hourly_response = $this -> make_api_request( $forecast_hourly_url, true );
-                if( $hourly_response && isset( $hourly_response['properties']['periods'] ) ) {
-                    $forecast -> hourly = $hourly_response['properties']['periods'];
-                }
-            }
 
             // Cache for 1 hour
             wp_cache_set( $cache_key, $forecast, 'sgu_weather', HOUR_IN_SECONDS );
@@ -317,7 +374,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
             // Build cache key
             $cache_key = sprintf( 'sgu_noaa_alerts_%s_%s', round( $lat, 2 ), round( $lon, 2 ) );
             
-            // Check cache (alerts cached for 15 minutes - they're time-sensitive)
+            // Check cache (15 minutes)
             $cached = wp_cache_get( $cache_key, 'sgu_weather' );
             if( $cached !== false ) {
                 return $cached;
@@ -330,7 +387,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
                 round( $lon, 4 )
             );
 
-            $response = $this -> make_api_request( $url, true );
+            $response = $this -> make_api_request( $url );
 
             if( ! $response || ! isset( $response['features'] ) ) {
                 return [];
@@ -362,7 +419,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         /** 
          * geocode_zip
          * 
-         * Convert a ZIP code to latitude/longitude coordinates
+         * Convert a ZIP code to latitude/longitude coordinates using Census Bureau API
          * 
          * @since 8.4
          * @access public
@@ -387,38 +444,38 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
             // Build cache key
             $cache_key = sprintf( 'sgu_geocode_zip_%s', $zip );
             
-            // Check cache (ZIP geocoding cached for 30 days - doesn't change)
+            // Check cache (30 days)
             $cached = wp_cache_get( $cache_key, 'sgu_weather' );
             if( $cached !== false ) {
                 return $cached;
             }
 
-            // Get API key
-            $api_key = $this -> get_openweather_key( );
-            if( ! $api_key ) {
+            // Use Census Bureau Geocoding API (free, no key required)
+            $url = sprintf(
+                'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=%s&benchmark=Public_AR_Current&format=json',
+                urlencode( $zip )
+            );
+
+            $response = $this -> make_api_request( $url, false );
+
+            if( ! $response || ! isset( $response['result']['addressMatches'][0] ) ) {
                 return false;
             }
 
-            // Use OpenWeather Geocoding API
-            $url = sprintf(
-                'https://api.openweathermap.org/geo/1.0/zip?zip=%s,US&appid=%s',
-                $zip,
-                $api_key
-            );
+            $match = $response['result']['addressMatches'][0];
+            $coords = $match['coordinates'] ?? [];
 
-            $response = $this -> make_api_request( $url );
-
-            if( ! $response || ! isset( $response['lat'] ) ) {
+            if( empty( $coords['x'] ) || empty( $coords['y'] ) ) {
                 return false;
             }
 
             // Build location object
             $location = (object) [
-                'lat' => (float) $response['lat'],
-                'lon' => (float) $response['lon'],
-                'name' => $response['name'] ?? '',
+                'lat' => (float) $coords['y'],
+                'lon' => (float) $coords['x'],
+                'name' => $match['matchedAddress'] ?? $zip,
                 'zip' => $zip,
-                'country' => $response['country'] ?? 'US',
+                'country' => 'US',
             ];
 
             // Cache for 30 days
@@ -430,7 +487,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         /** 
          * reverse_geocode
          * 
-         * Convert latitude/longitude to location name
+         * Convert latitude/longitude to location name using NOAA
          * 
          * @since 8.4
          * @access public
@@ -454,42 +511,95 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
                 return $cached;
             }
 
-            // Get API key
-            $api_key = $this -> get_openweather_key( );
-            if( ! $api_key ) {
+            // Get grid point info (includes location data)
+            $grid = $this -> get_grid_point( $lat, $lon );
+            if( ! $grid ) {
                 return false;
             }
-
-            // Use OpenWeather Reverse Geocoding API
-            $url = sprintf(
-                'https://api.openweathermap.org/geo/1.0/reverse?lat=%s&lon=%s&limit=1&appid=%s',
-                $lat,
-                $lon,
-                $api_key
-            );
-
-            $response = $this -> make_api_request( $url );
-
-            if( ! $response || empty( $response ) ) {
-                return false;
-            }
-
-            // Get first result
-            $data = $response[0];
 
             // Build location object
             $location = (object) [
-                'lat' => (float) $data['lat'],
-                'lon' => (float) $data['lon'],
-                'name' => $data['name'] ?? '',
-                'state' => $data['state'] ?? '',
-                'country' => $data['country'] ?? '',
+                'lat' => (float) $lat,
+                'lon' => (float) $lon,
+                'name' => $grid['location']['city'] ?? '',
+                'state' => $grid['location']['state'] ?? '',
+                'country' => 'US',
             ];
 
             // Cache for 30 days
             wp_cache_set( $cache_key, $location, 'sgu_weather', 30 * DAY_IN_SECONDS );
 
             return $location;
+        }
+
+        /** 
+         * get_grid_point
+         * 
+         * Get NOAA grid point data for coordinates (cached)
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param float $lat Latitude
+         * @param float $lon Longitude
+         * 
+         * @return array|bool Grid point data or false on failure
+         * 
+        */
+        private function get_grid_point( float $lat, float $lon ) : array|bool {
+
+            // Build cache key
+            $cache_key = sprintf( '%s_%s', round( $lat, 4 ), round( $lon, 4 ) );
+
+            // Check in-memory cache
+            if( isset( $this -> grid_cache[ $cache_key ] ) ) {
+                return $this -> grid_cache[ $cache_key ];
+            }
+
+            // Check WP cache (grid points don't change, cache for 7 days)
+            $wp_cache_key = sprintf( 'sgu_noaa_grid_%s', $cache_key );
+            $cached = wp_cache_get( $wp_cache_key, 'sgu_weather' );
+            if( $cached !== false ) {
+                $this -> grid_cache[ $cache_key ] = $cached;
+                return $cached;
+            }
+
+            // Get the grid point from NOAA
+            $points_url = sprintf(
+                'https://api.weather.gov/points/%s,%s',
+                round( $lat, 4 ),
+                round( $lon, 4 )
+            );
+
+            $response = $this -> make_api_request( $points_url );
+
+            if( ! $response || ! isset( $response['properties'] ) ) {
+                return false;
+            }
+
+            $props = $response['properties'];
+
+            // Build grid data array
+            $grid = [
+                'gridId' => $props['gridId'] ?? '',
+                'gridX' => $props['gridX'] ?? '',
+                'gridY' => $props['gridY'] ?? '',
+                'forecast' => $props['forecast'] ?? null,
+                'forecastHourly' => $props['forecastHourly'] ?? null,
+                'observationStations' => $props['observationStations'] ?? null,
+                'location' => [
+                    'city' => $props['relativeLocation']['properties']['city'] ?? '',
+                    'state' => $props['relativeLocation']['properties']['state'] ?? '',
+                ],
+            ];
+
+            // Cache in memory and WP
+            $this -> grid_cache[ $cache_key ] = $grid;
+            wp_cache_set( $wp_cache_key, $grid, 'sgu_weather', 7 * DAY_IN_SECONDS );
+
+            return $grid;
         }
 
         /** 
@@ -503,26 +613,27 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
          * @package US Star Gazers
          * 
          * @param string $url Full URL to request
-         * @param bool $is_noaa Whether this is a NOAA request (needs special headers)
+         * @param bool $is_noaa Whether this is a NOAA request (default true)
          * 
          * @return array|bool Parsed response or false on failure
          * 
         */
-        private function make_api_request( string $url, bool $is_noaa = false ) : array|bool {
+        private function make_api_request( string $url, bool $is_noaa = true ) : array|bool {
 
             // Configure HTTP request parameters
             $args = [
                 'timeout' => 30,
                 'redirection' => 3,
-                'user-agent' => 'US Star Gazers Weather ( iam@kevinpirnie.com )',
             ];
 
-            // NOAA requires Accept header
+            // NOAA requires specific headers
             if( $is_noaa ) {
                 $args['headers'] = [
                     'Accept' => 'application/geo+json',
                     'User-Agent' => '(US Star Gazers, iam@kevinpirnie.com)',
                 ];
+            } else {
+                $args['user-agent'] = 'US Star Gazers Weather ( iam@kevinpirnie.com )';
             }
 
             // Execute WordPress HTTP GET request
@@ -534,6 +645,9 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
                 return false; 
             }
 
+            // Extract response body
+            $body = wp_remote_retrieve_body( $request );
+
             // Check response code
             $response_code = wp_remote_retrieve_response_code( $request );
             if( $response_code !== 200 ) {
@@ -541,13 +655,10 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
                 return false;
             }
 
-            // Extract response body
-            $body = wp_remote_retrieve_body( $request );
-
             if( ! $body ) {
                 return false;
             }
-        
+
             // Decode JSON response
             $data = json_decode( $body, true );
             
@@ -561,39 +672,179 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
         }
 
         /** 
-         * get_openweather_key
+         * celsius_to_fahrenheit
          * 
-         * Get an OpenWeather API key from settings
+         * Convert Celsius to Fahrenheit
          * 
-         * @since 8.4
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @return string|bool API key or false if none configured
+         * @param float|null $celsius Temperature in Celsius
+         * @return float Temperature in Fahrenheit
          * 
         */
-        private function get_openweather_key( ) : string|bool {
-
-            // Check cache
-            if( isset( $this -> keys_cache['openweather'] ) ) {
-                return $this -> keys_cache['openweather'];
+        private function celsius_to_fahrenheit( ?float $celsius ) : float {
+            if( $celsius === null ) {
+                return 0;
             }
+            return round( ( $celsius * 9/5 ) + 32 );
+        }
 
-            // Get keys from settings
-            $keys = SGU_Static::get_sgu_option( 'sgup_apis' ) -> sgup_ow_keys ?? [];
-
-            if( empty( $keys ) ) {
-                return false;
+        /** 
+         * mps_to_mph
+         * 
+         * Convert meters per second to miles per hour
+         * 
+         * @param float|null $mps Speed in m/s
+         * @return float Speed in mph
+         * 
+        */
+        private function mps_to_mph( ?float $mps ) : float {
+            if( $mps === null ) {
+                return 0;
             }
+            return round( $mps * 2.237 );
+        }
 
-            // Select random key for rate limit distribution
-            $key = $keys[ array_rand( $keys ) ];
+        /** 
+         * noaa_icon_to_code
+         * 
+         * Convert NOAA icon URL to simple weather code
+         * 
+         * @param string $icon_url NOAA icon URL
+         * @return string Weather icon code
+         * 
+        */
+        private function noaa_icon_to_code( string $icon_url ) : string {
+            // Extract condition from NOAA icon URL
+            // Example: https://api.weather.gov/icons/land/day/skc
+            if( preg_match( '/icons\/land\/(day|night)\/([^,?]+)/', $icon_url, $matches ) ) {
+                $time = $matches[1] === 'day' ? 'd' : 'n';
+                $condition = $matches[2];
+                
+                // Map NOAA conditions to OpenWeather-style codes
+                $map = [
+                    'skc' => '01',      // Clear
+                    'few' => '02',      // Few clouds
+                    'sct' => '03',      // Scattered clouds
+                    'bkn' => '04',      // Broken clouds
+                    'ovc' => '04',      // Overcast
+                    'rain' => '10',     // Rain
+                    'rain_showers' => '09', // Showers
+                    'tsra' => '11',     // Thunderstorm
+                    'snow' => '13',     // Snow
+                    'fog' => '50',      // Fog
+                ];
+                
+                $code = $map[ $condition ] ?? '01';
+                return $code . $time;
+            }
+            
+            return '01d';
+        }
 
-            // Cache it
-            $this -> keys_cache['openweather'] = $key;
+        /** 
+         * extract_cloud_cover
+         * 
+         * Extract cloud cover percentage from NOAA cloud layers
+         * 
+         * @param array $layers Cloud layer data
+         * @return int Cloud cover percentage
+         * 
+        */
+        private function extract_cloud_cover( array $layers ) : int {
+            if( empty( $layers ) ) {
+                return 0;
+            }
+            
+            $coverage_map = [
+                'CLR' => 0,
+                'FEW' => 25,
+                'SCT' => 50,
+                'BKN' => 75,
+                'OVC' => 100,
+            ];
+            
+            $max_cover = 0;
+            foreach( $layers as $layer ) {
+                $amount = $layer['amount'] ?? '';
+                $cover = $coverage_map[ $amount ] ?? 0;
+                $max_cover = max( $max_cover, $cover );
+            }
+            
+            return $max_cover;
+        }
 
-            return $key;
+        /** 
+         * extract_precipitation_chance
+         * 
+         * Extract precipitation chance from forecast text
+         * 
+         * @param string $text Detailed forecast text
+         * @return float Precipitation probability (0-1)
+         * 
+        */
+        private function extract_precipitation_chance( string $text ) : float {
+            // Look for percentage in text like "Chance of precipitation is 40%"
+            if( preg_match( '/(\d+)\s*%/', $text, $matches ) ) {
+                return (float) $matches[1] / 100;
+            }
+            
+            // Check for keywords
+            $keywords = [
+                'slight chance' => 0.2,
+                'chance' => 0.4,
+                'likely' => 0.7,
+                'rain' => 0.5,
+                'showers' => 0.5,
+                'thunderstorms' => 0.5,
+                'snow' => 0.5,
+            ];
+            
+            $text_lower = strtolower( $text );
+            foreach( $keywords as $keyword => $prob ) {
+                if( strpos( $text_lower, $keyword ) !== false ) {
+                    return $prob;
+                }
+            }
+            
+            return 0;
+        }
+
+        /** 
+         * extract_wind_speed
+         * 
+         * Extract wind speed from NOAA wind string
+         * 
+         * @param string $wind_str Wind string like "10 to 15 mph"
+         * @return float Wind speed in mph
+         * 
+        */
+        private function extract_wind_speed( string $wind_str ) : float {
+            if( preg_match( '/(\d+)\s*to\s*(\d+)/', $wind_str, $matches ) ) {
+                return ( (float) $matches[1] + (float) $matches[2] ) / 2;
+            }
+            if( preg_match( '/(\d+)/', $wind_str, $matches ) ) {
+                return (float) $matches[1];
+            }
+            return 0;
+        }
+
+        /** 
+         * wind_direction_to_degrees
+         * 
+         * Convert wind direction string to degrees
+         * 
+         * @param string $direction Wind direction like "NW"
+         * @return int Degrees
+         * 
+        */
+        private function wind_direction_to_degrees( string $direction ) : int {
+            $directions = [
+                'N' => 0, 'NNE' => 22, 'NE' => 45, 'ENE' => 67,
+                'E' => 90, 'ESE' => 112, 'SE' => 135, 'SSE' => 157,
+                'S' => 180, 'SSW' => 202, 'SW' => 225, 'WSW' => 247,
+                'W' => 270, 'WNW' => 292, 'NW' => 315, 'NNW' => 337,
+            ];
+            
+            return $directions[ strtoupper( $direction ) ] ?? 0;
         }
 
     }
