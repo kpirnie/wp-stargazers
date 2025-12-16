@@ -90,7 +90,7 @@ registerBlockType('sgup/weather-daily', {
                             />
                         )}
                         <ToggleControl
-                            label="Include NOAA Forecast"
+                            label="Include Today's Forecast"
                             checked={attributes.useNoaa}
                             onChange={(value) => setAttributes({ useNoaa: value })}
                             help="Include detailed text forecast from NOAA"
@@ -109,7 +109,7 @@ registerBlockType('sgup/weather-daily', {
                         )}
                         {attributes.useNoaa && (
                             <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
-                                <em>NOAA forecast enabled</em>
+                                <em>Including today's forecast</em>
                             </p>
                         )}
                     </div>
@@ -152,7 +152,7 @@ registerBlockType('sgup/weather-weekly', {
                             max={8}
                         />
                         <ToggleControl
-                            label="Include NOAA Forecast"
+                            label="Include Today's Forecast"
                             checked={attributes.useNoaa}
                             onChange={(value) => setAttributes({ useNoaa: value })}
                             help="Include detailed text forecast from NOAA"
@@ -166,7 +166,7 @@ registerBlockType('sgup/weather-weekly', {
                         <p style={{ margin: 0, color: '#666' }}>{attributes.daysToShow}-day forecast will display here.</p>
                         {attributes.useNoaa && (
                             <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
-                                <em>NOAA forecast enabled</em>
+                                <em>Including today's forecast</em>
                             </p>
                         )}
                     </div>
@@ -214,7 +214,7 @@ registerBlockType('sgup/weather-alerts', {
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#ffe6e6', borderRadius: '4px' }}>
                         <h3 style={{ margin: '0 0 10px 0' }}>⚠️ {attributes.title}</h3>
-                        <p style={{ margin: 0, color: '#666' }}>NOAA weather alerts will display here when active.</p>
+                        <p style={{ margin: 0, color: '#666' }}>Weather alerts will display here when active.</p>
                         <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
                             <em>Showing up to {attributes.maxAlerts} alerts</em>
                         </p>
@@ -253,12 +253,17 @@ registerBlockType('sgup/weather-full', {
                             onChange={(value) => setAttributes({ showCurrent: value })}
                         />
                         <ToggleControl
+                            label="Show Today's Forecast"
+                            checked={attributes.showNoaa}
+                            onChange={(value) => setAttributes({ showNoaa: value })}
+                        />
+                        <ToggleControl
                             label="Show Hourly Forecast"
                             checked={attributes.showHourly}
                             onChange={(value) => setAttributes({ showHourly: value })}
                         />
                         <ToggleControl
-                            label="Show Daily Forecast"
+                            label="Show 7-Day Forecast"
                             checked={attributes.showDaily}
                             onChange={(value) => setAttributes({ showDaily: value })}
                         />
@@ -266,11 +271,6 @@ registerBlockType('sgup/weather-full', {
                             label="Show Weather Alerts"
                             checked={attributes.showAlerts}
                             onChange={(value) => setAttributes({ showAlerts: value })}
-                        />
-                        <ToggleControl
-                            label="Show NOAA Forecast"
-                            checked={attributes.showNoaa}
-                            onChange={(value) => setAttributes({ showNoaa: value })}
                         />
                         <ToggleControl
                             label="Show Location Picker"
@@ -288,10 +288,11 @@ registerBlockType('sgup/weather-full', {
                             <strong>Active Components:</strong>
                             <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
                                 {attributes.showCurrent && <li>Current Weather</li>}
+                                {attributes.showNoaa && <li>Today's Forecast</li>}
                                 {attributes.showHourly && <li>Hourly Forecast</li>}
-                                {attributes.showDaily && <li>Daily Forecast</li>}
+                                {attributes.showDaily && <li>7 Day Forecast</li>}
                                 {attributes.showAlerts && <li>Weather Alerts</li>}
-                                {attributes.showNoaa && <li>NOAA Forecast</li>}
+                                {attributes.showLocationPicker && <li>Location Picker</li>}
                             </ul>
                         </div>
                     </div>

@@ -40,7 +40,7 @@ registerBlockType('sgup/astro-menu', {
                         <h3 style={{ margin: '0 0 10px 0' }}>📋 Astronomy Menu</h3>
                         <p style={{ margin: 0, color: '#666' }}>Menu: {attributes.which}</p>
                         <p style={{ margin: 0, color: '#666' }}>Text Alignment: {attributes.text_align}</p>
-                        <p style={{ margin: 0, color: '#666' }}>Is Inline: {attributes.is_inline}</p>
+                        {attributes.is_inline && <p style={{ margin: 0, color: '#666' }}>Is Inline</p>}
                     </div>
                 </div>
             </>
