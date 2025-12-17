@@ -450,30 +450,27 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
                 return $cached;
             }
 
-            // Use Census Bureau Geocoding API (free, no key required)
-            $url = sprintf(
-                'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=%s&benchmark=Public_AR_Current&format=json',
-                urlencode( $zip )
-            );
+            // Use Zippopotam.us API (free, no key required, reliable for ZIP codes)
+            $url = sprintf( 'https://api.zippopotam.us/us/%s', $zip );
 
             $response = $this -> make_api_request( $url, false );
 
-            if( ! $response || ! isset( $response['result']['addressMatches'][0] ) ) {
+            if( ! $response || ! isset( $response['places'][0] ) ) {
                 return false;
             }
 
-            $match = $response['result']['addressMatches'][0];
-            $coords = $match['coordinates'] ?? [];
+            $place = $response['places'][0];
 
-            if( empty( $coords['x'] ) || empty( $coords['y'] ) ) {
+            if( empty( $place['latitude'] ) || empty( $place['longitude'] ) ) {
                 return false;
             }
 
             // Build location object
             $location = (object) [
-                'lat' => (float) $coords['y'],
-                'lon' => (float) $coords['x'],
-                'name' => $match['matchedAddress'] ?? $zip,
+                'lat' => (float) $place['latitude'],
+                'lon' => (float) $place['longitude'],
+                'name' => $place['place name'] ?? $zip,
+                'state' => $place['state abbreviation'] ?? '',
                 'zip' => $zip,
                 'country' => 'US',
             ];
@@ -483,7 +480,7 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
 
             return $location;
         }
-
+        
         /** 
          * reverse_geocode
          * 

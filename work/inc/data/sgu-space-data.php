@@ -198,7 +198,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
          * 
         */
         public function get_space_weather_alerts( int $paged = 1 ) : object|bool {
-            return $this -> get_paginated_posts( 'sgu_sw_alerts', $paged, 5, 'ussg_space_weather_alerts' );
+            return $this -> get_paginated_posts( 'sgu_sw_alerts', $paged, 6, 'ussg_space_weather_alerts' );
         }
 
         /** 
@@ -218,7 +218,7 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
          * 
         */
         public function get_geo_magnetic_alerts( int $paged = 1 ) : object|bool {
-            return $this -> get_paginated_posts( 'sgu_geo_alerts', $paged, 5, 'ussg_geo_magnetic_alerts' );
+            return $this -> get_paginated_posts( 'sgu_geo_alerts', $paged, 6, 'ussg_geo_magnetic_alerts' );
         }
 
         /** 

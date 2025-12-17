@@ -266,7 +266,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
             }
 
             // open the pagination container
-            $out[] = '<nav class="flex justify-center items-center gap-2 mt-8" role="navigation" aria-label="Pagination">';
+            $out[] = '<nav class="flex justify-center items-center gap-2 my-8" role="navigation" aria-label="Pagination">';
 
             // add first page link if we're not on page 1
             if( $current_page > 1 ) {
@@ -280,7 +280,11 @@ if( ! class_exists( 'SGU_Static' ) ) {
             foreach( $page_links as $link ) {
                 // replace WordPress classes with Tailwind classes
                 $link = str_replace( 'page-numbers', 'inline-flex items-center justify-center min-w-10 h-10 px-3 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700', $link );
-                $link = str_replace( 'current', 'inline-flex items-center justify-center min-w-10 h-10 px-3 bg-cyan-600 text-white rounded-lg border border-cyan-500', $link );
+                $link = str_replace( 
+                    'class="page-numbers current"', 
+                    'class="font-bold inline-flex items-center justify-center min-w-10 h-10 px-3 bg-cyan-600 text-white rounded-lg border border-cyan-500"', 
+                    $link 
+                );
                 $link = str_replace( 'dots', 'inline-flex items-center justify-center w-10 h-10 text-slate-400', $link );
                 $out[] = $link;
             }
