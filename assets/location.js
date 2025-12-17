@@ -34,6 +34,9 @@
             // Change location button
             $(document).on('click', '.sgu-weather-change-location', this.showLocationPicker.bind(this));
 
+            // Cancel button in location picker
+            $(document).on('click', '.sgu-weather-cancel-change', this.hideLocationPicker.bind(this));
+
             // Refresh weather data
             $(document).on('click', '.sgu-weather-refresh', this.refreshWeather.bind(this));
         },
@@ -59,7 +62,8 @@
          */
         promptForLocation: function () {
             // Show the location picker modal/section
-            $('.sgu-weather-location-prompt').addClass('active');
+            $('.sgu-weather-location-prompt').show().addClass('active');
+            $('.sgu-weather-has-location').hide();
 
             // Auto-request geolocation if supported
             if ('geolocation' in navigator) {
@@ -324,7 +328,7 @@
             $('.sgu-weather-location-name').text(displayName);
             $('.sgu-weather-has-location').show();
             $('.sgu-weather-no-location').hide();
-            $('.sgu-weather-location-prompt').removeClass('active');
+            $('.sgu-weather-location-prompt').removeClass('active').hide();
         },
 
         /**
@@ -332,14 +336,25 @@
          */
         showLocationPicker: function (e) {
             if (e) e.preventDefault();
-            $('.sgu-weather-location-prompt').addClass('active');
+
+            // Hide current location display
+            $('.sgu-weather-has-location').hide();
+
+            // Show location prompt
+            $('.sgu-weather-location-prompt').show().addClass('active');
         },
 
         /**
          * Hide location picker UI
          */
-        hideLocationPicker: function () {
-            $('.sgu-weather-location-prompt').removeClass('active');
+        hideLocationPicker: function (e) {
+            if (e) e.preventDefault();
+
+            // Hide location prompt
+            $('.sgu-weather-location-prompt').removeClass('active').hide();
+
+            // Show current location display
+            $('.sgu-weather-has-location').show();
         },
 
         /**
