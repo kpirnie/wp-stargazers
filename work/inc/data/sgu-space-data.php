@@ -293,12 +293,13 @@ if( ! class_exists( 'SGU_Space_Data' ) ) {
          * @package Stargazers.us Theme
          * 
          * @param int $paged The current page of records (default: 1)
+         * @param int $per_page The number of records per page (default: 6)
          * 
          * @return object|bool WP_Query object with posts, or false if none found
          * 
         */
-        public function get_apods( int $paged = 1 ) : object|bool {
-            return $this -> get_paginated_posts( 'sgu_apod', $paged, 6, 'ussg_apods' );
+        public function get_apods( int $paged = 1, int $per_page = 6 ) : object|bool {
+            return $this -> get_paginated_posts( 'sgu_apod', $paged, $per_page, 'ussg_apods' );
         }
 
         /** 

@@ -255,7 +255,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 'current'            => $current_page, 
                 'total'              => $max_pages, 
                 'type'               => 'array', 
-                'mid_size'           => 4,
+                'mid_size'           => 2,
                 'base'               => str_replace( 999999999, '%#%', esc_url( get_pagenum_link( 999999999 ) ) ),
                 'format'             => '?paged=%#%',
             ] );
