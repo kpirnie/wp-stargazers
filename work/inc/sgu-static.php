@@ -164,7 +164,6 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 'sgu_geo_alerts' => 'Geo Magnetic Storm',
                 'sgu_sf_alerts' => 'Solar Flare',
                 'sgu_neo' => 'Near Earth Objects', 
-                'sgu_journal' => 'Photo Journals', 
                 'sgu_apod' => 'Astronomy Photos of the Day',
             );
 
@@ -380,14 +379,22 @@ if( ! class_exists( 'SGU_Static' ) ) {
         */
         public static function get_attachment_id( string $_url ) : int {
 
-            // we'll need the db global
-            global $wpdb;
-
-            // get the attachment
-            $_att = $wpdb -> get_col( $wpdb -> prepare( "SELECT ID FROM $wpdb->posts WHERE guid='%s';", $_url ) ); 
+            // Clean the URL
+            $clean_url = preg_replace('/\?.*$/', '', $_url);
+            $clean_url = preg_replace('/#.*$/', '', $clean_url);
             
-            // return the value
-            return ( $_att[0] ) ?? 0;
+            // Remove common size suffixes
+            $clean_url = preg_replace('/-(\d+x\d+|scaled)(?=\.\w+$)/', '', $clean_url);
+            
+            // Try the WordPress function first
+            $attachment_id = attachment_url_to_postid($clean_url);
+            
+            if (!$attachment_id) {
+                // Fallback: Try the original URL
+                $attachment_id = attachment_url_to_postid($_url);
+            }
+            
+            return $attachment_id ?: 0;
 
         }
 

@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
 get_header( );var_dump("APOD ARCHIVE");
 
-$space_data = new SGU_Space_Data();
+$space_data = new SGU_Space_Data_Get();
 
 $paged = SGU_Static::safe_get_paged_var( ) ?: 1;
 $apods = $space_data -> get_apods( $paged );

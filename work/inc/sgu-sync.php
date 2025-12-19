@@ -27,14 +27,14 @@ if( ! class_exists( 'SGU_Sync' ) ) {
     class SGU_Sync {
 
         private array $sync_types;
-        private ?SGU_Space_Data $space_data; 
+        private ?SGU_Space_Data_CRUD $space_data; 
         private ?SGU_Space_Requests $space_requests; 
         private ?SGU_Space_Imagery $space_imagery;
 
         public function __init( ): void {}
 
         public function __construct( ) {
-            $this -> space_data = new SGU_Space_Data( );
+            $this -> space_data = new SGU_Space_Data_CRUD( );
             $this -> space_requests = new SGU_Space_Requests( );
             $this -> space_imagery = new SGU_Space_Imagery( );
 

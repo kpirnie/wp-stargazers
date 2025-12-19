@@ -141,7 +141,6 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     'has_archive' => $apod_archive_slug,
                     'public' => true, // ADD THIS
                     'show_in_nav_menus' => true, // CHANGE THIS 
-                    'rewrite' => false,
                     'rewrite' => ['slug' => "$apod_archive_slug/apod", 'with_front' => false],
                 ],
             ];

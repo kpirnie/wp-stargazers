@@ -29,7 +29,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
      * - Fetch data from NASA and NOAA APIs
      * - Manage API key rotation and endpoint configuration
      * - Parse JSON and plain text API responses
-     * - Delegate data storage to SGU_Space_Data class
+     * - Delegate data storage to SGU_Space_Data_CRUD class
      * 
      * @since 8.0
      * @access public
@@ -40,9 +40,9 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
     class SGU_Space_Requests {
 
         /** 
-         * @var SGU_Space_Data|null Database handler instance for storing fetched data
+         * @var SGU_Space_Data_CRUD|null Database handler instance for storing fetched data
          */
-        private ?SGU_Space_Data $space_data;
+        private ?SGU_Space_Data_CRUD $space_data;
         
         /** 
          * @var array In-memory cache of API keys to avoid repeated database queries
@@ -60,7 +60,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
          * __construct
          * 
          * Initialize the space requests handler.
-         * Creates the SGU_Space_Data instance that will handle all database operations.
+         * Creates the SGU_Space_Data_CRUD instance that will handle all database operations.
          * 
          * @since 8.0
          * @access public
@@ -70,7 +70,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
         */
         public function __construct( ) {
             // Initialize data handler for storing API responses
-            $this -> space_data = new SGU_Space_Data( );
+            $this -> space_data = new SGU_Space_Data_CRUD( );
         }
 
         /** 

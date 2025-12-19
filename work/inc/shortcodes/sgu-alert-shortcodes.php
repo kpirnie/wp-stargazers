@@ -28,12 +28,12 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
 
         // hold the internals
         private int $paged;
-        private SGU_Space_Data $space_data;
+        private SGU_Space_Data_Get $space_data;
 
         // fire us up
         public function __construct( ) {
             $this -> paged = SGU_Static::safe_get_paged_var( ) ?: 1;
-            $this -> space_data = new SGU_Space_Data( );
+            $this -> space_data = new SGU_Space_Data_Get( );
         }
 
         /** 

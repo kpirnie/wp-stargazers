@@ -28,11 +28,11 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
     class SGU_Astro_Shortcodes {
 
         // hold the internals
-        private ?SGU_Space_Data $space_data = null;
+        private ?SGU_Space_Data_Get $space_data = null;
 
         // fire us up
         public function __construct( ) {
-            $this -> space_data = new SGU_Space_Data( );
+            $this -> space_data = new SGU_Space_Data_Get( );
         }
 
         /** 

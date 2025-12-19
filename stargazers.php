@@ -64,8 +64,79 @@ if( defined( 'WP_CLI' ) ) {
         WP_CLI::add_command( 'sgu sync both', ['SGU_Sync', 'sync_both'], 
             ['shortdesc' => 'This method syncs both the data and the imagery.  We then utilize WP to display.'] );
 
+        // Historical sync commands
+        WP_CLI::add_command( 'sgu historical apod', 'sgu_cli_historical_apod', [
+            'shortdesc' => 'Sync historical APOD data from NASA (one-time bulk import)',
+            'synopsis' => [
+                [
+                    'type' => 'assoc',
+                    'name' => 'start',
+                    'description' => 'Start date in Y-m-d format (default: 2015-01-01)',
+                    'optional' => true,
+                    'default' => '2015-01-01',
+                ],
+                [
+                    'type' => 'assoc',
+                    'name' => 'end',
+                    'description' => 'End date in Y-m-d format (default: today)',
+                    'optional' => true,
+                ],
+            ],
+        ] );
+
+        WP_CLI::add_command( 'sgu historical imagery', 'sgu_cli_historical_imagery', [
+            'shortdesc' => 'Sync all missing APOD imagery (one-time bulk download)',
+        ] );
+
+        WP_CLI::add_command( 'sgu historical both', 'sgu_cli_historical_both', [
+            'shortdesc' => 'Sync both historical APOD data and imagery (one-time bulk import)',
+            'synopsis' => [
+                [
+                    'type' => 'assoc',
+                    'name' => 'start',
+                    'description' => 'Start date in Y-m-d format (default: 2015-01-01)',
+                    'optional' => true,
+                    'default' => '2015-01-01',
+                ],
+                [
+                    'type' => 'assoc',
+                    'name' => 'end',
+                    'description' => 'End date in Y-m-d format (default: today)',
+                    'optional' => true,
+                ],
+            ],
+        ] );
+
     }, PHP_INT_MAX );
 
+}
+
+/**
+ * CLI callback for historical APOD data sync
+ */
+function sgu_cli_historical_apod( $args, $assoc_args ) {
+    $sync = new SGU_Historical_Sync( );
+    $start = $assoc_args['start'] ?? '2015-01-01';
+    $end = $assoc_args['end'] ?? null;
+    $sync -> sync_historical_apod( $start, $end );
+}
+
+/**
+ * CLI callback for historical imagery sync
+ */
+function sgu_cli_historical_imagery( $args, $assoc_args ) {
+    $sync = new SGU_Historical_Sync( );
+    $sync -> sync_historical_imagery( );
+}
+
+/**
+ * CLI callback for both historical data and imagery
+ */
+function sgu_cli_historical_both( $args, $assoc_args ) {
+    $sync = new SGU_Historical_Sync( );
+    $start = $assoc_args['start'] ?? '2015-01-01';
+    $end = $assoc_args['end'] ?? null;
+    $sync -> sync_both_historical( $start, $end );
 }
 
 // fire this up in admin_init to inject it
