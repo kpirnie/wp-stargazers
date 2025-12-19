@@ -511,6 +511,201 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return rtrim( $base_url, '/' ) . '/' . $slug . '/';
         }
 
+        /**
+         * get_weather_emoji
+         * 
+         * Get weather emoji based on icon code
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * 
+         * @param string $icon Icon code (e.g., '01d', '10n')
+         * @return string Weather emoji
+         */
+        public static function get_weather_emoji( string $icon ) : string {
+            $code = substr( $icon, 0, 2 );
+            $is_night = substr( $icon, -1 ) === 'n';
+            
+            $emojis = [
+                '01' => $is_night ? '🌙' : '☀️',
+                '02' => $is_night ? '🌙' : '⛅',
+                '03' => '☁️',
+                '04' => '☁️',
+                '09' => '🌧️',
+                '10' => '🌧️',
+                '11' => '⛈️',
+                '13' => '❄️',
+                '50' => '🌫️',
+            ];
+            
+            return $emojis[ $code ] ?? '🌡️';
+        }
+
+        /**
+         * get_weather_icon_name
+         * 
+         * Get weather icon name for Basmilius weather icons
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * 
+         * @param string $icon Icon code (e.g., '01d', '10n')
+         * @return string Icon name for SVG lookup
+         */
+        public static function get_weather_icon_name( string $icon ) : string {
+            $code = substr( $icon, 0, 2 );
+            $is_night = substr( $icon, -1 ) === 'n';
+            $suffix = $is_night ? '-night' : '-day';
+            
+            $icons = [
+                '01' => 'clear' . $suffix,
+                '02' => 'partly-cloudy' . $suffix,
+                '03' => 'cloudy',
+                '04' => 'overcast',
+                '09' => 'rain',
+                '10' => 'rain',
+                '11' => 'thunderstorms',
+                '13' => 'snow',
+                '50' => 'fog',
+            ];
+            
+            return $icons[ $code ] ?? 'not-available';
+        }
+
+        /**
+         * get_weather_icon_url
+         * 
+         * Get full URL for weather icon SVG
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * 
+         * @param string $icon Icon code (e.g., '01d', '10n')
+         * @return string Full URL to SVG icon
+         */
+        public static function get_weather_icon_url( string $icon ) : string {
+            $icon_name = self::get_weather_icon_name( $icon );
+            return 'https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/all/' . $icon_name . '.svg';
+        }
+
+        /**
+         * wmo_code_to_description
+         * 
+         * Convert WMO weather code to human-readable description
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * 
+         * @param int $code WMO weather code
+         * @return string Weather description
+         */
+        public static function wmo_code_to_description( int $code ) : string {
+            $descriptions = [
+                0 => 'Clear sky',
+                1 => 'Mainly clear',
+                2 => 'Partly cloudy',
+                3 => 'Overcast',
+                45 => 'Fog',
+                48 => 'Depositing rime fog',
+                51 => 'Light drizzle',
+                53 => 'Moderate drizzle',
+                55 => 'Dense drizzle',
+                56 => 'Light freezing drizzle',
+                57 => 'Dense freezing drizzle',
+                61 => 'Slight rain',
+                63 => 'Moderate rain',
+                65 => 'Heavy rain',
+                66 => 'Light freezing rain',
+                67 => 'Heavy freezing rain',
+                71 => 'Slight snow fall',
+                73 => 'Moderate snow fall',
+                75 => 'Heavy snow fall',
+                77 => 'Snow grains',
+                80 => 'Slight rain showers',
+                81 => 'Moderate rain showers',
+                82 => 'Violent rain showers',
+                85 => 'Slight snow showers',
+                86 => 'Heavy snow showers',
+                95 => 'Thunderstorm',
+                96 => 'Thunderstorm with slight hail',
+                99 => 'Thunderstorm with heavy hail',
+            ];
+
+            return $descriptions[ $code ] ?? 'Unknown';
+        }
+
+        /**
+         * wmo_code_to_icon
+         * 
+         * Convert WMO weather code to icon code
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * 
+         * @param int $code WMO weather code
+         * @param int $is_day Whether it's daytime (1) or night (0)
+         * @return string Icon code
+         */
+        public static function wmo_code_to_icon( int $code, int $is_day = 1 ) : string {
+            $time = $is_day ? 'd' : 'n';
+            
+            $icon_map = [
+                0 => '01',
+                1 => '01',
+                2 => '02',
+                3 => '04',
+                45 => '50',
+                48 => '50',
+                51 => '09',
+                53 => '09',
+                55 => '09',
+                56 => '09',
+                57 => '09',
+                61 => '10',
+                63 => '10',
+                65 => '10',
+                66 => '13',
+                67 => '13',
+                71 => '13',
+                73 => '13',
+                75 => '13',
+                77 => '13',
+                80 => '09',
+                81 => '09',
+                82 => '09',
+                85 => '13',
+                86 => '13',
+                95 => '11',
+                96 => '11',
+                99 => '11',
+            ];
+
+            $icon_code = $icon_map[ $code ] ?? '01';
+            return $icon_code . $time;
+        }
+
+        /**
+         * wind_direction_to_compass
+         * 
+         * Convert wind direction degrees to compass direction
+         * 
+         * @since 8.4
+         * @access public
+         * @static
+         * 
+         * @param float $degrees Wind direction in degrees
+         * @return string Compass direction (N, NNE, NE, etc.)
+         */
+        public static function wind_direction_to_compass( float $degrees ) : string {
+            $directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            return $directions[ round( $degrees / 22.5 ) % 16 ];
+        }
+
     }
 
 }
