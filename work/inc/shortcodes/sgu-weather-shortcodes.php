@@ -357,7 +357,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
                 $sc_data['location_name'] = $this -> weather_data -> reverse_geocode( $location -> lat, $location -> lon );
             }
 
-            return $this -> render_template( 'weather/forecast.php', $sc_data );
+            return $this -> render_template( 'weather/dashboard.php', $sc_data );
         }
 
         /** 
