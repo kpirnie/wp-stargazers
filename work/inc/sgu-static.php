@@ -706,6 +706,35 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return $directions[ round( $degrees / 22.5 ) % 16 ];
         }
 
+        /**
+         * Convert compass direction to degrees
+         * 
+         * @param string $compass Compass direction (N, NNE, NE, etc.)
+         * @return int Degrees (0-360)
+         */
+        public static function compass_to_degrees( string $compass ) : int {
+            $directions = [
+                'N'   => 0,
+                'NNE' => 22,
+                'NE'  => 45,
+                'ENE' => 67,
+                'E'   => 90,
+                'ESE' => 112,
+                'SE'  => 135,
+                'SSE' => 157,
+                'S'   => 180,
+                'SSW' => 202,
+                'SW'  => 225,
+                'WSW' => 247,
+                'W'   => 270,
+                'WNW' => 292,
+                'NW'  => 315,
+                'NNW' => 337,
+            ];
+            
+            return $directions[ strtoupper( $compass ) ] ?? 0;
+        }
+
     }
 
 }

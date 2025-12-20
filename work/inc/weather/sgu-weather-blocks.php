@@ -76,12 +76,14 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_current_weather( [
                         'title' => $attributes['title'] ?? 'Current Weather',
+                        'show_title' => $attributes['showTitle'] ?? true,
                         'show_location_picker' => $attributes['showLocationPicker'] ?? true,
                         'show_details' => $attributes['showDetails'] ?? true,
                     ] );
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Current Weather' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
                     'showDetails' => [ 'type' => 'boolean', 'default' => true ],
                 ]
@@ -95,6 +97,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_daily_forecast( [
                         'title' => $attributes['title'] ?? 'Today\'s Forecast',
+                        'show_title' => $attributes['showTitle'] ?? true,
                         'show_location_picker' => $attributes['showLocationPicker'] ?? true,
                         'show_hourly' => $attributes['showHourly'] ?? true,
                         'hours_to_show' => $attributes['hoursToShow'] ?? 24,
@@ -103,10 +106,32 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Today\'s Forecast' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
                     'showHourly' => [ 'type' => 'boolean', 'default' => true ],
                     'hoursToShow' => [ 'type' => 'number', 'default' => 24 ],
                     'useNoaa' => [ 'type' => 'boolean', 'default' => true ],
+                ]
+            ] );
+
+            // Register the Hourly Breakdown
+            register_block_type( 'sgup/weather-daily-hourly', [
+                'api_version' => 2,
+                'category' => 'sgup_weather',
+                'render_callback' => function( $attributes ) {
+                    $sc = new SGU_Weather_Shortcodes( );
+                    return $sc -> render_hourly( [
+                        'title' => $attributes['title'] ?? 'Today\'s Hourly Forecast',
+                        'show_title' => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'hours_to_show' => $attributes['hoursToShow'] ?? 7,
+                    ] );
+                },
+                'attributes' => [
+                    'title' => [ 'type' => 'string', 'default' => 'Today\'s Hourly Forecast' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                    'hoursToShow' => [ 'type' => 'number', 'default' => 24 ],
                 ]
             ] );
 
@@ -118,6 +143,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_weekly_forecast( [
                         'title' => $attributes['title'] ?? '7-Day Forecast',
+                        'show_title' => $attributes['showTitle'] ?? true,
                         'show_location_picker' => $attributes['showLocationPicker'] ?? true,
                         'days_to_show' => $attributes['daysToShow'] ?? 7,
                         'use_noaa' => $attributes['useNoaa'] ?? true,
@@ -125,9 +151,31 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => '7-Day Forecast' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
                     'daysToShow' => [ 'type' => 'number', 'default' => 7 ],
                     'useNoaa' => [ 'type' => 'boolean', 'default' => true ],
+                ]
+            ] );
+
+            // Register the Extended Weekly Forecast
+            register_block_type( 'sgup/weather-weekly-extended', [
+                'api_version' => 2,
+                'category' => 'sgup_weather',
+                'render_callback' => function( $attributes ) {
+                    $sc = new SGU_Weather_Shortcodes( );
+                    return $sc -> render_extended_week( [
+                        'title' => $attributes['title'] ?? '7-Day Extended',
+                        'show_title' => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'days_to_show' => $attributes['daysToShow'] ?? 7,
+                    ] );
+                },
+                'attributes' => [
+                    'title' => [ 'type' => 'string', 'default' => '7-Day Extended' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                    'daysToShow' => [ 'type' => 'number', 'default' => 7 ],
                 ]
             ] );
 
@@ -139,12 +187,14 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_weather_alerts( [
                         'title' => $attributes['title'] ?? 'Weather Alerts',
+                        'show_title' => $attributes['showTitle'] ?? true,
                         'show_location_picker' => $attributes['showLocationPicker'] ?? false,
                         'max_alerts' => $attributes['maxAlerts'] ?? 5,
                     ] );
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Weather Alerts' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => false ],
                     'maxAlerts' => [ 'type' => 'number', 'default' => 5 ],
                 ]
@@ -158,9 +208,11 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_full_dashboard( [
                         'title' => $attributes['title'] ?? 'Weather Dashboard',
+                        'show_title' => $attributes['showTitle'] ?? true,
                         'show_current' => $attributes['showCurrent'] ?? true,
                         'show_hourly' => $attributes['showHourly'] ?? true,
                         'show_daily' => $attributes['showDaily'] ?? true,
+                        'show_daily_extended' => $attributes['showDailyExtended'] ?? true,
                         'show_alerts' => $attributes['showAlerts'] ?? true,
                         'show_noaa' => $attributes['showNoaa'] ?? true,
                         'show_location_picker' => $attributes['showLocationPicker'] ?? true,
@@ -168,9 +220,11 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Weather Dashboard' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'showCurrent' => [ 'type' => 'boolean', 'default' => true ],
                     'showHourly' => [ 'type' => 'boolean', 'default' => true ],
                     'showDaily' => [ 'type' => 'boolean', 'default' => true ],
+                    'showDailyExtended' => [ 'type' => 'boolean', 'default' => true ],
                     'showAlerts' => [ 'type' => 'boolean', 'default' => true ],
                     'showNoaa' => [ 'type' => 'boolean', 'default' => true ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ], 
@@ -185,11 +239,13 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                     $sc = new SGU_Weather_Shortcodes( );
                     return $sc -> render_location_picker( [
                         'title' => $attributes['title'] ?? 'Set Your Location',
+                        'show_title' => $attributes['showTitle'] ?? true,
                         'compact' => $attributes['compact'] ?? false,
                     ] );
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Set Your Location' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'compact' => [ 'type' => 'boolean', 'default' => false ],
                 ]
             ] );

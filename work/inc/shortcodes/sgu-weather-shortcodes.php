@@ -70,10 +70,13 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Register all weather shortcodes
             add_shortcode( 'sgup_weather_current', [ $this, 'render_current_weather' ] );
             add_shortcode( 'sgup_weather_daily', [ $this, 'render_daily_forecast' ] );
+            add_shortcode( 'sgup_weather_hourly', [ $this, 'render_hourly' ] );
             add_shortcode( 'sgup_weather_weekly', [ $this, 'render_weekly_forecast' ] );
+            add_shortcode( 'sgup_weather_weekly_extended', [ $this, 'render_extended_week' ] );
             add_shortcode( 'sgup_weather_alerts', [ $this, 'render_weather_alerts' ] );
             add_shortcode( 'sgup_weather_full', [ $this, 'render_full_dashboard' ] );
             add_shortcode( 'sgup_weather_location', [ $this, 'render_location_picker' ] );
+            add_shortcode( 'sgup_weather_map', [ $this, 'render_weather_maps' ] );
 
         }
 
@@ -97,6 +100,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'title' => 'Current Weather',
+                'show_title' => true,
                 'show_location_picker' => true,
                 'show_details' => true,
             ], $atts, 'sgup_weather_current' );
@@ -107,6 +111,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Build template data
             $sc_data = [
                 'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
                 'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
                 'show_details' => filter_var( $atts['show_details'], FILTER_VALIDATE_BOOLEAN ),
                 'has_location' => (bool) $location,
@@ -143,6 +148,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'title' => 'Today\'s Forecast',
+                'show_title' => true,
                 'show_location_picker' => true,
                 'show_hourly' => true,
                 'hours_to_show' => 24,
@@ -155,6 +161,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Build template data
             $sc_data = [
                 'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
                 'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
                 'show_hourly' => filter_var( $atts['show_hourly'], FILTER_VALIDATE_BOOLEAN ),
                 'hours_to_show' => absint( $atts['hours_to_show'] ),
@@ -201,6 +208,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'title' => '7-Day Forecast',
+                'show_title' => true,
                 'show_location_picker' => true,
                 'days_to_show' => 7,
                 'use_noaa' => true,
@@ -212,6 +220,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Build template data
             $sc_data = [
                 'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
                 'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
                 'days_to_show' => min( absint( $atts['days_to_show'] ), 8 ), // Max 8 days from API
                 'use_noaa' => filter_var( $atts['use_noaa'], FILTER_VALIDATE_BOOLEAN ),
@@ -257,6 +266,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'title' => 'Weather Alerts',
+                'show_title' => true,
                 'show_location_picker' => false,
                 'max_alerts' => 5,
             ], $atts, 'sgup_weather_alerts' );
@@ -267,6 +277,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Build template data
             $sc_data = [
                 'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
                 'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
                 'max_alerts' => absint( $atts['max_alerts'] ),
                 'has_location' => (bool) $location,
@@ -303,9 +314,11 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'title' => 'Weather Dashboard',
+                'show_title' => true,
                 'show_current' => true,
                 'show_hourly' => true,
                 'show_daily' => true,
+                'show_daily_extended' => true,
                 'show_alerts' => true,
                 'show_noaa' => true,
                 'show_location_picker' => true,
@@ -317,9 +330,11 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Build comprehensive template data
             $sc_data = [
                 'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
                 'show_current' => filter_var( $atts['show_current'], FILTER_VALIDATE_BOOLEAN ),
                 'show_hourly' => filter_var( $atts['show_hourly'], FILTER_VALIDATE_BOOLEAN ),
                 'show_daily' => filter_var( $atts['show_daily'], FILTER_VALIDATE_BOOLEAN ),
+                'show_daily_extended' => filter_var( $atts['show_daily_extended'], FILTER_VALIDATE_BOOLEAN ),
                 'show_alerts' => filter_var( $atts['show_alerts'], FILTER_VALIDATE_BOOLEAN ),
                 'show_noaa' => filter_var( $atts['show_noaa'], FILTER_VALIDATE_BOOLEAN ),
                 'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
@@ -380,6 +395,7 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             // Set default values
             $atts = shortcode_atts( [
                 'title' => 'Set Your Location',
+                'show_title' => true,
                 'compact' => false,
             ], $atts, 'sgup_weather_location' );
 
@@ -395,6 +411,173 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
             ];
 
             return $this -> render_template( 'weather/location-picker.php', $sc_data );
+        }
+
+        /** 
+         * render_hourly
+         * 
+         * Render today's hourly forecast
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param array $atts Shortcode attributes
+         * 
+         * @return string Rendered HTML
+         * 
+        */
+        public function render_hourly( array $atts = [] ) : string {
+
+            // Set default values
+            $atts = shortcode_atts( [
+                'title' => 'Today\'s Hourly Forecast',
+                'show_title' => true,
+                'show_location_picker' => true,
+                'hours_to_show' => 24,
+            ], $atts, 'sgup_weather_hourly' );
+
+            // Get location
+            $location = $this -> location_handler -> get_stored_location( );
+
+            // Build template data
+            $sc_data = [
+                'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
+                'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
+                'hours_to_show' => absint( $atts['hours_to_show'] ),
+                'has_location' => (bool) $location,
+                'location' => $location,
+                'forecast' => null,
+            ];
+
+            // If we have a location, fetch forecast data
+            if( $location ) {
+                // Get OpenWeather hourly forecast
+                $sc_data['forecast'] = $this -> weather_data -> get_hourly_forecast( $location -> lat, $location -> lon );
+
+                $sc_data['location_name'] = $this -> weather_data -> reverse_geocode( $location -> lat, $location -> lon );
+            }
+
+            return $this -> render_template( 'weather/hourly.php', $sc_data );
+            
+        }
+
+        /** 
+         * render_extended_week
+         * 
+         * Render 7-day extended forecast
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param array $atts Shortcode attributes
+         * 
+         * @return string Rendered HTML
+         * 
+        */
+        public function render_extended_week( array $atts = [] ) : string {
+
+            // Set default values
+            $atts = shortcode_atts( [
+                'title' => '7-Day Extended',
+                'show_title' => true,
+                'show_location_picker' => true,
+            ], $atts, 'sgup_weather_weekly_extended' );
+
+            // Get location
+            $location = $this -> location_handler -> get_stored_location( );
+
+            // Build template data
+            $sc_data = [
+                'title' => esc_html( $atts['title'] ),
+                'show_title' => filter_var( $atts['show_title'], FILTER_VALIDATE_BOOLEAN ),
+                'show_location_picker' => filter_var( $atts['show_location_picker'], FILTER_VALIDATE_BOOLEAN ),
+                'has_location' => (bool) $location,
+                'location' => $location,
+                'weather' => null,
+            ];
+
+            // If we have a location, fetch weather data
+            if( $location ) {
+                $sc_data['weather'] = $this -> weather_data -> get_noaa_forecast( $location -> lat, $location -> lon );
+                $sc_data['location_name'] = $this -> weather_data -> reverse_geocode( $location -> lat, $location -> lon );
+            }
+
+            return $this -> render_template( 'weather/week-extended.php', $sc_data );
+
+        }
+
+        /** 
+         * render_weather_maps
+         * 
+         * Render weather maps from Windy.com
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param array $atts Shortcode attributes
+         * 
+         * @return string Rendered HTML
+         * 
+        */
+        public function render_weather_maps( array $atts = [] ) : string {
+
+            // Set default values
+            $atts = shortcode_atts( [
+                'title' => 'Weather Map',
+                'show_title' => true,
+                'map_layer' => 'clouds',
+                'show_location_picker' => true,
+                'max_height' => 450 ,
+            ], $atts, 'sgup_weather_map' );
+
+            // setup the height
+            $_height = ( isset( $atts['height'] ) ) ? intval( esc_attr( $atts['height'] ) ) : 450;
+            // which map layer: wind|clouds|rain
+            $_layer = ( isset( $atts['layer'] ) ) ? esc_attr( $atts['layer'] ) : 'clouds';
+            
+            // hold our returnable string
+            $_ret = '';
+
+            // get our location info            
+            $location = $this -> location_handler -> get_stored_location( );
+            // latitude
+            $lat = $location -> lat;
+            // longitude
+            $lon = $location -> lon;
+            
+            // container
+            $_ret .= '  <div class="">';
+            // start building the iframe for the embed
+            $_ret .= '      <iframe class="sgup_weather_map" style="height:' . $_height . 'px;" src="//embed.windy.com/embed2.html?';
+            // Latitude and longitude.
+            $_ret .= 'lat=' . esc_attr( $lat ) . '&lon=' . esc_attr( $lon );
+            // Zoom level.
+            $_ret .= '&zoom=7';
+            // The weather layer (overlay).
+            $_ret .= '&overlay=' . $_layer;
+            // Show or hide pressure isolines.
+            $_ret .= '&pressure=true';
+            // Detail latitude and longitude.
+            $_ret .= '&detailLat=' . esc_attr( $lat ) . '&detailLon=' . esc_attr( $lon );
+            // The temperature scale.
+            $_ret .= '&metricTemp=°F';
+            // Complete the source URL.
+            $_ret .= '&product=ecmwf&level=surface&menu=&message=true&type=map&location=coordinates&radarRange=-1"';
+            // complete the iframe
+            $_ret .= ' frameborder="0"></iframe>';
+            // end container
+            $_ret .= '  </div>';
+            
+            // return it
+            return $_ret;
+
         }
 
         /** 

@@ -22,6 +22,11 @@ registerBlockType('sgup/weather-current', {
                             onChange={(value) => setAttributes({ title: value })}
                         />
                         <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
+                        <ToggleControl
                             label="Show Location Picker"
                             checked={attributes.showLocationPicker}
                             onChange={(value) => setAttributes({ showLocationPicker: value })}
@@ -36,7 +41,9 @@ registerBlockType('sgup/weather-current', {
 
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#e8f4fd', borderRadius: '4px' }}>
-                        <h3 style={{ margin: '0 0 10px 0' }}>☀️ {attributes.title}</h3>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
                         <p style={{ margin: 0, color: '#666' }}>Current weather conditions will display here.</p>
                         {attributes.showLocationPicker && (
                             <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
@@ -54,7 +61,7 @@ registerBlockType('sgup/weather-current', {
 
 // Daily Forecast Block
 registerBlockType('sgup/weather-daily', {
-    title: 'Daily Weather Forecast',
+    title: 'Daily Forecast',
     icon: 'calendar',
     category: 'sgup_weather',
 
@@ -69,6 +76,11 @@ registerBlockType('sgup/weather-daily', {
                             label="Title"
                             value={attributes.title}
                             onChange={(value) => setAttributes({ title: value })}
+                        />
+                        <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
                         />
                         <ToggleControl
                             label="Show Location Picker"
@@ -93,14 +105,16 @@ registerBlockType('sgup/weather-daily', {
                             label="Include Today's Forecast"
                             checked={attributes.useNoaa}
                             onChange={(value) => setAttributes({ useNoaa: value })}
-                            help="Include detailed text forecast from NOAA"
+                            help="Include detailed text forecast"
                         />
                     </PanelBody>
                 </InspectorControls>
 
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#fff8e6', borderRadius: '4px' }}>
-                        <h3 style={{ margin: '0 0 10px 0' }}>📅 {attributes.title}</h3>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
                         <p style={{ margin: 0, color: '#666' }}>Daily forecast will display here.</p>
                         {attributes.showHourly && (
                             <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
@@ -121,9 +135,64 @@ registerBlockType('sgup/weather-daily', {
     save: () => null
 });
 
+// Hourly Forecast
+registerBlockType('sgup/weather-daily-hourly', {
+    title: 'Today\'s Hourly Forecast',
+    icon: 'calendar',
+    category: 'sgup_weather',
+
+    edit: ({ attributes, setAttributes }) => {
+        const blockProps = useBlockProps();
+
+        return (
+            <>
+                <InspectorControls>
+                    <PanelBody title="Settings">
+                        <TextControl
+                            label="Title"
+                            value={attributes.title}
+                            onChange={(value) => setAttributes({ title: value })}
+                        />
+                        <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
+                        <ToggleControl
+                            label="Show Location Picker"
+                            checked={attributes.showLocationPicker}
+                            onChange={(value) => setAttributes({ showLocationPicker: value })}
+                        />
+                        <RangeControl
+                            label="Hours to Show"
+                            value={attributes.hoursToShow}
+                            onChange={(value) => setAttributes({ hoursToShow: value })}
+                            min={6}
+                            max={48}
+                        />
+                    </PanelBody>
+                </InspectorControls>
+
+                <div {...blockProps}>
+                    <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#e6f7e6', borderRadius: '4px' }}>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
+                        <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
+                            <em>Showing {attributes.hoursToShow} hours</em>
+                        </p>
+                    </div>
+                </div>
+            </>
+        );
+    },
+
+    save: () => null
+});
+
 // Weekly Forecast Block
 registerBlockType('sgup/weather-weekly', {
-    title: 'Weekly Weather Forecast',
+    title: 'Weekly Forecast',
     icon: 'calendar-alt',
     category: 'sgup_weather',
 
@@ -140,6 +209,11 @@ registerBlockType('sgup/weather-weekly', {
                             onChange={(value) => setAttributes({ title: value })}
                         />
                         <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
+                        <ToggleControl
                             label="Show Location Picker"
                             checked={attributes.showLocationPicker}
                             onChange={(value) => setAttributes({ showLocationPicker: value })}
@@ -152,21 +226,23 @@ registerBlockType('sgup/weather-weekly', {
                             max={8}
                         />
                         <ToggleControl
-                            label="Include Today's Forecast"
+                            label="Include Extended Forecast"
                             checked={attributes.useNoaa}
                             onChange={(value) => setAttributes({ useNoaa: value })}
-                            help="Include detailed text forecast from NOAA"
+                            help="Include detailed text forecast"
                         />
                     </PanelBody>
                 </InspectorControls>
 
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#e6f7e6', borderRadius: '4px' }}>
-                        <h3 style={{ margin: '0 0 10px 0' }}>📆 {attributes.title}</h3>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
                         <p style={{ margin: 0, color: '#666' }}>{attributes.daysToShow}-day forecast will display here.</p>
                         {attributes.useNoaa && (
                             <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
-                                <em>Including today's forecast</em>
+                                <em>Including extended forecast</em>
                             </p>
                         )}
                     </div>
@@ -178,9 +254,62 @@ registerBlockType('sgup/weather-weekly', {
     save: () => null
 });
 
+// Weekly Extended Forecast Block
+registerBlockType('sgup/weather-weekly-extended', {
+    title: 'Weekly Extended Forecast',
+    icon: 'calendar-alt',
+    category: 'sgup_weather',
+
+    edit: ({ attributes, setAttributes }) => {
+        const blockProps = useBlockProps();
+
+        return (
+            <>
+                <InspectorControls>
+                    <PanelBody title="Settings">
+                        <TextControl
+                            label="Title"
+                            value={attributes.title}
+                            onChange={(value) => setAttributes({ title: value })}
+                        />
+                        <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
+                        <ToggleControl
+                            label="Show Location Picker"
+                            checked={attributes.showLocationPicker}
+                            onChange={(value) => setAttributes({ showLocationPicker: value })}
+                        />
+                        <RangeControl
+                            label="Days to Display"
+                            value={attributes.daysToShow}
+                            onChange={(value) => setAttributes({ daysToShow: value })}
+                            min={3}
+                            max={8}
+                        />
+                    </PanelBody>
+                </InspectorControls>
+
+                <div {...blockProps}>
+                    <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#e6f7e6', borderRadius: '4px' }}>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
+                        <p style={{ margin: 0, color: '#666' }}>{attributes.daysToShow}-day forecast will display here.</p>
+                    </div>
+                </div>
+            </>
+        );
+    },
+
+    save: () => null
+});
+
 // Weather Alerts Block
 registerBlockType('sgup/weather-alerts', {
-    title: 'Weather Alerts',
+    title: 'Alerts',
     icon: 'warning',
     category: 'sgup_weather',
 
@@ -195,6 +324,11 @@ registerBlockType('sgup/weather-alerts', {
                             label="Title"
                             value={attributes.title}
                             onChange={(value) => setAttributes({ title: value })}
+                        />
+                        <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
                         />
                         <ToggleControl
                             label="Show Location Picker"
@@ -213,7 +347,9 @@ registerBlockType('sgup/weather-alerts', {
 
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#ffe6e6', borderRadius: '4px' }}>
-                        <h3 style={{ margin: '0 0 10px 0' }}>⚠️ {attributes.title}</h3>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
                         <p style={{ margin: 0, color: '#666' }}>Weather alerts will display here when active.</p>
                         <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
                             <em>Showing up to {attributes.maxAlerts} alerts</em>
@@ -229,7 +365,7 @@ registerBlockType('sgup/weather-alerts', {
 
 // Full Weather Dashboard Block
 registerBlockType('sgup/weather-full', {
-    title: 'Weather Dashboard',
+    title: 'Dashboard',
     icon: 'admin-site-alt3',
     category: 'sgup_weather',
 
@@ -245,8 +381,23 @@ registerBlockType('sgup/weather-full', {
                             value={attributes.title}
                             onChange={(value) => setAttributes({ title: value })}
                         />
+                        <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
                     </PanelBody>
                     <PanelBody title="Components" initialOpen={true}>
+                        <ToggleControl
+                            label="Show Location Picker"
+                            checked={attributes.showLocationPicker}
+                            onChange={(value) => setAttributes({ showLocationPicker: value })}
+                        />
+                        <ToggleControl
+                            label="Show Weather Alerts"
+                            checked={attributes.showAlerts}
+                            onChange={(value) => setAttributes({ showAlerts: value })}
+                        />
                         <ToggleControl
                             label="Show Current Weather"
                             checked={attributes.showCurrent}
@@ -268,31 +419,29 @@ registerBlockType('sgup/weather-full', {
                             onChange={(value) => setAttributes({ showDaily: value })}
                         />
                         <ToggleControl
-                            label="Show Weather Alerts"
-                            checked={attributes.showAlerts}
-                            onChange={(value) => setAttributes({ showAlerts: value })}
-                        />
-                        <ToggleControl
-                            label="Show Location Picker"
-                            checked={attributes.showLocationPicker}
-                            onChange={(value) => setAttributes({ showLocationPicker: value })}
+                            label="Show 7-Day Extended Forecast"
+                            checked={attributes.showDailyExtended}
+                            onChange={(value) => setAttributes({ showDailyExtended: value })}
                         />
                     </PanelBody>
                 </InspectorControls>
 
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#f0f0f0', borderRadius: '4px' }}>
-                        <h3 style={{ margin: '0 0 10px 0' }}>🌤️ {attributes.title}</h3>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
                         <p style={{ margin: 0, color: '#666' }}>Full weather dashboard will display here.</p>
                         <div style={{ marginTop: '10px', fontSize: '12px', color: '#888' }}>
                             <strong>Active Components:</strong>
                             <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                                {attributes.showLocationPicker && <li>Location Picker</li>}
+                                {attributes.showAlerts && <li>Weather Alerts</li>}
                                 {attributes.showCurrent && <li>Current Weather</li>}
                                 {attributes.showNoaa && <li>Today's Forecast</li>}
                                 {attributes.showHourly && <li>Hourly Forecast</li>}
                                 {attributes.showDaily && <li>7 Day Forecast</li>}
-                                {attributes.showAlerts && <li>Weather Alerts</li>}
-                                {attributes.showLocationPicker && <li>Location Picker</li>}
+                                {attributes.showDailyExtended && <li>7 Day Extended Forecast</li>}
                             </ul>
                         </div>
                     </div>
@@ -306,7 +455,7 @@ registerBlockType('sgup/weather-full', {
 
 // Location Picker Block
 registerBlockType('sgup/weather-location', {
-    title: 'Weather Location Picker',
+    title: 'Location Picker',
     icon: 'location',
     category: 'sgup_weather',
 
@@ -323,6 +472,11 @@ registerBlockType('sgup/weather-location', {
                             onChange={(value) => setAttributes({ title: value })}
                         />
                         <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
+                        <ToggleControl
                             label="Compact Mode"
                             checked={attributes.compact}
                             onChange={(value) => setAttributes({ compact: value })}
@@ -333,7 +487,9 @@ registerBlockType('sgup/weather-location', {
 
                 <div {...blockProps}>
                     <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#f5f5f5', borderRadius: '4px' }}>
-                        <h3 style={{ margin: '0 0 10px 0' }}>📍 {attributes.title}</h3>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            ☀️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
                         <p style={{ margin: 0, color: '#666' }}>Location picker will display here.</p>
                         {attributes.compact && (
                             <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
