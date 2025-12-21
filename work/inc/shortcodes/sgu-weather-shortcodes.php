@@ -534,49 +534,33 @@ if( ! class_exists( 'SGU_Weather_Shortcodes' ) ) {
                 'show_title' => true,
                 'map_layer' => 'clouds',
                 'show_location_picker' => true,
-                'max_height' => 450 ,
+                'max_height' => 450,
             ], $atts, 'sgup_weather_map' );
 
-            // setup the height
-            $_height = ( isset( $atts['height'] ) ) ? intval( esc_attr( $atts['height'] ) ) : 450;
-            // which map layer: wind|clouds|rain
-            $_layer = ( isset( $atts['layer'] ) ) ? esc_attr( $atts['layer'] ) : 'clouds';
-            
-            // hold our returnable string
-            $_ret = '';
-
-            // get our location info            
+            // Get location
             $location = $this -> location_handler -> get_stored_location( );
-            // latitude
-            $lat = $location -> lat;
-            // longitude
-            $lon = $location -> lon;
-            
-            // container
-            $_ret .= '  <div class="">';
-            // start building the iframe for the embed
-            $_ret .= '      <iframe class="sgup_weather_map" style="height:' . $_height . 'px;" src="//embed.windy.com/embed2.html?';
-            // Latitude and longitude.
-            $_ret .= 'lat=' . esc_attr( $lat ) . '&lon=' . esc_attr( $lon );
-            // Zoom level.
-            $_ret .= '&zoom=7';
-            // The weather layer (overlay).
-            $_ret .= '&overlay=' . $_layer;
-            // Show or hide pressure isolines.
-            $_ret .= '&pressure=true';
-            // Detail latitude and longitude.
-            $_ret .= '&detailLat=' . esc_attr( $lat ) . '&detailLon=' . esc_attr( $lon );
-            // The temperature scale.
-            $_ret .= '&metricTemp=°F';
-            // Complete the source URL.
-            $_ret .= '&product=ecmwf&level=surface&menu=&message=true&type=map&location=coordinates&radarRange=-1"';
-            // complete the iframe
-            $_ret .= ' frameborder="0"></iframe>';
-            // end container
-            $_ret .= '  </div>';
-            
-            // return it
-            return $_ret;
+
+            // If no location, return empty or message
+            if( ! $location ) {
+                return '<div class="sgu-weather-no-location"><p>Please set your location to view the weather map.</p></div>';
+            }
+
+            // Get coordinates
+            $lat = esc_attr( $location -> lat );
+            $lon = esc_attr( $location -> lon );
+            $layer = esc_attr( sanitize_text_field( $atts['map_layer'] ) );
+            $height = absint( $atts['max_height'] );
+
+            // Build and return the iframe
+            return sprintf(
+                '<iframe class="sgu-weather-map" style="width: 100%%; height: %dpx;" src="//embed.windy.com/embed2.html?lat=%s&lon=%s&zoom=7&overlay=%s&pressure=true&detailLat=%s&detailLon=%s&metricTemp=°F&product=ecmwf&level=surface&menu=&message=true&type=map&location=coordinates&radarRange=-1&pressure=true" frameborder="0" loading="lazy"></iframe>',
+                $height,
+                $lat,
+                $lon,
+                $layer,
+                $lat,
+                $lon
+            );
 
         }
 

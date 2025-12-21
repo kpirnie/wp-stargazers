@@ -1,7 +1,7 @@
 // Weather Blocks - Gutenberg Editor
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { registerBlockType } from '@wordpress/blocks';
-import { PanelBody, RangeControl, TextControl, ToggleControl } from '@wordpress/components';
+import { PanelBody, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
 
 // Current Weather Block
 registerBlockType('sgup/weather-current', {
@@ -496,6 +496,74 @@ registerBlockType('sgup/weather-location', {
                                 <em>Compact mode enabled</em>
                             </p>
                         )}
+                    </div>
+                </div>
+            </>
+        );
+    },
+
+    save: () => null
+});
+
+// Weather Map Block
+registerBlockType('sgup/weather-map', {
+    title: 'Weather Map',
+    icon: 'location-alt',
+    category: 'sgup_weather',
+
+    edit: ({ attributes, setAttributes }) => {
+        const blockProps = useBlockProps();
+
+        return (
+            <>
+                <InspectorControls>
+                    <PanelBody title="Settings">
+                        <TextControl
+                            label="Title"
+                            value={attributes.title}
+                            onChange={(value) => setAttributes({ title: value })}
+                        />
+                        <ToggleControl
+                            label="Show Title"
+                            checked={attributes.showTitle}
+                            onChange={(value) => setAttributes({ showTitle: value })}
+                        />
+                        <ToggleControl
+                            label="Show Location Picker"
+                            checked={attributes.showLocationPicker}
+                            onChange={(value) => setAttributes({ showLocationPicker: value })}
+                        />
+                        <SelectControl
+                            label="Map Layer"
+                            value={attributes.mapLayer}
+                            options={[
+                                { label: 'Clouds', value: 'clouds' },
+                                { label: 'Wind', value: 'wind' },
+                                { label: 'Rain', value: 'rain' },
+                                { label: 'Radar', value: 'radar' },
+                                { label: 'Temperature', value: 'temp' }
+                            ]}
+                            onChange={(value) => setAttributes({ mapLayer: value })}
+                        />
+                        <RangeControl
+                            label="Map Height (px)"
+                            value={attributes.maxHeight}
+                            onChange={(value) => setAttributes({ maxHeight: value })}
+                            min={200}
+                            max={800}
+                        />
+                    </PanelBody>
+                </InspectorControls>
+
+                <div {...blockProps}>
+                    <div style={{ border: '2px dashed #ccc', padding: '20px', background: '#e0f2fe', borderRadius: '4px' }}>
+                        <h3 style={{ margin: '0 0 10px 0' }}>
+                            🗺️ {attributes.title} <small>({attributes.showTitle ? 'Shown' : 'Hidden'})</small>
+                        </h3>
+                        <p style={{ margin: 0, color: '#666' }}>Weather map will display here.</p>
+                        <p style={{ margin: '5px 0', fontSize: '12px', color: '#888' }}>
+                            <em>Layer: {attributes.mapLayer} | Height: {attributes.maxHeight}px</em>
+                        </p>
                     </div>
                 </div>
             </>

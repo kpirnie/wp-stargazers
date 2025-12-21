@@ -250,6 +250,29 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                 ]
             ] );
 
+            // Register Weather Map block
+            register_block_type( 'sgup/weather-map', [
+                'api_version' => 2,
+                'category' => 'sgup_weather',
+                'render_callback' => function( $attributes ) {
+                    $sc = new SGU_Weather_Shortcodes( );
+                    return $sc -> render_weather_maps( [
+                        'title' => $attributes['title'] ?? 'Weather Map',
+                        'show_title' => $attributes['showTitle'] ?? true,
+                        'map_layer' => $attributes['mapLayer'] ?? 'clouds',
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'max_height' => $attributes['maxHeight'] ?? 450,
+                    ] );
+                },
+                'attributes' => [
+                    'title' => [ 'type' => 'string', 'default' => 'Weather Map' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
+                    'mapLayer' => [ 'type' => 'string', 'default' => 'clouds', 'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', ] ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                    'maxHeight' => [ 'type' => 'number', 'default' => 450 ],
+                ]
+            ] );
+
         }
 
     }

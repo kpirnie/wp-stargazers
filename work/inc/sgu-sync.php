@@ -73,7 +73,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
             
             // Then sync imagery
             $this -> sync_the_imagery( );
-            
+
             $this -> cli_line( WP_CLI::colorize("%GAll syncing complete!%N") );
         }
 
@@ -109,9 +109,6 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                     // Silently skip - no error message needed for items that don't update
                 }
             }
-
-            // Post-sync cleanup
-            $this -> perform_cleanup( );
 
             // Display final status
             $total = $successes + $skipped;
@@ -162,7 +159,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
          * 
          * @return void
          */
-        private function perform_cleanup( ) : void {
+        public function perform_cleanup( ) : void {
             WP_CLI::line( WP_CLI::colorize("%YPerforming post-sync cleanup...%N") );
             
             // Clean up duplicate data

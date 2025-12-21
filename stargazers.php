@@ -63,8 +63,14 @@ if( defined( 'WP_CLI' ) ) {
             ['shortdesc' => 'This method syncs the remote imagery to WordPress.  We then utilize WP to display.'] );
         WP_CLI::add_command( 'sgu sync both', ['SGU_Sync', 'sync_both'], 
             ['shortdesc' => 'This method syncs both the data and the imagery.  We then utilize WP to display.'] );
+        WP_CLI::add_command( 'sgu sync cleanup', ['SGU_Sync', 'perform_cleanup'], 
+            ['shortdesc' => 'This method cleans up the data.'] );
+
+        
 
         // Historical sync commands
+        
+
         WP_CLI::add_command( 'sgu historical apod', 'sgu_cli_historical_apod', [
             'shortdesc' => 'Sync historical APOD data from NASA (one-time bulk import)',
             'synopsis' => [
