@@ -101,9 +101,23 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
                 // 3. Media type is image (not video)
                 if( $orig_media && $does_not_have_local && $media_type == 'image' ) {
 
-                    // Extract filename from NASA URL
-                    // Example: https://apod.nasa.gov/apod/image/2024/galaxy.jpg -> galaxy.jpg
-                    $filepath = basename( wp_parse_url( $orig_media, PHP_URL_PATH ) );
+                    // Skip if URL appears to be a video embed
+                    if( strpos( $orig_media, 'youtube.com' ) !== false || 
+                        strpos( $orig_media, 'youtu.be' ) !== false ||
+                        strpos( $orig_media, 'vimeo.com' ) !== false ) {
+                        continue;
+                    }
+
+                    // Clean the URL - remove %20 and other URL encoding issues
+                    $clean_url = str_replace( '%20', ' ', $orig_media );
+                    $clean_url = trim( $clean_url );
+                    
+                    // Extract filename from cleaned URL
+                    $filepath = basename( wp_parse_url( $clean_url, PHP_URL_PATH ) );
+                    
+                    // Remove trailing spaces and %20 from filename
+                    $filepath = str_replace( '%20', '', $filepath );
+                    $filepath = trim( $filepath );
 
                     // Check if this file already exists in media library
                     // post_exists() returns post ID if title matches, 0 if not
@@ -121,7 +135,7 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
                     // Attachment doesn't exist, need to download
                     // Download image from NASA using WordPress HTTP API
                     // 90 second timeout for large HD images
-                    $response = wp_safe_remote_get( $orig_media, ['timeout' => 90] );
+                    $response = wp_safe_remote_get( $clean_url, ['timeout' => 90] );
 
                     // Check for download errors
                     if( ! is_wp_error( $response ) ) {
@@ -161,7 +175,7 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
 
                     } else {
                         // Log download error for debugging
-                        error_log( sprintf( "There was an issue pulling: %s", $orig_media ) );
+                        error_log( sprintf( "There was an issue pulling: %s", $clean_url ) );
                         error_log( $response -> get_error_message( ) );
                     }
                 }
@@ -183,6 +197,14 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
          * 
         */
         public function sync_apod_imagery_with_progress( ) : void {
+
+            // Add upload_mimes filter
+            add_filter( 'upload_mimes', function( $mimes ) {
+                $mimes['gif'] = 'image/gif';
+                $mimes['svg'] = 'image/svg+xml';
+                $mimes['svgz'] = 'image/svg+xml';
+                return $mimes;
+            } );
 
             // Query all published APOD posts that need imagery
             $args = [
@@ -239,6 +261,11 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
                 // Extract post ID and meta data
                 $id = $post -> ID;
                 $orig_media = get_post_meta( $id, 'sgu_apod_orignal_media', true );
+                $local_media = get_post_meta( $id, 'sgu_apod_local_media', true );
+                $media_type = get_post_meta( $id, 'sgu_apod_local_media_type', true );
+
+                // Check if we need to download this image
+                $does_not_have_local = empty( $local_media ) || is_null( $local_media );
 
                 if( ! $orig_media ) {
                     $skipped++;
@@ -246,72 +273,97 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
                     continue;
                 }
 
-                // Extract filename from NASA URL
-                $filepath = basename( wp_parse_url( $orig_media, PHP_URL_PATH ) );
+                // Only process if we have an original URL, no local copy exists yet, and media type is image
+                if( $orig_media && $does_not_have_local && $media_type == 'image' ) {
 
-                // Check if this file already exists in media library
-                $attach_id = post_exists( $filepath );
-
-                // If attachment already exists, just update the meta and skip download
-                if( $attach_id ) {
-                    $attach_url = wp_get_attachment_url( $attach_id );
-                    if( $attach_url ) {
-                        update_post_meta( $id, 'sgu_apod_local_media', $attach_url );
+                    // Skip if URL appears to be a video embed
+                    if( strpos( $orig_media, 'youtube.com' ) !== false || 
+                        strpos( $orig_media, 'youtu.be' ) !== false ||
+                        strpos( $orig_media, 'vimeo.com' ) !== false ) {
                         $skipped++;
                         if( $progress ) $progress -> tick( );
                         continue;
                     }
-                }
 
-                // Download image from NASA
-                $response = wp_safe_remote_get( $orig_media, [ 'timeout' => 90 ] );
+                    // Clean the URL - remove %20 and other URL encoding issues
+                    $clean_url = str_replace( '%20', ' ', $orig_media );
+                    $clean_url = trim( $clean_url );
+                    
+                    // Extract filename from cleaned URL
+                    $filepath = basename( wp_parse_url( $clean_url, PHP_URL_PATH ) );
+                    
+                    // Remove trailing spaces and %20 from filename
+                    $filepath = str_replace( '%20', '', $filepath );
+                    $filepath = trim( $filepath );
 
-                // Check for download errors
-                if( ! is_wp_error( $response ) ) {
+                    // Check if this file already exists in media library
+                    $attach_id = post_exists( $filepath );
 
-                    // Extract image binary data from response
-                    $bits = wp_remote_retrieve_body( $response );
+                    // If attachment already exists, just update the meta and skip download
+                    if( $attach_id ) {
+                        $attach_url = wp_get_attachment_url( $attach_id );
+                        if( $attach_url ) {
+                            update_post_meta( $id, 'sgu_apod_local_media', $attach_url );
+                            $skipped++;
+                            if( $progress ) $progress -> tick( );
+                            continue;
+                        }
+                    }
 
-                    // Upload to WordPress using wp_upload_bits()
-                    $upload = wp_upload_bits( $filepath, null, $bits );
+                    // Attachment doesn't exist, need to download
+                    // Use the cleaned URL for download
+                    $response = wp_safe_remote_get( $clean_url, [ 'timeout' => 90 ] );
 
-                    // Check if upload succeeded
-                    if( ! isset( $upload['error'] ) || ! $upload['error'] ) {
+                    // Check for download errors
+                    if( ! is_wp_error( $response ) ) {
 
-                        // Prepare attachment post data
-                        $attachment = [
-                            'post_title' => $filepath,
-                            'post_mime_type' => $upload['type'],
-                            'guid' => $upload['url'],
-                        ];
+                        // Extract image binary data from response
+                        $bits = wp_remote_retrieve_body( $response );
 
-                        // Insert attachment into media library
-                        $attach_id = wp_insert_attachment( $attachment, $upload['file'], 0 );
+                        // Upload to WordPress using wp_upload_bits()
+                        $upload = wp_upload_bits( $filepath, null, $bits );
 
-                        // Generate attachment metadata
-                        $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
-                        wp_update_attachment_metadata( $attach_id, $attach_data );
+                        // Check if upload succeeded
+                        if( ! isset( $upload['error'] ) || ! $upload['error'] ) {
 
-                        // Update APOD post with local media URL
-                        update_post_meta( $id, 'sgu_apod_local_media', $upload['url'] );
+                            // Prepare attachment post data
+                            $attachment = [
+                                'post_title' => $filepath,
+                                'post_mime_type' => $upload['type'],
+                                'guid' => $upload['url'],
+                            ];
 
-                        $downloaded++;
+                            // Insert attachment into media library
+                            $attach_id = wp_insert_attachment( $attachment, $upload['file'], 0 );
+
+                            // Generate attachment metadata
+                            $attach_data = wp_generate_attachment_metadata( $attach_id, $upload['file'] );
+                            wp_update_attachment_metadata( $attach_id, $attach_data );
+
+                            // Update APOD post with local media URL
+                            update_post_meta( $id, 'sgu_apod_local_media', $upload['url'] );
+
+                            $downloaded++;
+
+                        } else {
+                            $failed++;
+                            error_log( sprintf( "Upload failed for %s: %s", $filepath, $upload['error'] ) );
+                        }
 
                     } else {
                         $failed++;
-                        error_log( sprintf( "Upload failed for %s: %s", $filepath, $upload['error'] ) );
+                        error_log( sprintf( "Download failed for %s: %s", $clean_url, $response -> get_error_message( ) ) );
                     }
 
+                    if( $progress ) $progress -> tick( );
+
+                    // Small delay to avoid overwhelming servers
+                    usleep( 100000 ); // 0.1 second
+
                 } else {
-                    $failed++;
-                    error_log( sprintf( "Download failed for %s: %s", $orig_media, $response -> get_error_message( ) ) );
+                    $skipped++;
+                    if( $progress ) $progress -> tick( );
                 }
-
-                if( $progress ) $progress -> tick( );
-
-                // Small delay to avoid overwhelming servers
-                usleep( 100000 ); // 0.1 second
-
             }
 
             if( $progress ) $progress -> finish( );
@@ -326,5 +378,7 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
             }
 
         }
+        
+        
     }
 }

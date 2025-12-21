@@ -91,6 +91,14 @@ if( ! class_exists( 'SGUP' ) ) {
             // now we can clean up the class array
             unset( $theme_classes );
 
+            // Add a couple mime types to allow for uploads
+            add_filter( 'upload_mimes', function( $mimes ) {
+                $mimes['gif'] = 'image/gif';
+                $mimes['svg'] = 'image/svg+xml';
+                $mimes['svgz'] = 'image/svg+xml';
+                return $mimes;
+            } );
+
         }
 
     }

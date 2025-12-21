@@ -382,13 +382,18 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             $content = sanitize_text_field( $data['explanation'] );
             
             // Prefer HD URL if available, fall back to standard
-            $media = sanitize_url( ( $data['hdurl'] ) ?? $data['url'] );
+            $media = sanitize_url( ( $data['hdurl'] ) ?? ( $data['url'] ) ?? '' );
             
             // Extract copyright or default to NASA
             $copyright = sanitize_text_field( ( $data['copyright'] ) ?? 'NASA/JPL' );
             
             // Media type: 'image' or 'video'
             $media_type = sanitize_text_field( $data['media_type'] );
+
+            // if the media type is not an image or video, skip it
+            if( ! in_array( $media_type, ['video', 'image'] ) ) {
+                return false;
+            }
 
             // Check if APOD already exists by title
             $existing_id = ( SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_apod' ) ) ?: 0;
