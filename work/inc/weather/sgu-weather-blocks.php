@@ -70,23 +70,35 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
 
             // Register Current Weather block
             register_block_type( 'sgup/weather-current', [
-                'api_version' => 2,
+                'api_version' => 3,
                 'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
+                'render_callback' => function( $attributes, $content, $block ) {
+                    $wrapper_attributes = get_block_wrapper_attributes();
                     $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_current_weather( [
+                    $output = $sc -> render_current_weather( [
                         'title' => $attributes['title'] ?? 'Current Weather',
                         'show_title' => $attributes['showTitle'] ?? true,
                         'show_location_picker' => $attributes['showLocationPicker'] ?? true,
                         'show_details' => $attributes['showDetails'] ?? true,
                     ] );
+                    return sprintf( '<div %s>%s</div>', $wrapper_attributes, $output );
                 },
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Current Weather' ],
                     'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
                     'showDetails' => [ 'type' => 'boolean', 'default' => true ],
-                ]
+                ],
+                'supports' => [
+                    'align' => true,
+                    'className' => true,
+                    'customClassName' => true,
+                    'spacing' => [
+                        'margin' => true,
+                        'padding' => true,
+                        'blockGap' => true,
+                    ],
+                ],
             ] );
 
             // Register Daily Forecast block
@@ -267,7 +279,7 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
                 'attributes' => [
                     'title' => [ 'type' => 'string', 'default' => 'Weather Map' ],
                     'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'mapLayer' => [ 'type' => 'string', 'default' => 'clouds', 'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', ] ],
+                    'mapLayer' => [ 'type' => 'string', 'default' => 'clouds', 'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', 'rh', 'satelite', 'visibility' ] ],
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
                     'maxHeight' => [ 'type' => 'number', 'default' => 450 ],
                 ]

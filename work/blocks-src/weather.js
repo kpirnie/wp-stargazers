@@ -8,9 +8,22 @@ registerBlockType('sgup/weather-current', {
     title: 'Current Weather',
     icon: 'cloud',
     category: 'sgup_weather',
-
+    supports: {
+        align: true,
+        className: true,
+        customClassName: true,
+        spacing: {
+            margin: true,
+            padding: true,
+            blockGap: true
+        }
+    },
     edit: ({ attributes, setAttributes }) => {
-        const blockProps = useBlockProps();
+        const blockProps = useBlockProps({
+            style: {
+                ...attributes.style
+            }
+        });
 
         return (
             <>
@@ -541,7 +554,10 @@ registerBlockType('sgup/weather-map', {
                                 { label: 'Wind', value: 'wind' },
                                 { label: 'Rain', value: 'rain' },
                                 { label: 'Radar', value: 'radar' },
-                                { label: 'Temperature', value: 'temp' }
+                                { label: 'Temperature', value: 'temp' },
+                                { label: 'Humidity', value: 'rh' },
+                                { label: 'Satelite', value: 'satelite' },
+                                { label: 'Visibility', value: 'visibility' }                                
                             ]}
                             onChange={(value) => setAttributes({ mapLayer: value })}
                         />

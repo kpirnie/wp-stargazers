@@ -194,3 +194,9 @@ add_action( 'admin_init', function( ) {
     }
 
 }, 999 );
+
+// wee need some theme supports for our blocks
+add_action( 'after_setup_theme', function() {
+    add_theme_support( 'custom-spacing' );
+    add_theme_support( 'appearance-tools' );
+}, 99 );
