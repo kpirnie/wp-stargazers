@@ -152,7 +152,7 @@ if( ! class_exists( 'SGU_Astro_Shortcodes' ) ) {
             $the_menu = wp_nav_menu( $alert_nav_conf );
 
             // Render the template
-            $output = $this -> render_template( 'menu.php', [
+            $output = $this -> render_template( 'astro-menu.php', [
                 'the_menu' => $the_menu,
                 'is_inline' => $is_inline,
                 'text_align' => $text_align,

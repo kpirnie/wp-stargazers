@@ -20,7 +20,6 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
         'SGU_CPT_Settings' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-settings.php',
         'SGU_CPT_Templates' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-templates.php',
         'SGU_CPTs' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpts.php',
-        'SGU_Historical_Sync' => __DIR__ . '/../..' . '/work/inc/sgu-historical-sync.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
         'SGU_RSS_Parser' => __DIR__ . '/../..' . '/work/inc/sgu-rss-parser.php',
         'SGU_Settings' => __DIR__ . '/../..' . '/work/inc/sgu-settings.php',

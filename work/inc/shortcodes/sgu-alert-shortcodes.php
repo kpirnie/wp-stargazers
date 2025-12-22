@@ -91,7 +91,7 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
             unset( $latest_alerts );
 
             // get the template
-            $template = $this -> pull_template( "alerts/latest.php", $sc_data );
+            $template = $this -> pull_template( "astro-alerts/latest.php", $sc_data );
 
             // clean up
             unset( $sc_data );
@@ -150,10 +150,10 @@ if( ! class_exists( 'SGU_Alert_Shortcodes' ) ) {
 
             // hold the output
             $out = match( $tag ) {
-                'sgup_cme_alerts' => $this -> pull_template( "alerts/cme.php", $sc_data ),
-                'sgup_flare_alerts' => $this -> pull_template( "alerts/solar-flare.php", $sc_data ),
-                'sgup_sw_alerts' => $this -> pull_template( "alerts/space-weather.php", $sc_data ),
-                'sgup_geomag_alerts' => $this -> pull_template( "alerts/geomagnetic.php", $sc_data ),
+                'sgup_cme_alerts' => $this -> pull_template( "astro-alerts/cme.php", $sc_data ),
+                'sgup_flare_alerts' => $this -> pull_template( "astro-alerts/solar-flare.php", $sc_data ),
+                'sgup_sw_alerts' => $this -> pull_template( "astro-alerts/space-weather.php", $sc_data ),
+                'sgup_geomag_alerts' => $this -> pull_template( "astro-alerts/geomagnetic.php", $sc_data ),
                 default => '',
             };
 
