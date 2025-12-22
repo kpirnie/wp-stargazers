@@ -16,7 +16,7 @@
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
 // Make sure this class doesn't already exist
-if( ! class_exists( 'SGU_Blocks' ) ) {
+if ( ! class_exists( 'SGU_Blocks' ) ) {
 
     /** 
      * Class SGU_Blocks
@@ -41,7 +41,55 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
      * @package US Star Gazers Plugin
      * 
     */
-    class SGU_Blocks {
+    final class SGU_Blocks {
+
+        /** @var string Block category slug for space blocks */
+        private const CATEGORY = 'sgup_space';
+
+        /** @var int Default Block API version */
+        private const API_VERSION = 3;
+
+        /** @var array Block supports configuration */
+        private readonly array $supports;
+
+        /** @var SGU_Space_Data_Get Space data handler */
+        private readonly SGU_Space_Data_Get $space_data;
+
+        /** @var int Current page number for pagination */
+        private readonly int $paged;
+
+        /** 
+         * __construct
+         * 
+         * Initialize the class and setup dependencies
+         * 
+         * @since 0.0.1
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+        */
+        public function __construct() {
+
+            // instantiate space data handler
+            $this->space_data = new SGU_Space_Data_Get();
+
+            // get the current page number
+            $this->paged = SGU_Static::safe_get_paged_var() ?: 1;
+
+            // hold the supports array
+            $this->supports = [
+                'align' => true,
+                'className' => true,
+                'customClassName' => true,
+                'spacing' => [
+                    'margin' => true,
+                    'padding' => true,
+                    'blockGap' => true,
+                ],
+            ];
+
+        }
 
         /** 
          * init
@@ -58,18 +106,18 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
          * @return void This method does not return anything
          * 
         */
-        public function init( ): void {
+        public function init(): void {
 
             // Register all blocks during WordPress initialization
             // This must happen before WordPress processes blocks on pages
-            add_action( 'init', [ $this, 'register_blocks' ] );
+            add_action( 'init', $this->register_blocks( ... ) );
             
             // Enqueue JavaScript for block editor previews and controls
             // Only loads in wp-admin block editor, not on front-end
-            add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ] );
+            add_action( 'enqueue_block_editor_assets', $this->enqueue_editor_assets( ... ) );
 
             // Hook into the filter
-            add_filter( 'block_categories_all', [ $this, 'register_block_categories' ], 5, 2 );
+            add_filter( 'block_categories_all', $this->register_block_categories( ... ), 5, 2 );
 
         }
 
@@ -91,7 +139,7 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
          * @return void This method does not return anything
          * 
         */
-        public function enqueue_editor_assets( ): void {
+        public function enqueue_editor_assets(): void {
     
             // Get the correct plugin directory URL
             $plugin_url = plugins_url( '/', SGUP_PATH . '/' . SGUP_FILENAME );
@@ -100,9 +148,9 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
             $asset_file = SGUP_PATH . '/build/blocks.asset.php';
             
             // Load asset file if it exists, otherwise use defaults
-            $asset = file_exists( $asset_file ) ? require( $asset_file ) : [
-                'dependencies' => ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n'],
-                'version' => '1.0.0'
+            $asset = file_exists( $asset_file ) ? require $asset_file : [
+                'dependencies' => [ 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n' ],
+                'version' => '1.0.0',
             ];
 
             // Enqueue the compiled blocks JavaScript for the editor
@@ -113,6 +161,87 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
                 $asset['version'],
                 true
             );
+
+        }
+
+        /** 
+         * register_block
+         * 
+         * Register a single Gutenberg block with common configuration
+         * 
+         * @since 0.0.1
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param string $name Block name (e.g., 'sgup/latest-alerts')
+         * @param array $attributes Block attributes definition
+         * @param callable $render_callback Render callback function
+         * 
+         * @return void
+         * 
+        */
+        private function register_block( string $name, array $attributes, callable $render_callback ): void {
+
+            register_block_type( $name, [
+                'api_version' => self::API_VERSION,
+                'category' => self::CATEGORY,
+                'render_callback' => $render_callback,
+                'attributes' => $attributes,
+                'supports' => $this->supports,
+            ] );
+
+        }
+
+        /** 
+         * paging_attributes
+         * 
+         * Get paging attributes common to paginated blocks
+         * 
+         * @since 0.0.1
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @return array Paging attributes array
+         * 
+        */
+        private function paging_attributes(): array {
+
+            return [
+                'showPaging' => [ 'type' => 'boolean', 'default' => false ],
+                'pagingLocation' => [ 'type' => 'string', 'default' => 'bottom', 'enum' => [ 'top', 'bottom', 'both' ] ],
+                'perPage' => [ 'type' => 'number', 'default' => 6 ],
+            ];
+
+        }
+
+        /** 
+         * paging_data
+         * 
+         * Build paging data array common to paginated block templates
+         * 
+         * @since 0.0.1
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param array $attributes Block attributes
+         * @param object|null $query_data Query data object with max_num_pages
+         * 
+         * @return array Paging data array for template
+         * 
+        */
+        private function paging_data( array $attributes, ?object $query_data = null ): array {
+
+            return [
+                'show_paging' => filter_var( $attributes['showPaging'] ?? false, FILTER_VALIDATE_BOOLEAN ),
+                'paging_location' => sanitize_text_field( $attributes['pagingLocation'] ?? 'bottom' ),
+                'per_page' => absint( $attributes['perPage'] ?? 6 ) ?: 6,
+                'max_pages' => $query_data?->max_num_pages ?? 1,
+                'paged' => $this->paged,
+            ];
+
         }
 
         /** 
@@ -133,200 +262,260 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
          * @return void This method does not return anything
          * 
         */
-        public function register_blocks( ): void {
-            
+        public function register_blocks(): void {
+
             // Register Latest Alerts block
             // Displays the most recent astronomy alerts with a customizable title
-            register_block_type( 'sgup/latest-alerts', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/latest-alerts',
+                [
+                    'title' => [ 'type' => 'string', 'default' => 'Latest Astronomy Alerts' ],
+                ],
+                function( array $attributes ): string {
 
-                    // Instantiate shortcode handler
-                    $sc = new SGU_Alert_Shortcodes( );
+                    // pull the latest alert data
+                    $latest_alerts = $this->space_data->get_latest_alerts();
 
-                    // Delegate to existing shortcode render method
-                    return $sc -> render_latest_alerts( [ 'title' => $attributes['title'] ?? 'Latest Astronomy Alerts', ], 
-                        '', 'sgup_latest_alerts' );
+                    // hold the data we're going to pass to the template
+                    $data = [
+                        'title' => esc_html( $attributes['title'] ?? 'Latest Astronomy Alerts' ),
+                        'latest_alerts' => $latest_alerts,
+                    ];
 
-                },
-                'attributes' => [
-                    'title' => ['type' => 'string', 'default' => 'Latest Astronomy Alerts']
-                ]
-            ] );
+                    // render the template
+                    return SGU_Static::render_template( 'astro-alerts/latest', $data );
+
+                }
+            );
 
             // Register CME (Coronal Mass Ejection) Alerts block
             // Displays CME alerts with optional pagination controls
-            register_block_type( 'sgup/cme-alerts', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/cme-alerts',
+                $this->paging_attributes(),
+                function( array $attributes ): string {
 
-                    // Instantiate shortcode handler
-                    $sc = new SGU_Alert_Shortcodes();
-                    
-                    // Delegate to existing shortcode render method
-                    // Converts block attributes to shortcode parameters
-                    return $sc -> render_alert_shortcode( [
-                        'show_paging' => $attributes['showPaging'] ?? false,
-                        'paging_location' => $attributes['pagingLocation'] ?? 'bottom',
-                        'per_page' => $attributes['perPage'] ?? 6
-                    ], '', 'sgup_cme_alerts' );
-                },
-                'attributes' => [
-                    'showPaging' => ['type' => 'boolean', 'default' => false],
-                    'pagingLocation' => ['type' => 'string', 'default' => 'bottom', 'enum' => array( 'top', 'bottom', 'both' )],
-                    'perPage' => ['type' => 'number', 'default' => 6]
-                ]
-            ] );
+                    // get the CME alert data
+                    $alerts = $this->space_data->get_cme_alerts( $this->paged );
+
+                    // make sure there is data, if not dump out early
+                    if ( ! $alerts || ! $alerts->posts ) {
+                        return '';
+                    }
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->paging_data( $attributes, $alerts ) + [
+                        'data' => $alerts,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'astro-alerts/cme', $data );
+
+                }
+            );
 
             // Register Solar Flare Alerts block
             // Displays solar flare event data with optional pagination
-            register_block_type( 'sgup/flare-alerts', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/flare-alerts',
+                $this->paging_attributes(),
+                function( array $attributes ): string {
 
-                    // Instantiate shortcode handler
-                    $sc = new SGU_Alert_Shortcodes();
-                    
-                    // Delegate to existing shortcode render method
-                    return $sc -> render_alert_shortcode( [
-                        'show_paging' => $attributes['showPaging'] ?? false,
-                        'paging_location' => $attributes['pagingLocation'] ?? 'bottom',
-                        'per_page' => $attributes['perPage'] ?? 6
-                    ], '', 'sgup_flare_alerts' );
-                },
-                'attributes' => [
-                    'showPaging' => ['type' => 'boolean', 'default' => false],
-                    'pagingLocation' => ['type' => 'string', 'default' => 'bottom', 'enum' => array( 'top', 'bottom', 'both' )],
-                    'perPage' => ['type' => 'number', 'default' => 6]
-                ]
-            ] );
+                    // get the solar flare alert data
+                    $alerts = $this->space_data->get_solar_flare_alerts( $this->paged );
+
+                    // make sure there is data, if not dump out early
+                    if ( ! $alerts || ! $alerts->posts ) {
+                        return '';
+                    }
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->paging_data( $attributes, $alerts ) + [
+                        'data' => $alerts,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'astro-alerts/solar-flare', $data );
+
+                }
+            );
 
             // Register Space Weather Alerts block
             // Displays general space weather notifications with pagination
-            register_block_type( 'sgup/sw-alerts', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/sw-alerts',
+                $this->paging_attributes(),
+                function( array $attributes ): string {
 
-                    // Instantiate shortcode handler
-                    $sc = new SGU_Alert_Shortcodes();
-                    
-                    // Delegate to existing shortcode render method
-                    return $sc -> render_alert_shortcode( [
-                        'show_paging' => $attributes['showPaging'] ?? false,
-                        'paging_location' => $attributes['pagingLocation'] ?? 'bottom',
-                        'per_page' => $attributes['perPage'] ?? 6
-                    ], '', 'sgup_sw_alerts' );
-                },
-                'attributes' => [
-                    'showPaging' => ['type' => 'boolean', 'default' => false],
-                    'pagingLocation' => ['type' => 'string', 'default' => 'bottom', 'enum' => array( 'top', 'bottom', 'both' )],
-                    'perPage' => ['type' => 'number', 'default' => 6]
-                ]
-            ] );
+                    // get the space weather alert data
+                    $alerts = $this->space_data->get_space_weather_alerts( $this->paged );
+
+                    // make sure there is data, if not dump out early
+                    if ( ! $alerts || ! $alerts->posts ) {
+                        return '';
+                    }
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->paging_data( $attributes, $alerts ) + [
+                        'data' => $alerts,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'astro-alerts/space-weather', $data );
+
+                }
+            );
 
             // Register Geomagnetic Storm Alerts block
             // Displays geomagnetic activity alerts with pagination options
-            register_block_type( 'sgup/geomag-alerts', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/geomag-alerts',
+                $this->paging_attributes(),
+                function( array $attributes ): string {
 
-                    // Instantiate shortcode handler
-                    $sc = new SGU_Alert_Shortcodes();
-                    
-                    // Delegate to existing shortcode render method
-                    return $sc -> render_alert_shortcode( [
-                        'show_paging' => $attributes['showPaging'] ?? false,
-                        'paging_location' => $attributes['pagingLocation'] ?? 'bottom',
-                        'per_page' => $attributes['perPage'] ?? 6
-                    ], '', 'sgup_geomag_alerts' );
-                },
-                'attributes' => [
-                    'showPaging' => ['type' => 'boolean', 'default' => false],
-                    'pagingLocation' => ['type' => 'string', 'default' => 'bottom', 'enum' => array( 'top', 'bottom', 'both' )],
-                    'perPage' => ['type' => 'number', 'default' => 6]
-                ]
-            ] );
+                    // get the geomagnetic alert data
+                    $alerts = $this->space_data->get_geo_magnetic_alerts( $this->paged );
+
+                    // make sure there is data, if not dump out early
+                    if ( ! $alerts || ! $alerts->posts ) {
+                        return '';
+                    }
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->paging_data( $attributes, $alerts ) + [
+                        'data' => $alerts,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'astro-alerts/geomagnetic', $data );
+
+                }
+            );
 
             // Register Astronomy Menu block
             // Displays navigation menu for astronomy sections
             // 'which' attribute determines which menu variation to show
-            register_block_type( 'sgup/astro-menu', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/astro-menu',
+                [
+                    'which' => [ 'type' => 'string', 'default' => 'alert-menu' ],
+                    'text_align' => [ 'type' => 'string', 'default' => 'left' ],
+                    'is_inline' => [ 'type' => 'boolean', 'default' => false ],
+                ],
+                function( array $attributes ): string {
 
-                    // Instantiate astronomy shortcode handler
-                    $sc = new SGU_Astro_Shortcodes();
-                    
-                    // Delegate to menu generation method
-                    return $sc -> add_astro_nav( [
-                        'which' => $attributes['which'] ?? 'alert-menu', 
-                        'is_inline' => $attributes['is_inline'] ?? false, 
-                        'text_align' => $attributes['text_align'] ?? 'left'] );
-                },
-                'attributes' => [
-                    'which' => ['type' => 'string', 'default' => 'alert-menu'],
-                    'text_align' => ['type' => 'string', 'default' => 'left'],
-                    'is_inline' => ['type' => 'boolean', 'default' => false],
-                ]
-            ] );
+                    // sanitize the attributes
+                    $menu_slug = sanitize_text_field( $attributes['which'] ?? 'alert-menu' );
+                    $text_align = sanitize_text_field( $attributes['text_align'] ?? 'left' );
+                    $is_inline = filter_var( $attributes['is_inline'] ?? false, FILTER_VALIDATE_BOOLEAN );
+
+                    // Create cache key for this specific menu
+                    $cache_key = "sgup_astro_menu_{$menu_slug}";
+
+                    // Try to get cached menu
+                    $cached = wp_cache_get( $cache_key, 'sgup_menus' );
+                    if ( $cached !== false ) {
+                        return $cached;
+                    }
+
+                    // configure the menu from our themes menus
+                    $alert_nav_conf = [
+                        'menu' => $menu_slug,
+                        'items_wrap' => '%3$s',
+                        'depth' => 1,
+                        'container' => null,
+                        'echo' => false,
+                        'menu_class' => '',
+                    ];
+
+                    // get the menu
+                    $the_menu = wp_nav_menu( $alert_nav_conf );
+
+                    // hold the data we're going to pass to the template
+                    $data = [
+                        'the_menu' => $the_menu,
+                        'is_inline' => $is_inline,
+                        'text_align' => $text_align,
+                    ];
+
+                    // render the template
+                    $output = SGU_Static::render_template( 'astro-menu', $data );
+
+                    // Cache for 12 hours (menus don't change often)
+                    wp_cache_set( $cache_key, $output, 'sgup_menus', 12 * HOUR_IN_SECONDS );
+
+                    // return the output
+                    return $output;
+
+                }
+            );
 
             // Register Near Earth Objects (NEO) block
             // Displays NEO tracking data with optional map visualization and pagination
-            register_block_type( 'sgup/neos', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/neos',
+                $this->paging_attributes() + [
+                    'showMap' => [ 'type' => 'boolean', 'default' => false ],
+                ],
+                function( array $attributes ): string {
 
-                    // Instantiate astronomy shortcode handler
-                    $sc = new SGU_Astro_Shortcodes();
-                    
-                    // Delegate to NEO display method
-                    // Includes map toggle for orbital visualization
-                    return $sc -> add_neos( [
-                        'show_paging' => $attributes['showPaging'] ?? false,
-                        'show_map' => $attributes['showMap'] ?? false,
-                        'paging_location' => $attributes['pagingLocation'] ?? 'bottom',
-                        'per_page' => $attributes['perPage'] ?? 6
-                    ] );
-                },
-                'attributes' => [
-                    'showPaging' => ['type' => 'boolean', 'default' => false],
-                    'showMap' => ['type' => 'boolean', 'default' => false],
-                    'pagingLocation' => ['type' => 'string', 'default' => 'bottom', 'enum' => array( 'top', 'bottom', 'both' )],
-                    'perPage' => ['type' => 'number', 'default' => 6]
-                ]
-            ] );
+                    // get the NEO data
+                    $neos = $this->space_data->get_neos( $this->paged );
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->paging_data( $attributes, $neos ) + [
+                        'show_map' => filter_var( $attributes['showMap'] ?? false, FILTER_VALIDATE_BOOLEAN ),
+                        'data' => $neos,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'neos', $data );
+
+                }
+            );
 
             // Register Astronomy Picture of the Day (APOD) block
             // Displays NASA's APOD with image and description
-            register_block_type( 'sgup/apod', [
-                'api_version' => 2,
-                'category' => 'sgup_space',
-                'render_callback' => function( $attributes ) {
+            $this->register_block(
+                'sgup/apod',
+                [
+                    'title' => [ 'type' => 'string', 'default' => 'Astronomy Picture of the Day' ],
+                ],
+                function( array $attributes ): string {
 
-                    // Instantiate astronomy shortcode handler
-                    $sc = new SGU_Astro_Shortcodes();
-                    
-                    // Delegate to APOD display method with title
-                    return $sc -> add_latest_apod( ['title' => $attributes['title'] ?? 'Astronomy Picture of the Day'] );
-                },
-                'attributes' => [
-                    'title' => ['type' => 'string', 'default' => 'Astronomy Picture of the Day']
-                ]
-            ] );
+                    // get the APOD data
+                    $apod = $this->space_data->get_apod();
+
+                    // Early return if no data
+                    if ( ! $apod || empty( $apod->posts ) ) {
+                        return '';
+                    }
+
+                    // setup the post
+                    $post = $apod->posts[0];
+
+                    // hold the data we're going to pass to the template
+                    $data = [
+                        'id' => $post->ID,
+                        'block_title' => esc_html( $attributes['title'] ?? 'Astronomy Picture of the Day' ),
+                        'title' => $post->post_title,
+                        'content' => $post->post_content,
+                        'meta' => get_post_meta( $post->ID ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'apod/home', $data );
+
+                }
+            );
 
         }
 
         /** 
          * register_block_categories
          * 
-         * Register custom block categories
+         * Register custom block categories for space and weather blocks.
+         * Categories appear in the block inserter to group related blocks together.
          * 
          * @since 0.0.1
          * @access public
@@ -334,30 +523,30 @@ if( ! class_exists( 'SGU_Blocks' ) ) {
          * @package US Star Gazers Plugin
          * 
          * @param array $categories Existing block categories
+         * @param WP_Post $post Current post object
          * 
          * @return array Modified block categories
          * 
         */
-        public function register_block_categories( $categories, $post ) : array {
+        public function register_block_categories( array $categories, WP_Post $post ): array {
 
             // merge our new categories in with the existing ones
-            $all_categories = array_merge(
+            return array_merge(
                 [
                     [
-                        'slug'  => 'sgup_space',
+                        'slug' => 'sgup_space',
                         'title' => __( 'Space', 'sgup' ),
                     ],
                     [
-                        'slug'  => 'sgup_weather',
+                        'slug' => 'sgup_weather',
                         'title' => __( 'Weather', 'sgup' ),
                     ],
                 ],
                 $categories
             );
 
-            // return them
-            return $all_categories;
         }
 
     }
+
 }

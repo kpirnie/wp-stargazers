@@ -14,7 +14,7 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
-if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
+if ( ! class_exists( 'SGU_Weather_Blocks' ) ) {
 
     /** 
      * Class SGU_Weather_Blocks
@@ -35,7 +35,74 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
      * @package US Star Gazers Plugin
      * 
     */
-    class SGU_Weather_Blocks {
+    final class SGU_Weather_Blocks {
+
+        /** @var string Block category slug */
+        private const CATEGORY = 'sgup_weather';
+
+        /** @var array Default coordinates (Hawaii) */
+        private const DEFAULT_COORDS = [
+            'lat' => 19.8987,
+            'lon' => -155.6659,
+        ];
+
+        /** @var SGU_Weather_Data Weather data handler */
+        private readonly SGU_Weather_Data $weather_data;
+
+        /** @var object|null Cached location data */
+        private readonly ?object $location;
+
+        /** @var string Resolved location name */
+        private readonly string $location_name;
+
+        /** @var float Latitude coordinate */
+        private readonly float $lat;
+
+        /** @var float Longitude coordinate */
+        private readonly float $lon;
+
+        /** @var array Block supports configuration */
+        private readonly array $supports;
+
+        /** @var array Cached weather data by type */
+        private array $weather_cache = [];
+
+        /** 
+         * __construct
+         * 
+         * Initialize the class
+         * 
+         * @since 8.4
+         * @access public
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+        */
+        public function __construct() {
+
+            // setup and cache the weather & location data for the class
+            $this->weather_data = new SGU_Weather_Data();
+            $location_handler = new SGU_Weather_Location();
+
+            // hold the supports array
+            $this->supports = [
+                'align' => true,
+                'className' => true,
+                'customClassName' => true,
+                'spacing' => [
+                    'margin' => true,
+                    'padding' => true,
+                    'blockGap' => true,
+                ],
+            ];
+
+            // get & setup class common data
+            $this->location = $location_handler->get_stored_location();
+            $this->location_name = $this->location?->name ?? 'Not Found';
+            $this->lat = $this->location?->lat ?? self::DEFAULT_COORDS['lat'];
+            $this->lon = $this->location?->lon ?? self::DEFAULT_COORDS['lon'];
+
+        }
 
         /** 
          * init
@@ -47,11 +114,139 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers Plugin
          * 
+         * @return void
+         * 
         */
-        public function init( ) : void {
+        public function init(): void {
 
             // Register all weather blocks during WordPress initialization
-            add_action( 'init', [ $this, 'register_blocks' ] );
+            add_action( 'init', $this->register_blocks( ... ) );
+
+        }
+
+        /** 
+         * get_weather_data
+         * 
+         * Retrieve weather data by type with caching
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param string $type The type of weather data to retrieve
+         * 
+         * @return mixed Weather data or false if type not found
+         * 
+        */
+        private function get_weather_data( string $type ): mixed {
+
+            // return cached data if available
+            if ( isset( $this->weather_cache[ $type ] ) ) {
+                return $this->weather_cache[ $type ];
+            }
+
+            // match the type and get the actual weather data needed for it
+            $data = match ( $type ) {
+                'current' => $this->weather_data->get_current_weather( $this->lat, $this->lon ),
+                'hourly' => $this->weather_data->get_hourly_forecast( $this->lat, $this->lon ),
+                'daily' => $this->weather_data->get_daily_forecast( $this->lat, $this->lon ),
+                'noaa' => $this->weather_data->get_noaa_forecast( $this->lat, $this->lon ),
+                'alerts' => $this->weather_data->get_noaa_alerts( $this->lat, $this->lon ),
+                default => false,
+            };
+
+            // cache and return the data
+            $this->weather_cache[ $type ] = $data;
+
+            // return the data
+            return $data;
+
+        }
+
+        /** 
+         * base_attributes
+         * 
+         * Get base attributes common to most weather blocks
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param string $default_title Default title for the block
+         * @param bool $show_location_picker Whether to show location picker by default
+         * 
+         * @return array Base attributes array
+         * 
+        */
+        private function base_attributes( string $default_title, bool $show_location_picker = true ): array {
+
+            return [
+                'title' => [ 'type' => 'string', 'default' => $default_title ],
+                'showTitle' => [ 'type' => 'boolean', 'default' => true ],
+                'showLocationPicker' => [ 'type' => 'boolean', 'default' => $show_location_picker ],
+            ];
+
+        }
+
+        /** 
+         * base_data
+         * 
+         * Build base data array common to all weather block templates
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param array $attributes Block attributes
+         * @param string $default_title Default title fallback
+         * 
+         * @return array Base data array for template
+         * 
+        */
+        private function base_data( array $attributes, string $default_title ): array {
+
+            return [
+                'title' => $attributes['title'] ?? $default_title,
+                'show_title' => $attributes['showTitle'] ?? true,
+                'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                'has_location' => (bool) $this->location,
+                'location' => $this->location,
+                'location_name' => $this->location_name,
+                'wrapper_attr' => get_block_wrapper_attributes(),
+            ];
+
+        }
+
+        /** 
+         * register_block
+         * 
+         * Register a single Gutenberg block with common configuration
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers Plugin
+         * 
+         * @param string $name Block name (e.g., 'sgup/weather-current')
+         * @param array $attributes Block attributes definition
+         * @param callable $render_callback Render callback function
+         * @param int $api_version Block API version (default: 2)
+         * 
+         * @return void
+         * 
+        */
+        private function register_block( string $name, array $attributes, callable $render_callback ): void {
+
+            register_block_type( $name, [
+                'api_version' => 3,
+                'category' => self::CATEGORY,
+                'render_callback' => $render_callback,
+                'attributes' => $attributes,
+                'supports' => $this->supports,
+            ] );
 
         }
 
@@ -65,225 +260,239 @@ if( ! class_exists( 'SGU_Weather_Blocks' ) ) {
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers Plugin
          * 
+         * @return void
+         * 
         */
-        public function register_blocks( ) : void {
+        public function register_blocks(): void {
 
             // Register Current Weather block
-            register_block_type( 'sgup/weather-current', [
-                'api_version' => 3,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes, $content, $block ) {
-                    $wrapper_attributes = get_block_wrapper_attributes();
-                    $sc = new SGU_Weather_Shortcodes( );
-                    $output = $sc -> render_current_weather( [
-                        'title' => $attributes['title'] ?? 'Current Weather',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'show_details' => $attributes['showDetails'] ?? true,
-                    ] );
-                    return sprintf( '<div %s>%s</div>', $wrapper_attributes, $output );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => 'Current Weather' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-current',
+                $this->base_attributes( 'Current Weather' ) + [
                     'showDetails' => [ 'type' => 'boolean', 'default' => true ],
                 ],
-                'supports' => [
-                    'align' => true,
-                    'className' => true,
-                    'customClassName' => true,
-                    'spacing' => [
-                        'margin' => true,
-                        'padding' => true,
-                        'blockGap' => true,
-                    ],
-                ],
-            ] );
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, 'Current Weather' ) + [
+                        'show_details' => $attributes['showDetails'] ?? true,
+                        'weather' => $this->get_weather_data( 'current' ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/current', $data );
+
+                }
+            );
 
             // Register Daily Forecast block
-            register_block_type( 'sgup/weather-daily', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_daily_forecast( [
-                        'title' => $attributes['title'] ?? 'Today\'s Forecast',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'show_hourly' => $attributes['showHourly'] ?? true,
-                        'hours_to_show' => $attributes['hoursToShow'] ?? 24,
-                        'use_noaa' => $attributes['useNoaa'] ?? true,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => 'Today\'s Forecast' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-daily',
+                $this->base_attributes( "Today's Forecast" ) + [
                     'showHourly' => [ 'type' => 'boolean', 'default' => true ],
                     'hoursToShow' => [ 'type' => 'number', 'default' => 24 ],
                     'useNoaa' => [ 'type' => 'boolean', 'default' => true ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, "Today's Forecast" ) + [
+                        'show_hourly' => $attributes['showHourly'] ?? true,
+                        'hours_to_show' => $attributes['hoursToShow'] ?? 24,
+                        'use_noaa' => $attributes['useNoaa'] ?? true,
+                        'forecast' => $this->get_weather_data( 'hourly' ),
+                        'noaa_forecast' => $this->get_weather_data( 'noaa' ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/day', $data );
+
+                }
+            );
 
             // Register the Hourly Breakdown
-            register_block_type( 'sgup/weather-daily-hourly', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_hourly( [
-                        'title' => $attributes['title'] ?? 'Today\'s Hourly Forecast',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'hours_to_show' => $attributes['hoursToShow'] ?? 7,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => 'Today\'s Hourly Forecast' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-daily-hourly',
+                $this->base_attributes( "Today's Hourly Forecast" ) + [
                     'hoursToShow' => [ 'type' => 'number', 'default' => 24 ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, "Today's Hourly Forecast" ) + [
+                        'hours_to_show' => $attributes['hoursToShow'] ?? 7,
+                        'forecast' => $this->get_weather_data( 'hourly' ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/hourly', $data );
+
+                }
+            );
 
             // Register Weekly Forecast block
-            register_block_type( 'sgup/weather-weekly', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_weekly_forecast( [
-                        'title' => $attributes['title'] ?? '7-Day Forecast',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'days_to_show' => $attributes['daysToShow'] ?? 7,
-                        'use_noaa' => $attributes['useNoaa'] ?? true,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => '7-Day Forecast' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-weekly',
+                $this->base_attributes( '7-Day Forecast' ) + [
                     'daysToShow' => [ 'type' => 'number', 'default' => 7 ],
                     'useNoaa' => [ 'type' => 'boolean', 'default' => true ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, '7-Day Forecast' ) + [
+                        'days_to_show' => $attributes['daysToShow'] ?? 7,
+                        'use_noaa' => $attributes['useNoaa'] ?? true,
+                        'forecast' => $this->get_weather_data( 'daily' ),
+                        'noaa_forecast' => $this->get_weather_data( 'noaa' ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/week', $data );
+
+                }
+            );
 
             // Register the Extended Weekly Forecast
-            register_block_type( 'sgup/weather-weekly-extended', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_extended_week( [
-                        'title' => $attributes['title'] ?? '7-Day Extended',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'days_to_show' => $attributes['daysToShow'] ?? 7,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => '7-Day Extended' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-weekly-extended',
+                $this->base_attributes( '7-Day Extended' ) + [
                     'daysToShow' => [ 'type' => 'number', 'default' => 7 ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // setup the data to pass to the template
+                    $data = $this->base_data( $attributes, '7-Day Extended' ) + [
+                        'days_to_show' => $attributes['daysToShow'] ?? 7,
+                        'weather' => $this->get_weather_data( 'noaa' ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/week-extended', $data );
+
+                }
+            );
 
             // Register Weather Alerts block
-            register_block_type( 'sgup/weather-alerts', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_weather_alerts( [
-                        'title' => $attributes['title'] ?? 'Weather Alerts',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? false,
-                        'max_alerts' => $attributes['maxAlerts'] ?? 5,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => 'Weather Alerts' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => false ],
+            $this->register_block(
+                'sgup/weather-alerts',
+                $this->base_attributes( 'Weather Alerts', false ) + [
                     'maxAlerts' => [ 'type' => 'number', 'default' => 5 ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // get the alerts and the max alerts
+                    $alerts = (array) $this->get_weather_data( 'alerts' );
+                    $max_alerts = $attributes['maxAlerts'] ?: 5;
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, 'Weather Alerts' ) + [
+                        'max_alerts' => $max_alerts,
+                        'alerts' => array_slice( $alerts, 0, $max_alerts ),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/alerts', $data );
+
+                }
+            );
 
             // Register Full Weather Dashboard block
-            register_block_type( 'sgup/weather-full', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_full_dashboard( [
-                        'title' => $attributes['title'] ?? 'Weather Dashboard',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'show_current' => $attributes['showCurrent'] ?? true,
-                        'show_hourly' => $attributes['showHourly'] ?? true,
-                        'show_daily' => $attributes['showDaily'] ?? true,
-                        'show_daily_extended' => $attributes['showDailyExtended'] ?? true,
-                        'show_alerts' => $attributes['showAlerts'] ?? true,
-                        'show_noaa' => $attributes['showNoaa'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => 'Weather Dashboard' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-full',
+                $this->base_attributes( 'Weather Dashboard' ) + [
                     'showCurrent' => [ 'type' => 'boolean', 'default' => true ],
                     'showHourly' => [ 'type' => 'boolean', 'default' => true ],
                     'showDaily' => [ 'type' => 'boolean', 'default' => true ],
                     'showDailyExtended' => [ 'type' => 'boolean', 'default' => true ],
                     'showAlerts' => [ 'type' => 'boolean', 'default' => true ],
                     'showNoaa' => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ], 
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // build show flags for cleaner conditionals
+                    $show = [
+                        'current' => $attributes['showCurrent'] ?? true,
+                        'hourly' => $attributes['showHourly'] ?? true,
+                        'daily' => $attributes['showDaily'] ?? true,
+                        'daily_extended' => $attributes['showDailyExtended'] ?? true,
+                        'alerts' => $attributes['showAlerts'] ?? true,
+                        'noaa' => $attributes['showNoaa'] ?? true,
+                    ];
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, 'Weather Dashboard' ) + [
+                        'show_current' => $show['current'],
+                        'show_hourly' => $show['hourly'],
+                        'show_daily' => $show['daily'],
+                        'show_daily_extended' => $show['daily_extended'],
+                        'show_alerts' => $show['alerts'],
+                        'show_noaa' => $show['noaa'],
+                        'current_weather' => $show['current'] ? $this->get_weather_data( 'current' ) : [],
+                        'hourly_forecast' => $show['hourly'] ? $this->get_weather_data( 'hourly' ) : [],
+                        'daily_forecast' => $show['daily'] ? $this->get_weather_data( 'daily' ) : [],
+                        'noaa_forecast' => $show['noaa'] ? $this->get_weather_data( 'noaa' ) : [],
+                        'alerts' => $show['alerts'] ? $this->get_weather_data( 'alerts' ) : [],
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/dashboard', $data );
+
+                }
+            );
 
             // Register Location Picker block
-            register_block_type( 'sgup/weather-location', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_location_picker( [
-                        'title' => $attributes['title'] ?? 'Set Your Location',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'compact' => $attributes['compact'] ?? false,
-                    ] );
-                },
-                'attributes' => [
+            $this->register_block(
+                'sgup/weather-location',
+                [
                     'title' => [ 'type' => 'string', 'default' => 'Set Your Location' ],
                     'showTitle' => [ 'type' => 'boolean', 'default' => true ],
                     'compact' => [ 'type' => 'boolean', 'default' => false ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = [
+                        'title' => $attributes['title'] ?? 'Set Your Location',
+                        'show_title' => $attributes['showTitle'] ?? true,
+                        'compact' => $attributes['compact'] ?? false,
+                        'has_location' => (bool) $this->location,
+                        'location' => $this->location,
+                        'wrapper_attr' => get_block_wrapper_attributes(),
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/location-picker', $data );
+
+                }
+            );
 
             // Register Weather Map block
-            register_block_type( 'sgup/weather-map', [
-                'api_version' => 2,
-                'category' => 'sgup_weather',
-                'render_callback' => function( $attributes ) {
-                    $sc = new SGU_Weather_Shortcodes( );
-                    return $sc -> render_weather_maps( [
-                        'title' => $attributes['title'] ?? 'Weather Map',
-                        'show_title' => $attributes['showTitle'] ?? true,
-                        'map_layer' => $attributes['mapLayer'] ?? 'clouds',
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'max_height' => $attributes['maxHeight'] ?? 450,
-                    ] );
-                },
-                'attributes' => [
-                    'title' => [ 'type' => 'string', 'default' => 'Weather Map' ],
-                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
-                    'mapLayer' => [ 'type' => 'string', 'default' => 'clouds', 'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', 'rh', 'satelite', 'visibility' ] ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+            $this->register_block(
+                'sgup/weather-map',
+                $this->base_attributes( 'Weather Map' ) + [
+                    'mapLayer' => [
+                        'type' => 'string',
+                        'default' => 'clouds',
+                        'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', 'rh', 'satelite', 'visibility' ],
+                    ],
                     'maxHeight' => [ 'type' => 'number', 'default' => 450 ],
-                ]
-            ] );
+                ],
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, 'Weather Map' ) + [
+                        'map_layer' => $attributes['mapLayer'] ?? 'clouds',
+                        'max_height' => $attributes['maxHeight'] ?? 450,
+                        'latitude' => $this->lat,
+                        'longitude' => $this->lon,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'weather/map', $data );
+
+                }
+            );
 
         }
 

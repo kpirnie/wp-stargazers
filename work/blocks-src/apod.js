@@ -7,7 +7,7 @@ import { useState } from '@wordpress/element';
 registerBlockType('sgup/apod', {
     title: 'Astronomy Picture of the Day',
     icon: 'format-image',
-    category: 'space',
+    category: 'sgup_space',
 
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps();

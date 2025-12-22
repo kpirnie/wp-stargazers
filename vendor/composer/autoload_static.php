@@ -13,12 +13,9 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'SGU_Alert_Shortcodes' => __DIR__ . '/../..' . '/work/inc/shortcodes/sgu-alert-shortcodes.php',
-        'SGU_Astro_Shortcodes' => __DIR__ . '/../..' . '/work/inc/shortcodes/sgu-astro-shortcodes.php',
         'SGU_Blocks' => __DIR__ . '/../..' . '/work/inc/sgu-blocks.php',
         'SGU_CPT_Admin_Cols' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-admin-cols.php',
         'SGU_CPT_Settings' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-settings.php',
-        'SGU_CPT_Templates' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpt-templates.php',
         'SGU_CPTs' => __DIR__ . '/../..' . '/work/inc/custom-post-types/sgu-cpts.php',
         'SGU_Plugin' => __DIR__ . '/../..' . '/work/inc/sgu-plugin.php',
         'SGU_RSS_Parser' => __DIR__ . '/../..' . '/work/inc/sgu-rss-parser.php',
@@ -32,7 +29,6 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
         'SGU_Weather_Blocks' => __DIR__ . '/../..' . '/work/inc/weather/sgu-weather-blocks.php',
         'SGU_Weather_Data' => __DIR__ . '/../..' . '/work/inc/weather/sgu-weather-data.php',
         'SGU_Weather_Location' => __DIR__ . '/../..' . '/work/inc/weather/sgu-weather-location.php',
-        'SGU_Weather_Shortcodes' => __DIR__ . '/../..' . '/work/inc/shortcodes/sgu-weather-shortcodes.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

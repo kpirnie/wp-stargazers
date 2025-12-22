@@ -37,6 +37,57 @@ if( ! class_exists( 'SGU_Static' ) ) {
          * @author Kevin Pirnie <me@kpirnie.com>
          * @package US Star Gazers
          * 
+         * @param string $path Final path slug to the template to be rendered
+         * @param mixed $data The data being passed to the template
+         * 
+         * @return string Returns the rendered template
+         * 
+        */
+        public static function render_template( string $path, mixed $data ) : string {
+
+            // properly format the file path
+            $file_path = trim( sprintf( "%s.php", $path ) );
+
+            // Check theme for override first
+            $theme_template = locate_template( [
+                "templates/$file_path",
+                "sgu/$file_path",
+                "stargazers/$file_path",
+            ] );
+
+            // Use theme template if found, otherwise plugin template
+            $template = $theme_template ?: SGUP_PATH . "/templates/$file_path";
+
+            // Check if template exists
+            if( ! file_exists( $template ) ) {
+                return sprintf( '<!-- SGU Weather: Template not found: %s -->', esc_html( $file_path ) );
+            }
+
+            // Start output buffering
+            ob_start( );
+
+            // Extract data to variables
+            extract( $data );
+
+            // Include the template
+            include $template;
+
+            // Return buffered content
+            return ob_get_clean( );
+
+        }
+
+        /** 
+         * get_id_from_slug
+         * 
+         * This method is utilized for returning the post id from the slug
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
          * @param string $_the_slug The posts slug
          * @param string $_post_type The post type
          * @param array $_qry_args An array of extra query arguments

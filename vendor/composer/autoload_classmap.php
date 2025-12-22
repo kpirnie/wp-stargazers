@@ -7,12 +7,9 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
-    'SGU_Alert_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-alert-shortcodes.php',
-    'SGU_Astro_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-astro-shortcodes.php',
     'SGU_Blocks' => $baseDir . '/work/inc/sgu-blocks.php',
     'SGU_CPT_Admin_Cols' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-admin-cols.php',
     'SGU_CPT_Settings' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-settings.php',
-    'SGU_CPT_Templates' => $baseDir . '/work/inc/custom-post-types/sgu-cpt-templates.php',
     'SGU_CPTs' => $baseDir . '/work/inc/custom-post-types/sgu-cpts.php',
     'SGU_Plugin' => $baseDir . '/work/inc/sgu-plugin.php',
     'SGU_RSS_Parser' => $baseDir . '/work/inc/sgu-rss-parser.php',
@@ -26,5 +23,4 @@ return array(
     'SGU_Weather_Blocks' => $baseDir . '/work/inc/weather/sgu-weather-blocks.php',
     'SGU_Weather_Data' => $baseDir . '/work/inc/weather/sgu-weather-data.php',
     'SGU_Weather_Location' => $baseDir . '/work/inc/weather/sgu-weather-location.php',
-    'SGU_Weather_Shortcodes' => $baseDir . '/work/inc/shortcodes/sgu-weather-shortcodes.php',
 );

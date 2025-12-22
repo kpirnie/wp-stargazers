@@ -193,10 +193,13 @@ add_action( 'admin_init', function( ) {
         <?php
     }
 
-}, 999 );
+    // remove these
+    add_filter( 'register_block_type_args', function( $args, $name ) {
+        if ( str_starts_with( $name, 'sgup/' ) ) {
+            $args['supports']['customClassName'] = false;
+            $args['supports']['className'] = false;
+        }
+        return $args;
+    }, 10, 2 );
 
-// wee need some theme supports for our blocks
-add_action( 'after_setup_theme', function() {
-    add_theme_support( 'custom-spacing' );
-    add_theme_support( 'appearance-tools' );
-}, 99 );
+}, 999 );

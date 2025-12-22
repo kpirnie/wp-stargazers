@@ -8,16 +8,6 @@ registerBlockType('sgup/weather-current', {
     title: 'Current Weather',
     icon: 'cloud',
     category: 'sgup_weather',
-    supports: {
-        align: true,
-        className: true,
-        customClassName: true,
-        spacing: {
-            margin: true,
-            padding: true,
-            blockGap: true
-        }
-    },
     edit: ({ attributes, setAttributes }) => {
         const blockProps = useBlockProps({
             style: {
