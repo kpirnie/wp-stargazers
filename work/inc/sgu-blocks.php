@@ -283,7 +283,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'astro-alerts/latest', $data );
+                    return SGU_Static::render_template( 'astro/alerts/latest', $data );
 
                 }
             );
@@ -309,7 +309,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'astro-alerts/cme', $data );
+                    return SGU_Static::render_template( 'astro/alerts/cme', $data );
 
                 }
             );
@@ -335,7 +335,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'astro-alerts/solar-flare', $data );
+                    return SGU_Static::render_template( 'astro/alerts/solar-flare', $data );
 
                 }
             );
@@ -361,7 +361,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'astro-alerts/space-weather', $data );
+                    return SGU_Static::render_template( 'astro/alerts/space-weather', $data );
 
                 }
             );
@@ -387,7 +387,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'astro-alerts/geomagnetic', $data );
+                    return SGU_Static::render_template( 'astro/alerts/geomagnetic', $data );
 
                 }
             );
@@ -439,7 +439,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    $output = SGU_Static::render_template( 'astro-menu', $data );
+                    $output = SGU_Static::render_template( 'astro/menu', $data );
 
                     // Cache for 12 hours (menus don't change often)
                     wp_cache_set( $cache_key, $output, 'sgup_menus', 12 * HOUR_IN_SECONDS );
@@ -469,7 +469,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'neos', $data );
+                    return SGU_Static::render_template( 'astro/neos', $data );
 
                 }
             );
@@ -504,7 +504,33 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'apod/home', $data );
+                    return SGU_Static::render_template( 'astro/apod/home', $data );
+
+                }
+            );
+
+            // register the light pollution map
+            $this->register_block(
+                'sgup/lightpollution',
+                $this->base_attributes( 'Light Pollution' ) + [
+                    'mapLayer' => [
+                        'type' => 'string',
+                        'default' => 'clouds',
+                        'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', 'rh', 'satelite', 'visibility' ],
+                    ],
+                    'maxHeight' => [ 'type' => 'number', 'default' => 450 ],
+                ],
+                function( array $attributes ): string {
+
+                    // hold the data we're going to pass to the template
+                    $data = $this->base_data( $attributes, 'Weather Map' ) + [
+                        'max_height' => $attributes['maxHeight'] ?? 450,
+                        'latitude' => $this->lat,
+                        'longitude' => $this->lon,
+                    ];
+
+                    // render the template
+                    return SGU_Static::render_template( 'astro/astro/lightpollution-map', $data );
 
                 }
             );
@@ -523,12 +549,12 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
          * @package US Star Gazers Plugin
          * 
          * @param array $categories Existing block categories
-         * @param WP_Post $post Current post object
+         * @param WP_Block_Editor_Context $context Current context
          * 
          * @return array Modified block categories
          * 
         */
-        public function register_block_categories( array $categories, WP_Post $post ): array {
+        public function register_block_categories( array $categories, WP_Block_Editor_Context $context ): array {
 
             // merge our new categories in with the existing ones
             return array_merge(

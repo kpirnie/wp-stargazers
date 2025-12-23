@@ -428,25 +428,66 @@ if( ! class_exists( 'SGU_Static' ) ) {
          * @return void This method returns nothing
          * 
         */
-        public static function get_attachment_id( string $_url ) : int {
-
-            // Clean the URL
-            $clean_url = preg_replace('/\?.*$/', '', $_url);
-            $clean_url = preg_replace('/#.*$/', '', $clean_url);
-            
-            // Remove common size suffixes
-            $clean_url = preg_replace('/-(\d+x\d+|scaled)(?=\.\w+$)/', '', $clean_url);
-            
-            // Try the WordPress function first
-            $attachment_id = attachment_url_to_postid($clean_url);
-            
-            if (!$attachment_id) {
-                // Fallback: Try the original URL
-                $attachment_id = attachment_url_to_postid($_url);
+        public static function get_attachment_id( string $_url ): int {
+    
+            // Return 0 if empty URL
+            if( empty( $_url ) ) {
+                return 0;
             }
             
-            return $attachment_id ?: 0;
-
+            // Get upload directory info
+            $upload_dir = wp_upload_dir();
+            $upload_url = $upload_dir['baseurl'];
+            
+            // Remove protocol and host from URL for comparison
+            $_url = preg_replace( '/^https?:\/\//', '', $_url );
+            $upload_url = preg_replace( '/^https?:\/\//', '', $upload_url );
+            
+            // Check if URL is actually from uploads directory
+            if( strpos( $_url, $upload_url ) === false ) {
+                return 0;
+            }
+            
+            // Extract just the file path relative to uploads
+            $file = str_replace( $upload_url, '', $_url );
+            $file = ltrim( $file, '/' );
+            
+            global $wpdb;
+            
+            // Try direct GUID match first (most reliable)
+            $attachment_id = $wpdb->get_var( 
+                $wpdb->prepare( 
+                    "SELECT ID FROM {$wpdb->posts} WHERE guid LIKE %s AND post_type = 'attachment' LIMIT 1",
+                    '%' . $wpdb->esc_like( $file ) . '%'
+                )
+            );
+            
+            if( $attachment_id ) {
+                return (int) $attachment_id;
+            }
+            
+            // Try meta_value search as fallback
+            $attachment_id = $wpdb->get_var( 
+                $wpdb->prepare( 
+                    "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s LIMIT 1",
+                    $file
+                )
+            );
+            
+            if( $attachment_id ) {
+                return (int) $attachment_id;
+            }
+            
+            // Last resort: search by filename only
+            $filename = basename( $file );
+            $attachment_id = $wpdb->get_var( 
+                $wpdb->prepare( 
+                    "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value LIKE %s LIMIT 1",
+                    '%' . $wpdb->esc_like( $filename )
+                )
+            );
+            
+            return $attachment_id ? (int) $attachment_id : 0;
         }
 
         /** 

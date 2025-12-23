@@ -81,9 +81,9 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     // Check theme for override first
                     $theme_template = locate_template( [
                         'single-sgu_apod.php',
-                        'templates/apod/single.php',
-                        'sgu/apod/single.php',
-                        'stargazers/apod/single.php',
+                        'templates/astro/apod/single.php',
+                        'sgu/astro/apod/single.php',
+                        'stargazers/astro/apod/single.php',
                     ] );
 
                     // Use theme template if found, otherwise plugin template
@@ -92,7 +92,7 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     }
 
                     // Use plugin template
-                    $plugin_template = SGUP_PATH . '/templates/apod/single.php';
+                    $plugin_template = SGUP_PATH . '/templates/astro/apod/single.php';
                     if( file_exists( $plugin_template ) ) {
                         return $plugin_template;
                     }
@@ -104,9 +104,9 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     // Check theme for override first
                     $theme_template = locate_template( [
                         'archive-sgu_apod.php',
-                        'templates/apod/archive.php',
-                        'sgu/apod/archive.php',
-                        'stargazers/apod/archive.php',
+                        'templates/astro/apod/archive.php',
+                        'sgu/astro/apod/archive.php',
+                        'stargazers/astro/apod/archive.php',
                     ] );
 
                     // Use theme template if found, otherwise plugin template
@@ -115,7 +115,7 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                     }
 
                     // Use plugin template
-                    $plugin_template = SGUP_PATH . '/templates/apod/archive.php';
+                    $plugin_template = SGUP_PATH . '/templates/astro/apod/archive.php';
                     if( file_exists( $plugin_template ) ) {
                         return $plugin_template;
                     }
