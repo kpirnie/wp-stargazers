@@ -42,6 +42,9 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
             // register all custom post types
             $this -> register_all_cpts( );
 
+            // setup the templates to use
+            $this -> setup_apod_templates( );
+
             // inject admin styling for column widths
             add_action( 'admin_head', function( ) {
                 ?>
@@ -51,6 +54,76 @@ if( ! class_exists( 'SGU_CPTs' ) ) {
                 </style>
                 <?php
             } );
+
+        }
+
+        /** 
+         * setup_apod_templates
+         * 
+         * Setup custom template loading for APOD post type
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @return void This method returns nothing
+         * 
+        */
+        private function setup_apod_templates( ) : void {
+
+            // Hook into template_include to load custom templates
+            add_filter( 'template_include', function( $template ) {
+                
+                // Check if we're viewing an APOD post type
+                if( is_singular( 'sgu_apod' ) ) {
+                    
+                    // Check theme for override first
+                    $theme_template = locate_template( [
+                        'single-sgu_apod.php',
+                        'templates/apod/single.php',
+                        'sgu/apod/single.php',
+                        'stargazers/apod/single.php',
+                    ] );
+
+                    // Use theme template if found, otherwise plugin template
+                    if( $theme_template ) {
+                        return $theme_template;
+                    }
+
+                    // Use plugin template
+                    $plugin_template = SGUP_PATH . '/templates/apod/single.php';
+                    if( file_exists( $plugin_template ) ) {
+                        return $plugin_template;
+                    }
+                }
+
+                // Check if we're viewing APOD archive
+                if( is_post_type_archive( 'sgu_apod' ) ) {
+                    
+                    // Check theme for override first
+                    $theme_template = locate_template( [
+                        'archive-sgu_apod.php',
+                        'templates/apod/archive.php',
+                        'sgu/apod/archive.php',
+                        'stargazers/apod/archive.php',
+                    ] );
+
+                    // Use theme template if found, otherwise plugin template
+                    if( $theme_template ) {
+                        return $theme_template;
+                    }
+
+                    // Use plugin template
+                    $plugin_template = SGUP_PATH . '/templates/apod/archive.php';
+                    if( file_exists( $plugin_template ) ) {
+                        return $plugin_template;
+                    }
+                }
+
+                return $template;
+
+            }, 99 );
 
         }
 
