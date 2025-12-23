@@ -1,6 +1,6 @@
 <?php
 /** 
- * SGU Blocks Class
+ * SGU Space Blocks Class
  * 
  * Handles Gutenberg block registration and rendering for astronomy-related blocks.
  * Provides block editor integration with real-time previews and delegates rendering
@@ -16,10 +16,10 @@
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
 // Make sure this class doesn't already exist
-if ( ! class_exists( 'SGU_Blocks' ) ) {
+if ( ! class_exists( 'SGU_Space_Blocks' ) ) {
 
     /** 
-     * Class SGU_Blocks
+     * Class SGU_Space_Blocks
      * 
      * Registers and manages Gutenberg blocks for displaying astronomy data.
      * Each block wraps existing shortcode functionality to maintain consistency
@@ -41,7 +41,7 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
      * @package US Star Gazers Plugin
      * 
     */
-    final class SGU_Blocks {
+    final class SGU_Space_Blocks {
 
         /** @var string Block category slug for space blocks */
         private const CATEGORY = 'sgup_space';
@@ -509,28 +509,33 @@ if ( ! class_exists( 'SGU_Blocks' ) ) {
                 }
             );
 
-            // register the light pollution map
+            // fire up and pull in the light pollution block/template
             $this->register_block(
-                'sgup/lightpollution',
-                $this->base_attributes( 'Light Pollution' ) + [
-                    'mapLayer' => [
-                        'type' => 'string',
-                        'default' => 'clouds',
-                        'enum' => [ 'clouds', 'wind', 'rain', 'radar', 'temp', 'rh', 'satelite', 'visibility' ],
-                    ],
-                    'maxHeight' => [ 'type' => 'number', 'default' => 450 ],
+                'sgup/light-pollution',
+                [
+                    'title' => [ 'type' => 'string', 'default' => 'Light Pollution Map' ],
                 ],
                 function( array $attributes ): string {
 
+                    // we need to get the location data
+                    $location_handler = new SGU_Weather_Location( );
+                    $location = $location_handler->get_stored_location();
+                    $location_name = $location?->name ?? 'Not Found';
+                    $lat = $location?->lat ?? 19.8987;
+                    $lon = $location?->lon ?? -155.6659;
+                    
                     // hold the data we're going to pass to the template
-                    $data = $this->base_data( $attributes, 'Weather Map' ) + [
-                        'max_height' => $attributes['maxHeight'] ?? 450,
-                        'latitude' => $this->lat,
-                        'longitude' => $this->lon,
+                    $data = [
+                        'title' => '',
+                        'show_title' => true,
+                        'location' => $location,
+                        'location_name' => $location_name,
+                        'lat' => $lat,
+                        'lon' => $lon,
                     ];
 
                     // render the template
-                    return SGU_Static::render_template( 'astro/astro/lightpollution-map', $data );
+                    return SGU_Static::render_template( 'astro/lightpollution-map', $data );
 
                 }
             );

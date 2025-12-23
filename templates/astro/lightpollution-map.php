@@ -20,10 +20,12 @@
 // Prevent direct access
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
+// setup the URL
+$url = sprintf( "" );
 ?>
 
 <?php if($show_title) : ?>
     <h2><?php echo esc_html( $title ); ?></h2>
 <?php endif; ?>
 
-<iframe <?php echo $wrapper_attr; ?> style="width:100%;height:<?php echo $max_height; ?>px;" src="//embed.windy.com/embed2.html?lat=<?php echo $latitude; ?>&lon=<?php echo $longitude; ?>&zoom=7&overlay=<?php echo $map_layer; ?>&pressure=true&detailLat=<?php echo $latitude; ?>&detailLon=<?php echo $longitude; ?>&metricTemp=°F&product=ecmwf&level=surface&message=true&type=map&location=coordinates&radarRange=-1&pressure=true" frameborder="0" loading="lazy"></iframe>
+<iframe <?php echo $wrapper_attr; ?> style="width:100%;height:<?php echo $max_height; ?>px;" src="<?php echo $url; ?>" frameborder="0" loading="lazy"></iframe>
