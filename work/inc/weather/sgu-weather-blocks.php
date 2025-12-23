@@ -50,7 +50,7 @@ if ( ! class_exists( 'SGU_Weather_Blocks' ) ) {
         private readonly SGU_Weather_Data $weather_data;
 
         /** @var object|null Cached location data */
-        private readonly ?object $location;
+        private $location; // cant set this
 
         /** @var string Resolved location name */
         private readonly string $location_name;
