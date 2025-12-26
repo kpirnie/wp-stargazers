@@ -27,6 +27,47 @@ if( ! class_exists( 'SGU_Static' ) ) {
     class SGU_Static {
 
         /** 
+         * custom_youtube_embed
+         * 
+         * This method is utilized to properly format a video URL
+         * for properly embedding videos from youtube
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param string $embed_url The embed video URL
+         * 
+         * @return string Returns corrected url to utilize with WP OEmbed
+         * 
+        */
+        public static function custom_youtube_embed( string $embed_url ) : string {
+            
+            // Extract video ID from embed URL
+            preg_match('/embed\/([^?]+)/', $embed_url, $matches);
+            
+            if (isset($matches[1])) {
+                $video_id = $matches[1];
+                $watch_url = 'https://www.youtube.com/watch?v=' . $video_id;
+                
+                // Get parameters from embed URL
+                $query_string = parse_url($embed_url, PHP_URL_QUERY);
+                parse_str($query_string, $params);
+                
+                // Add parameters to watch URL
+                if (!empty($params)) {
+                    $watch_url = add_query_arg($params, $watch_url);
+                }
+                
+                return $watch_url;
+            }
+            
+            return '';
+        }
+
+        /** 
          * get_id_from_slug
          * 
          * This method is utilized for returning the post id from the slug
