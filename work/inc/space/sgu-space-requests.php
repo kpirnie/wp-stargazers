@@ -164,71 +164,12 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 $url = sprintf( $endpoint, $key );
                 
                 // Make HTTP request and parse response
-                $ret[] = $this -> request_data( $url );
+                $ret[] = SGU_Static::get_remote_data( $url )['body'] ?: [];
+
             }
 
             // Return first response (or empty array if all failed)
-            return ( $ret[0] ) ?: [];
-        }
-
-        /** 
-         * request_data
-         * 
-         * Executes HTTP request to external API and parses response.
-         * Handles both JSON and plain text responses.
-         * 
-         * Process:
-         * 1. Make HTTP GET request with proper headers
-         * 2. Check for HTTP errors
-         * 3. Attempt JSON decode
-         * 4. Fall back to plain text if JSON decode fails
-         * 
-         * @since 8.4
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @param string $endpoint Full URL to request including any query parameters
-         * 
-         * @return array Parsed response data (JSON decoded or plain text), empty array on failure
-         * 
-        */
-        private function request_data( string $endpoint ) : array {
-            
-            // Configure HTTP request parameters
-            $headers = [
-                'timeout' => 30,                                    // 30 second timeout for slow APIs
-                'redirection' => 1,                                 // Follow up to 1 redirect
-                'user-agent' => 'US Star Gazers ( iam@kevinpirnie.com )'  // Identify our application to API
-            ];
-
-            // Execute WordPress HTTP GET request
-            $request = wp_safe_remote_get( $endpoint, $headers );
-
-            // Check for request errors (network failure, timeout, etc.)
-            if ( is_wp_error( $request ) ) { 
-                return []; 
-            }
-
-            // Extract response body
-            $resp = wp_remote_retrieve_body( $request );
-
-            // Return empty if no body received
-            if( ! $resp ) {
-                return [];
-            }
-        
-            // Attempt to decode as JSON (most APIs use JSON)
-            $ret = json_decode( $resp, true );
-            
-            // Check if JSON decode failed (returns NULL on error)
-            if( json_last_error( ) !== JSON_ERROR_NONE ) {
-                // Not JSON - probably plain text (NOAA uses plain text)
-                // Wrap in array for consistent return type
-                $ret = [$resp];
-            }
-
-            return $ret;
+            return ( $ret ) ?: [];
         }
 
         /** 

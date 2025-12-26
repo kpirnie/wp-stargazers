@@ -111,12 +111,15 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
          * @return bool Always returns true (bulk operation doesn't track individual failures)
          * 
         */
-        public function insert_neo( array $data ) : bool {
+        public function insert_neo( array $the_data ) : bool {
             
             // Early return if no data
-            if( ! $data ) { 
+            if( ! $the_data ) { 
                 return false; 
             }
+
+            // the actuall data
+            $data = $the_data[0];
 
             // Extract the nested NEO data grouped by date
             $neos = $data['near_earth_objects'];
@@ -194,7 +197,7 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             }
 
             // Loop through each flare in the feed
-            foreach( $data as $flare ) {
+            foreach( $data[0] as $flare ) {
                 
                 // Extract unique flare ID from NASA
                 $title = sanitize_text_field( $flare['flrID'] );
@@ -254,7 +257,7 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             }
 
             // Loop through each alert
-            foreach( $data as $object ) {
+            foreach( $data[0] as $object ) {
                 
                 // Parse issue datetime to WordPress format
                 $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $object['issue_datetime'] ) ) );
@@ -314,7 +317,7 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             }
 
             // Loop through each CME event
-            foreach( $data as $object ) {
+            foreach( $data[0] as $object ) {
                 
                 // Parse start time to WordPress format
                 $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $object['startTime'] ) ) );
@@ -369,13 +372,15 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
          * @return bool True if insert succeeded, false if data empty or insert failed
          * 
         */
-        public function insert_apod( array $data ) : bool {
+        public function insert_apod( array $the_data ) : bool {
             
             // Early return if no data
-            if( ! $data ) { 
+            if( ! $the_data ) { 
                 return false; 
             }
-
+            // we only need the first item
+            $data = $the_data[0];
+            
             // Extract and sanitize APOD data
             $title = sanitize_text_field( $data['title'] );
             $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $data['date'] ) ) );

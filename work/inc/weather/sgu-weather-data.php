@@ -657,39 +657,9 @@ if( ! class_exists( 'SGU_Weather_Data' ) ) {
                 $args['user-agent'] = 'US Star Gazers Weather ( iam@kevinpirnie.com )';
             }
 
-            // Execute WordPress HTTP GET request
-            $request = wp_safe_remote_get( $url, $args );
-
-            // Check for request errors
-            if ( is_wp_error( $request ) ) { 
-                error_log( sprintf( 'SGU Weather API Error: %s', $request->get_error_message() ) );
-                return false; 
-            }
-
-            // Extract response body
-            $body = wp_remote_retrieve_body( $request );
-
-            // Check response code
-            $response_code = wp_remote_retrieve_response_code( $request );
-            if( $response_code !== 200 ) {
-                error_log( sprintf( 'SGU Weather API HTTP Error: %s for URL: %s', $response_code, $url ) );
-                return false;
-            }
-
-            if( ! $body ) {
-                return false;
-            }
-
-            // Decode JSON response
-            $data = json_decode( $body, true );
-            
-            // Check for JSON decode errors
-            if( json_last_error() !== JSON_ERROR_NONE ) {
-                error_log( sprintf( 'SGU Weather JSON Error: %s', json_last_error_msg() ) );
-                return false;
-            }
-
-            return $data;
+            // make our request and return the response
+            $resp = SGU_Static::get_remote_data( $url, $args );
+            return $resp['body'] ?: [];
         }
 
     }

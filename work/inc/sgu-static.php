@@ -68,6 +68,110 @@ if( ! class_exists( 'SGU_Static' ) ) {
         }
 
 
+        public static function get_remote_data( string $endpoint, array $headers = [], $should_cache = false, int $cache_length = 0, string $method = 'GET', mixed $body = null ) : array {
+
+            // Validate HTTP method
+            $method = strtoupper($method);
+            if (!in_array($method, ['GET', 'POST'], true)) {
+                return [
+                    'success' => false,
+                    'error' => 'Invalid HTTP method. Only GET and POST are supported.',
+                    'data' => null
+                ];
+            }
+
+            // Generate cache key based on request parameters
+            $cache_key = 'wp_remote_cache_' . md5(serialize([
+                'endpoint' => $endpoint,
+                'headers' => $headers,
+                'method' => $method,
+                'body' => $body
+            ]));
+
+            // Try to get cached data if caching is enabled
+            if ($should_cache) {
+                $cached_response = wp_cache_get($cache_key);
+                
+                if ($cached_response !== false) {
+                    return [
+                        'success' => true,
+                        'cached' => true,
+                        'data' => $cached_response,
+                        'cache_key' => $cache_key
+                    ];
+                }
+            }
+
+            // Prepare request arguments
+            $args = [
+                'method' => $method,
+                'headers' => $headers,
+                'timeout' => 30,
+                'sslverify' => apply_filters('https_ssl_verify', true),
+            ];
+
+            // Add body for POST requests
+            if ($method === 'POST' && $body !== null) {
+                if (is_array($body)) {
+                    $args['body'] = $body;
+                } else {
+                    $args['body'] = (string)$body;
+                }
+            }
+
+            // Make the request
+            $response = wp_remote_request($endpoint, $args);
+
+            // Check for WP_Error
+            if (is_wp_error($response)) {
+                return [
+                    'success' => false,
+                    'error' => $response->get_error_message(),
+                    'error_code' => $response->get_error_code(),
+                    'data' => null
+                ];
+            }
+
+            // Get response information
+            $response_code = wp_remote_retrieve_response_code($response);
+            $response_body = wp_remote_retrieve_body($response);
+            
+            // Try to decode JSON response
+            $decoded_body = json_decode($response_body, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $decoded_body = $response_body;
+            }
+
+            // Prepare response array
+            $response_data = [
+                'success' => $response_code >= 200 && $response_code < 300,
+                'status_code' => $response_code,
+                'headers' => wp_remote_retrieve_headers($response)->getAll(),
+                'body' => $decoded_body,
+                'raw_body' => $response_body,
+                'response' => $response,
+                'cached' => false
+            ];
+
+            // Cache the response if enabled
+            if ($should_cache && $response_data['success']) {
+                $group = 'wp_remote_responses';
+                
+                if ($cache_length > 0) {
+                    wp_cache_set($cache_key, $response_data, $group, $cache_length);
+                } else {
+                    wp_cache_set($cache_key, $response_data, $group);
+                }
+                
+                $response_data['cache_key'] = $cache_key;
+                $response_data['cache_length'] = $cache_length;
+            }
+
+            // return the data
+            return $response_data;
+
+        }
+
         public static function get_api_endpoint( string $which ) {
 
             return match( $which ) {
