@@ -40,19 +40,21 @@ if( ! class_exists( 'SGUP' ) ) {
          * 
         */
         public function init( ) : void {
-
+            
             // hold our classes and the public method we'll be using
             $plugin_classes = array(
-                [ 'class' => 'SGU_Plugin', 'method' => null],
-                [ 'class' => 'SGU_CPTs', 'method' => null],
-                [ 'class' => 'SGU_CPT_Settings', 'method' => null],
-                [ 'class' => 'SGU_CPT_Admin_Cols', 'method' => null],                
-                [ 'class' => 'SGU_Settings', 'method' => null],
-                [ 'class' => 'SGU_Sync', 'method' => '__init'],
-                [ 'class' => 'SGU_Space_Blocks', 'method' => null],
-                [ 'class' => 'SGU_Hero_Slider_Shortcode', 'method' => null],
-                [ 'class' => 'SGU_Weather_Location', 'method' => null],
-                [ 'class' => 'SGU_Weather_Blocks', 'method' => null],
+                [ 'class' => 'SGU_Plugin', 'method' => null ],
+                [ 'class' => 'SGU_CPTs', 'method' => null ],
+                [ 'class' => 'SGU_CPT_Settings', 'method' => null ],
+                [ 'class' => 'SGU_CPT_Admin_Cols', 'method' => null ],                
+                [ 'class' => 'SGU_Settings', 'method' => null ],
+                [ 'class' => 'SGU_Sync', 'method' => '__init' ],
+                [ 'class' => 'SGU_Space_Blocks', 'method' => null ],
+                [ 'class' => 'SGU_Hero_Slider_Shortcode', 'method' => null ],
+                [ 'class' => 'SGU_Weather_Location', 'method' => null ],
+                [ 'class' => 'SGU_Weather_Blocks', 'method' => null ],
+                [ 'class' => 'SGU_Space_API', 'method' => null ],
+                [ 'class' => 'SGU_USNO_API', 'method' => null ],
             );
 
             // loop over each item
@@ -94,6 +96,54 @@ if( ! class_exists( 'SGUP' ) ) {
                 $mimes['svgz'] = 'image/svg+xml';
                 return $mimes;
             } );
+
+            // register the scripts and styles
+            add_action( 'wp_enqueue_scripts', [$this, 'sgup_register_light_pollution_assets'] );
+
+        }
+
+        /**
+         * Register light pollution map assets
+         * 
+         */
+        function sgup_register_light_pollution_assets(): void {
+
+            $plugin_url = plugins_url( '/', SGUP_PATH . '/' . SGUP_FILENAME );
+            $version    = defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : '8.4.0';
+
+            // Register Leaflet CSS
+            wp_register_style(
+                'leaflet',
+                'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+                [],
+                '1.9.4'
+            );
+
+            // Register Leaflet JS
+            wp_register_script(
+                'leaflet',
+                'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+                [],
+                '1.9.4',
+                true
+            );
+
+            // Register light pollution map CSS
+            wp_register_style(
+                'sgu-light-pollution-map',
+                $plugin_url . 'assets/light-pollution-map.css',
+                [ 'leaflet' ],
+                $version
+            );
+
+            // Register light pollution map JS
+            wp_register_script(
+                'sgu-light-pollution-map',
+                $plugin_url . 'assets/light-pollution-map.js',
+                [ 'leaflet' ],
+                $version,
+                true
+            );
 
         }
 

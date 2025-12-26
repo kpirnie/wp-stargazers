@@ -509,34 +509,291 @@ if ( ! class_exists( 'SGU_Space_Blocks' ) ) {
                 }
             );
 
-            // fire up and pull in the light pollution block/template
+            // Register Light Pollution Map block
             $this->register_block(
                 'sgup/light-pollution',
                 [
                     'title' => [ 'type' => 'string', 'default' => 'Light Pollution Map' ],
+                    'showTitle' => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                    'maxHeight' => [ 'type' => 'number', 'default' => 450 ],
                 ],
                 function( array $attributes ): string {
 
-                    // we need to get the location data
-                    $location_handler = new SGU_Weather_Location( );
+                    // get the location data
+                    $location_handler = new SGU_Weather_Location();
                     $location = $location_handler->get_stored_location();
-                    $location_name = $location?->name ?? 'Not Found';
-                    $lat = $location?->lat ?? 19.8987;
-                    $lon = $location?->lon ?? -155.6659;
-                    
+                    $location_name = $location?->name ?? '';
+
                     // hold the data we're going to pass to the template
                     $data = [
-                        'title' => '',
-                        'show_title' => true,
+                        'title' => $attributes['title'] ?? 'Light Pollution Map',
+                        'show_title' => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'max_height' => $attributes['maxHeight'] ?? 450,
+                        'has_location' => (bool) $location,
                         'location' => $location,
                         'location_name' => $location_name,
-                        'lat' => $lat,
-                        'lon' => $lon,
+                        'latitude' => $location?->lat ?? 19.8987,
+                        'longitude' => $location?->lon ?? -155.6659,
+                        'wrapper_attr' => get_block_wrapper_attributes(),
                     ];
 
                     // render the template
                     return SGU_Static::render_template( 'astro/lightpollution-map', $data );
 
+                }
+            );
+
+            // Register Sun Rise/Set block
+            $this->register_block(
+                'sgup/sun-riseset',
+                [
+                    'title'              => [ 'type' => 'string', 'default' => 'Sun Times' ],
+                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                ],
+                function( array $attributes ): string {
+
+                    wp_enqueue_style( 'sgu-sky-tonight' );
+
+                    $location_handler = new SGU_Weather_Location();
+                    $location         = $location_handler->get_stored_location();
+                    $location_name    = $location?->name ?? '';
+                    $latitude         = $location?->lat ?? 19.8987;
+                    $longitude        = $location?->lon ?? -155.6659;
+
+                    $usno = new SGU_USNO_API();
+                    $rise_set = $usno->get_rise_set_data( $latitude, $longitude );
+
+                    $data = [
+                        'title'                => $attributes['title'] ?? 'Sun Times',
+                        'show_title'           => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'wrapper_attr'         => get_block_wrapper_attributes(),
+                        'has_location'         => (bool) $location,
+                        'location'             => $location,
+                        'location_name'        => $location_name,
+                        'latitude'             => $latitude,
+                        'longitude'            => $longitude,
+                        'sun'                  => $rise_set?->sun ?? null,
+                    ];
+
+                    return SGU_Static::render_template( 'astro/sun-riseset', $data );
+                }
+            );
+
+            // Register Moon Rise/Set block
+            $this->register_block(
+                'sgup/moon-riseset',
+                [
+                    'title'              => [ 'type' => 'string', 'default' => 'Moon Times' ],
+                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                ],
+                function( array $attributes ): string {
+
+                    wp_enqueue_style( 'sgu-sky-tonight' );
+
+                    $location_handler = new SGU_Weather_Location();
+                    $location         = $location_handler->get_stored_location();
+                    $location_name    = $location?->name ?? '';
+                    $latitude         = $location?->lat ?? 19.8987;
+                    $longitude        = $location?->lon ?? -155.6659;
+
+                    $usno     = new SGU_USNO_API();
+                    $rise_set = $usno->get_rise_set_data( $latitude, $longitude );
+
+                    $data = [
+                        'title'                => $attributes['title'] ?? 'Moon Times',
+                        'show_title'           => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'wrapper_attr'         => get_block_wrapper_attributes(),
+                        'has_location'         => (bool) $location,
+                        'location'             => $location,
+                        'location_name'        => $location_name,
+                        'latitude'             => $latitude,
+                        'longitude'            => $longitude,
+                        'moon'                 => $rise_set?->moon ?? null,
+                        'moon_phase'           => $rise_set?->moon_phase ?? null,
+                    ];
+
+                    return SGU_Static::render_template( 'astro/moon-riseset', $data );
+                }
+            );
+
+            // Register Planet Positions block
+            $this->register_block(
+                'sgup/planet-positions',
+                [
+                    'title'              => [ 'type' => 'string', 'default' => 'Planet Positions' ],
+                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                ],
+                function( array $attributes ): string {
+
+                    wp_enqueue_style( 'sgu-sky-tonight' );
+
+                    $location_handler = new SGU_Weather_Location();
+                    $location         = $location_handler->get_stored_location();
+                    $location_name    = $location?->name ?? '';
+                    $latitude         = $location?->lat ?? 19.8987;
+                    $longitude        = $location?->lon ?? -155.6659;
+
+                    $astronomy_api = new SGU_Space_API();
+                    $planets       = [];
+
+                    if ( $astronomy_api->has_credentials() ) {
+                        $positions = $astronomy_api->get_planet_positions( $latitude, $longitude );
+
+                        if ( $positions && isset( $positions->data->rows ) ) {
+                            $planet_ids = [ 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune' ];
+
+                            foreach ( $positions->data->rows as $row ) {
+                                $body_id = strtolower( $row->body->id ?? '' );
+
+                                if ( ! in_array( $body_id, $planet_ids, true ) ) {
+                                    continue;
+                                }
+
+                                $pos = $row->positions[0] ?? null;
+                                if ( ! $pos ) {
+                                    continue;
+                                }
+
+                                $altitude = (float) ( $pos->position->horizontal->altitude->degrees ?? -90 );
+
+                                $planets[] = (object) [
+                                    'name'          => $row->body->name,
+                                    'id'            => $body_id,
+                                    'visible'       => $altitude > 0,
+                                    'altitude'      => $altitude,
+                                    'azimuth'       => (float) ( $pos->position->horizontal->azimuth->degrees ?? 0 ),
+                                    'constellation' => $pos->position->constellation->name ?? '',
+                                ];
+                            }
+
+                            usort( $planets, fn( $a, $b ) => $b->altitude <=> $a->altitude );
+                        }
+                    }
+
+                    $data = [
+                        'title'                => $attributes['title'] ?? 'Planet Positions',
+                        'show_title'           => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'wrapper_attr'         => get_block_wrapper_attributes(),
+                        'has_location'         => (bool) $location,
+                        'location'             => $location,
+                        'location_name'        => $location_name,
+                        'latitude'             => $latitude,
+                        'longitude'            => $longitude,
+                        'planets'              => $planets,
+                        'has_credentials'      => $astronomy_api->has_credentials(),
+                    ];
+
+                    return SGU_Static::render_template( 'astro/planet-positions', $data );
+                }
+            );
+
+            // Register Star Chart block
+            $this->register_block(
+                'sgup/star-chart',
+                [
+                    'title'              => [ 'type' => 'string', 'default' => 'Star Chart' ],
+                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                    'style'              => [ 'type' => 'string', 'default' => 'default' ],
+                    'zoom'               => [ 'type' => 'number', 'default' => 3 ],
+                ],
+                function( array $attributes ): string {
+
+                    wp_enqueue_style( 'sgu-sky-tonight' );
+
+                    $location_handler = new SGU_Weather_Location();
+                    $location         = $location_handler->get_stored_location();
+                    $location_name    = $location?->name ?? '';
+                    $latitude         = $location?->lat ?? 19.8987;
+                    $longitude        = $location?->lon ?? -155.6659;
+
+                    $astronomy_api  = new SGU_Space_API();
+                    $star_chart_url = null;
+
+                    if ( $astronomy_api->has_credentials() ) {
+                        $star_chart_url = $astronomy_api->get_star_chart(
+                            $latitude,
+                            $longitude,
+                            '',
+                            12.0,
+                            0.0,
+                            $attributes['zoom'] ?? 3,
+                            $attributes['style'] ?? 'default'
+                        );
+                    }
+
+                    $data = [
+                        'title'                => $attributes['title'] ?? 'Star Chart',
+                        'show_title'           => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'wrapper_attr'         => get_block_wrapper_attributes(),
+                        'has_location'         => (bool) $location,
+                        'location'             => $location,
+                        'location_name'        => $location_name,
+                        'latitude'             => $latitude,
+                        'longitude'            => $longitude,
+                        'star_chart_url'       => $star_chart_url,
+                        'has_credentials'      => $astronomy_api->has_credentials(),
+                    ];
+
+                    return SGU_Static::render_template( 'astro/star-chart', $data );
+                }
+            );
+
+            // Register Moon Phase block
+            $this->register_block(
+                'sgup/moon-phase',
+                [
+                    'title'              => [ 'type' => 'string', 'default' => 'Moon Phase' ],
+                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
+                    'moonStyle'          => [ 'type' => 'string', 'default' => 'shaded' ],
+                ],
+                function( array $attributes ): string {
+
+                    wp_enqueue_style( 'sgu-sky-tonight' );
+
+                    $location_handler = new SGU_Weather_Location();
+                    $location         = $location_handler->get_stored_location();
+                    $location_name    = $location?->name ?? '';
+                    $latitude         = $location?->lat ?? 19.8987;
+                    $longitude        = $location?->lon ?? -155.6659;
+
+                    $astronomy_api  = new SGU_Space_API();
+                    $moon_phase_url = null;
+
+                    if ( $astronomy_api->has_credentials() ) {
+                        $moon_phase_url = $astronomy_api->get_moon_phase(
+                            $latitude,
+                            $longitude,
+                            '',
+                            $attributes['moonStyle'] ?? 'shaded'
+                        );
+                    }
+
+                    $data = [
+                        'title'                => $attributes['title'] ?? 'Moon Phase',
+                        'show_title'           => $attributes['showTitle'] ?? true,
+                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
+                        'wrapper_attr'         => get_block_wrapper_attributes(),
+                        'has_location'         => (bool) $location,
+                        'location'             => $location,
+                        'location_name'        => $location_name,
+                        'latitude'             => $latitude,
+                        'longitude'            => $longitude,
+                        'moon_phase_url'       => $moon_phase_url,
+                        'has_credentials'      => $astronomy_api->has_credentials(),
+                    ];
+
+                    return SGU_Static::render_template( 'astro/moon-phase', $data );
                 }
             );
 

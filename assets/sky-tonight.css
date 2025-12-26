@@ -1,0 +1,177 @@
+/**
+ * Sky Tonight Block Styles
+ * 
+ * Shared styles for all astronomy blocks
+ * 
+ * @package US Star Gazers
+ * @since 8.4
+ */
+
+/* Shared card styles */
+.sgu-sun-riseset-card,
+.sgu-moon-riseset-card,
+.sgu-planet-positions-card,
+.sgu-star-chart-card,
+.sgu-moon-phase-card {
+    background: rgba(20, 20, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+/* Shared time row styles */
+.sgu-sun-riseset-times,
+.sgu-moon-riseset-times {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sgu-sun-riseset-row,
+.sgu-moon-riseset-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sgu-sun-riseset-row:last-child,
+.sgu-moon-riseset-row:last-child {
+    border-bottom: none;
+}
+
+.sgu-sun-riseset-label,
+.sgu-moon-riseset-label {
+    color: #888;
+    font-size: 0.875rem;
+}
+
+.sgu-sun-riseset-value,
+.sgu-moon-riseset-value {
+    font-weight: 500;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Moon phase info */
+.sgu-moon-riseset-phase {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sgu-moon-riseset-phase-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.sgu-moon-riseset-phase-illum {
+    font-size: 0.875rem;
+    color: #888;
+}
+
+.sgu-moon-riseset-next {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Planet positions */
+.sgu-planet-positions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sgu-planet-positions-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sgu-planet-visible {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid #22c55e;
+}
+
+.sgu-planet-hidden {
+    opacity: 0.5;
+}
+
+.sgu-planet-positions-name {
+    font-weight: 600;
+    color: #fff;
+    min-width: 70px;
+}
+
+.sgu-planet-positions-status {
+    font-size: 0.875rem;
+    color: #888;
+}
+
+.sgu-planet-positions-constellation {
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* Star chart image */
+.sgu-star-chart-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+/* Moon phase image */
+.sgu-moon-phase-image {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+/* Notice styles */
+.sgu-sun-riseset-notice,
+.sgu-moon-riseset-notice,
+.sgu-planet-positions-notice,
+.sgu-star-chart-notice,
+.sgu-moon-phase-notice {
+    padding: 1rem;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #fbbf24;
+}
+
+.sgu-sun-riseset-notice p,
+.sgu-moon-riseset-notice p,
+.sgu-planet-positions-notice p,
+.sgu-star-chart-notice p,
+.sgu-moon-phase-notice p {
+    margin: 0;
+}
+
+/* Error styles */
+.sgu-sun-riseset-error,
+.sgu-moon-riseset-error,
+.sgu-planet-positions-error,
+.sgu-star-chart-error,
+.sgu-moon-phase-error {
+    color: #f87171;
+    font-size: 0.875rem;
+}

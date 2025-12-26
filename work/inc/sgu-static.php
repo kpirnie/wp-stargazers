@@ -67,6 +67,97 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return '';
         }
 
+
+        public static function get_api_endpoint( string $which ) {
+
+            return match( $which ) {
+                'cme' => (array) SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [],
+                'geo' => (array) SGU_Static::get_sgu_option( 'sgup_geomag_settings' ) -> sgup_geomag_endpoint ?: [],
+                'neo' => (array) SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [],
+                'sf' => (array) SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [],
+                'sw' => (array) SGU_Static::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [],
+                'apod' => (array) SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [],
+
+                default => [],  // Unknown type - return empty array
+            };
+
+        }
+
+
+        public static function get_api_key( string $which ) : array {
+
+            // get the CME keys by default
+            $cme_keys = self::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_keys ?: [];
+
+            return match( $which ) {
+                // NOAA endpoints don't require API keys
+                'geo', 'sw' => [],
+                
+                // Solar Flare keys - check if user wants to share CME keys
+                'sf' => ( function( ) use( $cme_keys ) {
+                    // Get the "use CME keys" checkbox value
+                    $use_cme = filter_var( 
+                        self::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_use_cme ?: false, 
+                        FILTER_VALIDATE_BOOLEAN 
+                    );
+                    
+                    // Return CME keys if sharing, otherwise get dedicated flare keys
+                    return $use_cme 
+                        ? $cme_keys 
+                        : ( self::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_keys ?: [] );
+                } )( ),
+                
+                // NEO keys - check if user wants to share CME keys
+                'neo' => ( function( ) use( $cme_keys ) {
+                    // Get the "use CME keys" checkbox value
+                    $use_cme = filter_var( 
+                        self::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_cme ?: false, 
+                        FILTER_VALIDATE_BOOLEAN 
+                    );
+                    
+                    // Return CME keys if sharing, otherwise get dedicated NEO keys
+                    return $use_cme 
+                        ? $cme_keys 
+                        : ( self::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_keys ?: [] );
+                } )( ),
+                
+                // APOD keys - check if user wants to share CME keys
+                'apod' => ( function( ) use( $cme_keys ) {
+                    // Get the "use CME keys" checkbox value
+                    $use_cme = filter_var( 
+                        self::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_cme ?: false, 
+                        FILTER_VALIDATE_BOOLEAN 
+                    );
+                    
+                    // Return CME keys if sharing, otherwise get dedicated APOD keys
+                    return $use_cme 
+                        ? $cme_keys 
+                        : ( self::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_keys ?: [] );
+                } )( ),
+
+                // Astronomy API keys
+                'aapi' => ( function( ) use( $cme_keys ) {
+
+                    // get the dedicated keys, and set the return
+                    $aa_group = self::get_sgu_option( 'sgup_apis' ) -> sgu_aa_group;
+                    $ret = [];
+                    
+                    // loop the returned setting, so we can combine the app id and secret into one string we can use later on
+                    foreach( $aa_group as $item ) {
+                        $str = $item['sgup_aa_api_id'] . '|' . $item['sgup_aa_api_secret'];
+                        $ret[] = $str;
+                    }
+
+                    // return the dedicated keys
+                    return $ret ?: [];
+                } )( ),
+                
+                // CME and unknown types use CME keys by default
+                default => $cme_keys,
+            };
+
+        }
+
         /** 
          * get_id_from_slug
          * 

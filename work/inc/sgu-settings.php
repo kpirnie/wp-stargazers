@@ -68,12 +68,12 @@ if( ! class_exists( 'SGU_Settings' ) ) {
                 // the apis options page
                 $apis = new_cmb2_box( array(
                     'id'           => $apis_id,
-                    'title'        => esc_html__( 'US Stargazers Weather API', 'sgup' ),
+                    'title'        => esc_html__( 'US Stargazers API\'s', 'sgup' ),
                     'object_types' => array( 'options-page' ),
 
                     'option_key'      => $apis_id,
                     'icon_url'        => 'dashicons-location-alt',
-                    'menu_title'      => esc_html__( 'SGU Weather', 'sgup' ),
+                    'menu_title'      => esc_html__( 'Stargazers API\'s', 'sgup' ),
                     'capability'      => 'list_users',
                     'position'        => 2,
                     'save_button'     => esc_html__( 'Save the Settings', 'sgup' ),
@@ -87,7 +87,7 @@ if( ! class_exists( 'SGU_Settings' ) ) {
 
                     'option_key'      => $epoints_id,
                     'icon_url'        => 'dashicons-star-filled',
-                    'menu_title'      => esc_html__( 'SGU Endpoints', 'sgup' ),
+                    'menu_title'      => esc_html__( 'Endpoints', 'sgup' ),
                     'parent_slug'     => $apis_id,
                     'capability'      => 'list_users',
                     'position'        => 2,
@@ -135,6 +135,39 @@ if( ! class_exists( 'SGU_Settings' ) ) {
                     'default' => 'US Star Gazers (iam@kevinpirnie.com)',
                 ) 
             );
+
+            // add the astronomyapi.com keys
+            // add the aa endpoint groups
+            $aa_group = $the_box->add_field( 
+                array(
+                    'id' => 'sgu_aa_group',
+                    'type' => 'group',
+                    'name' => esc_html__( 'Astronomy API', 'sgup' ),
+                    'description' => esc_html__( 'See here to obtain the keys: https://docs.astronomyapi.com/', 'sgup' ),
+                    'options'     => array(
+                        'group_title'       => __( 'Key {#}', 'sgup' ),
+                        'add_button'        => __( 'Add Another Key', 'sgup' ),
+                        'remove_button'     => __( 'Remove Key', 'sgup' ),
+                        'sortable'          => true,
+                        'closed'         => true,
+                    ),
+                )
+            );
+
+            // NOAA endpoint fields
+            $the_box->add_group_field( $aa_group, array(
+                'id'      => 'sgup_aa_api_id',
+                'type'    => 'text',
+                'name' => __( 'App ID', 'sgup' ),
+                ) 
+            );
+            $the_box->add_group_field( $aa_group, array(
+                'id'      => 'sgup_aa_api_secret',
+                'type'    => 'text',
+                'name' => __( 'App Secret', 'sgup' ),
+                ) 
+            );
+
         }
 
         /** 
@@ -161,34 +194,23 @@ if( ! class_exists( 'SGU_Settings' ) ) {
             );
 
             // add the NOAA endpoint groups
-            $noaa_group = $the_box->add_field( 
+            $the_box->add_field( 
                 array(
                     'id' => 'noaa_ep_group',
-                    'type' => 'group',
+                    'type' => 'title',
                     'name' => esc_html__( 'NOAA Endpoints (Optional Override)', 'sgup' ),
-                    'description' => esc_html__( 'NOAA endpoints are pre-configured. Only add custom endpoints if needed. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
-                    'options'     => array(
-                        'group_title'       => __( 'NOAA Endpoint {#}', 'sgup' ),
-                        'add_button'        => __( 'Add Another Endpoint', 'sgup' ),
-                        'remove_button'     => __( 'Remove Endpoint', 'sgup' ),
-                        'sortable'          => true,
-                        'closed'         => true,
-                    ),
+                    'desc' => esc_html__( 'NOAA endpoints are pre-configured. Only add custom endpoints if needed. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
                 )
             );
 
-            // NOAA endpoint fields
-            $the_box->add_group_field( $noaa_group, array(
-                'id'      => 'sgup_noaa_endpoint_type',
-                'type'    => 'text_small',
-                'name' => __( 'Type', 'sgup' ),
-                ) 
-            );
-            $the_box->add_group_field( $noaa_group, array(
-                'id'      => 'sgup_noaa_endpoint_url',
-                'type'    => 'text_url',
-                'name' => __( 'URL', 'sgup' ),
-                'protocols' => array( 'http', 'https', )
+            // add the astronomyapi.com endpoint(s)
+            $the_box->add_field( 
+                array(
+                    'name'    => esc_html__( 'Astronomy API Endpoint', 'sgup' ),
+                    'id'      => 'sgup_aapi_endpont',
+                    'desc'    => esc_html__( 'Astronomy API Endpoint can be found here: https://docs.astronomyapi.com/', 'sgup' ),
+                    'type'    => 'text',
+                    'default' => '',
                 ) 
             );
 

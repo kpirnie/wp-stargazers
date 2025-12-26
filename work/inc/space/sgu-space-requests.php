@@ -69,6 +69,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
          * 
         */
         public function __construct( ) {
+
             // Initialize data handler for storing API responses
             $this -> space_data = new SGU_Space_Data_CRUD( );
         }
@@ -108,6 +109,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 'sw' => $this -> space_data -> insert_space_weather( $data ),  // Space weather alerts
                 'apod' => $this -> space_data -> insert_apod( $data ),         // Astronomy Photo of the Day
                 'cme' => $this -> space_data -> insert_cme( $data ),           // Coronal Mass Ejections
+    
                 default => true,                                                // Unknown type - skip silently
             };
         }
@@ -260,60 +262,8 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 return $this -> keys_cache[$type];
             }
 
-            // Load CME keys as base - these might be shared by other types
-            $cme_keys = SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_keys ?: [];
-
             // Determine which keys to use based on type and configuration
-            $this -> keys_cache[$type] = match( $type ) {
-                
-                // NOAA endpoints don't require API keys
-                'geo', 'sw' => [],
-                
-                // Solar Flare keys - check if user wants to share CME keys
-                'sf' => ( function( ) use( $cme_keys ) {
-                    // Get the "use CME keys" checkbox value
-                    $use_cme = filter_var( 
-                        SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_use_cme ?: false, 
-                        FILTER_VALIDATE_BOOLEAN 
-                    );
-                    
-                    // Return CME keys if sharing, otherwise get dedicated flare keys
-                    return $use_cme 
-                        ? $cme_keys 
-                        : ( SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_keys ?: [] );
-                } )( ),
-                
-                // NEO keys - check if user wants to share CME keys
-                'neo' => ( function( ) use( $cme_keys ) {
-                    // Get the "use CME keys" checkbox value
-                    $use_cme = filter_var( 
-                        SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_cme ?: false, 
-                        FILTER_VALIDATE_BOOLEAN 
-                    );
-                    
-                    // Return CME keys if sharing, otherwise get dedicated NEO keys
-                    return $use_cme 
-                        ? $cme_keys 
-                        : ( SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_keys ?: [] );
-                } )( ),
-                
-                // APOD keys - check if user wants to share CME keys
-                'apod' => ( function( ) use( $cme_keys ) {
-                    // Get the "use CME keys" checkbox value
-                    $use_cme = filter_var( 
-                        SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_cme ?: false, 
-                        FILTER_VALIDATE_BOOLEAN 
-                    );
-                    
-                    // Return CME keys if sharing, otherwise get dedicated APOD keys
-                    return $use_cme 
-                        ? $cme_keys 
-                        : ( SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_keys ?: [] );
-                } )( ),
-                
-                // CME and unknown types use CME keys by default
-                default => $cme_keys,
-            };
+            $this -> keys_cache[$type] = SGU_Static::get_api_key( $type );
 
             return $this -> keys_cache[$type];
         }
@@ -349,15 +299,7 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
 
             // Load endpoints from WordPress options based on type
             // Each data type has its own settings page in admin
-            $this -> endpoints_cache[$type] = match( $type ) {
-                'cme' => (array) SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [],
-                'geo' => (array) SGU_Static::get_sgu_option( 'sgup_geomag_settings' ) -> sgup_geomag_endpoint ?: [],
-                'neo' => (array) SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [],
-                'sf' => (array) SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [],
-                'sw' => (array) SGU_Static::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [],
-                'apod' => (array) SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [],
-                default => [],  // Unknown type - return empty array
-            };
+            $this -> endpoints_cache[$type] = SGU_Static::get_api_endpoint($type);
 
             return $this -> endpoints_cache[$type];
         }
