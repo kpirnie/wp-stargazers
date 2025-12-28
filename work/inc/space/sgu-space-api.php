@@ -115,57 +115,6 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
             return $result;
         }
 
-        public function get_star_chart( 
-            float $latitude, 
-            float $longitude, 
-            string $date = '',
-            float $right_ascension = 12.0,
-            float $declination = 0.0,
-            int $zoom = 3,
-            string $style = 'default'
-        ): ?string {
-            if ( empty( $date ) ) {
-                $date = current_time( 'Y-m-d' );
-            }
-
-            $cache_key = 'sgu_starchart_' . md5( $latitude . $longitude . $date . $right_ascension . $declination . $zoom . $style );
-            $cached    = get_transient( $cache_key );
-
-            /*if ( $cached !== false ) {
-                return $cached;
-            }*/
-
-            $body = [
-                'style'    => $style,
-                'observer' => [
-                    'latitude'  => $latitude,
-                    'longitude' => $longitude,
-                    'date'      => $date,
-                ],
-                'view'     => [
-                    'type'       => 'area',
-                    'parameters' => [
-                        'position' => [
-                            'equatorial' => [
-                                'rightAscension' => $right_ascension,
-                                'declination'    => $declination,
-                            ],
-                        ],
-                        'zoom' => $zoom,
-                    ],
-                ],
-            ];
-            var_dump($body);
-            $result = $this->request( '/studio/star-chart', $body, 'POST' );
-
-            if ( $result && isset( $result->data->imageUrl ) ) {
-                set_transient( $cache_key, $result->data->imageUrl, self::CACHE_DURATION );
-                return $result->data->imageUrl;
-            }
-
-            return null;
-        }
-
         public function get_moon_phase( 
             float $latitude, 
             float $longitude, 

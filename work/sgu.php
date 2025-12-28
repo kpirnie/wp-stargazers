@@ -98,15 +98,15 @@ if( ! class_exists( 'SGUP' ) ) {
             } );
 
             // register the scripts and styles
-            add_action( 'wp_enqueue_scripts', [$this, 'sgup_register_light_pollution_assets'] );
-
+            add_action( 'wp_enqueue_scripts', [$this, 'register_light_pollution_assets'] );
+            
         }
 
         /**
          * Register light pollution map assets
          * 
          */
-        function sgup_register_light_pollution_assets(): void {
+        function register_light_pollution_assets(): void {
 
             $plugin_url = plugins_url( '/', SGUP_PATH . '/' . SGUP_FILENAME );
             $version    = defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : '8.4.0';

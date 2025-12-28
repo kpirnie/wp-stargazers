@@ -432,10 +432,6 @@ if( ! class_exists( 'SGU_Sync' ) ) {
 
             $existing_id = SGU_Static::get_id_from_slug( sanitize_title( $title ), 'sgu_apod' );
 
-            if( $existing_id > 0 ) {
-                return 'skipped';
-            }
-
             $args = [
                 'post_status' => 'publish',
                 'post_title' => $title,
@@ -445,16 +441,24 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                 'post_date' => $date,
             ];
 
-            $post_id = wp_insert_post( $args );
+            // it doesnt already exist
+            if( $existing_id == 0 ) {
+                $existing_id = wp_insert_post( $args );
+            // it does, so update instead
+            } else{
+                // Update existing post with revised data
+                $args['ID'] = $existing_id;
+                wp_update_post( $args );
+            }
 
-            if( is_wp_error( $post_id ) || $post_id === 0 ) {
+            if( is_wp_error( $existing_id ) || $existing_id === 0 ) {
                 return 'failed';
             }
 
-            update_post_meta( $post_id, 'sgu_apod_local_media_type', $media_type );
-            update_post_meta( $post_id, 'sgu_apod_orignal_media', $media );
-            update_post_meta( $post_id, 'sgu_apod_local_media', '' );
-            update_post_meta( $post_id, 'sgu_apod_copyright', $copyright );
+            update_post_meta( $existing_id, 'sgu_apod_local_media_type', $media_type );
+            update_post_meta( $existing_id, 'sgu_apod_orignal_media', $media );
+            update_post_meta( $existing_id, 'sgu_apod_local_media', '' );
+            update_post_meta( $existing_id, 'sgu_apod_copyright', $copyright );
 
             return 'inserted';
 

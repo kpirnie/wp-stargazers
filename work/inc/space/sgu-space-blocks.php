@@ -631,52 +631,42 @@ if ( ! class_exists( 'SGU_Space_Blocks' ) ) {
                     'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
                 ],
                 function( array $attributes ): string {
-
                     wp_enqueue_style( 'sgu-sky-tonight' );
-
                     $location_handler = new SGU_Weather_Location();
                     $location         = $location_handler->get_stored_location();
                     $location_name    = $location?->name ?? '';
                     $latitude         = $location?->lat ?? 19.8987;
                     $longitude        = $location?->lon ?? -155.6659;
-
                     $astronomy_api = new SGU_Space_API();
                     $planets       = [];
-
                     if ( $astronomy_api->has_credentials() ) {
                         $positions = $astronomy_api->get_planet_positions( $latitude, $longitude );
-
-                        if ( $positions && isset( $positions->data->rows ) ) {
+                        // FIX: Changed from $positions->data->rows to $positions->data->table->rows
+                        if ( $positions && isset( $positions->data->table->rows ) ) {
                             $planet_ids = [ 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune' ];
-
-                            foreach ( $positions->data->rows as $row ) {
-                                $body_id = strtolower( $row->body->id ?? '' );
-
+                            foreach ( $positions->data->table->rows as $row ) {
+                                $body_id = strtolower( $row->entry->id ?? '' );
                                 if ( ! in_array( $body_id, $planet_ids, true ) ) {
                                     continue;
                                 }
-
-                                $pos = $row->positions[0] ?? null;
-                                if ( ! $pos ) {
+                                // FIX: Changed from $row->positions[0] to $row->cells[0]
+                                $cell = $row->cells[0] ?? null;
+                                if ( ! $cell ) {
                                     continue;
                                 }
-
-                                $altitude = (float) ( $pos->position->horizontal->altitude->degrees ?? -90 );
-
+                                $altitude = (float) ( $cell->position->horizontal->altitude->degrees ?? -90 );
                                 $planets[] = (object) [
-                                    'name'          => $row->body->name,
+                                    'name'          => $row->entry->name,
                                     'id'            => $body_id,
                                     'visible'       => $altitude > 0,
                                     'altitude'      => $altitude,
-                                    'azimuth'       => (float) ( $pos->position->horizontal->azimuth->degrees ?? 0 ),
-                                    'constellation' => $pos->position->constellation->name ?? '',
+                                    'azimuth'       => (float) ( $cell->position->horizontal->azimuth->degrees ?? 0 ),
+                                    'constellation' => $cell->position->constellation->name ?? '',
                                 ];
                             }
-
                             usort( $planets, fn( $a, $b ) => $b->altitude <=> $a->altitude );
                         }
                     }
-
                     $data = [
                         'title'                => $attributes['title'] ?? 'Planet Positions',
                         'show_title'           => $attributes['showTitle'] ?? true,
@@ -691,6 +681,7 @@ if ( ! class_exists( 'SGU_Space_Blocks' ) ) {
                         'has_credentials'      => $astronomy_api->has_credentials(),
                     ];
 
+                    // pull the template
                     return SGU_Static::render_template( 'astro/planet-positions', $data );
                 }
             );
@@ -699,55 +690,66 @@ if ( ! class_exists( 'SGU_Space_Blocks' ) ) {
             $this->register_block(
                 'sgup/star-chart',
                 [
-                    'title'              => [ 'type' => 'string', 'default' => 'Star Chart' ],
-                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
-                    'style'              => [ 'type' => 'string', 'default' => 'default' ],
-                    'zoom'               => [ 'type' => 'number', 'default' => 3 ],
+                    'title'                      => [ 'type' => 'string', 'default' => 'Star Chart' ],
+                    'showTitle'                  => [ 'type' => 'boolean', 'default' => true ],
+                    'showLocationPicker'         => [ 'type' => 'boolean', 'default' => true ],
+                    'projection'                 => [ 'type' => 'string', 'default' => 'stereo' ],
+                    'style'                      => [ 'type' => 'string', 'default' => 'default' ],
+                    'zoom'                       => [ 'type' => 'number', 'default' => 3 ],
+                    'az'                         => [ 'type' => 'number', 'default' => 180 ],
+                    'showStars'                  => [ 'type' => 'boolean', 'default' => true ],
+                    'showStarLabels'             => [ 'type' => 'boolean', 'default' => false ],
+                    'showConstellations'         => [ 'type' => 'boolean', 'default' => true ],
+                    'showConstellationLabels'    => [ 'type' => 'boolean', 'default' => true ],
+                    'showPlanets'                => [ 'type' => 'boolean', 'default' => true ],
+                    'showPlanetLabels'           => [ 'type' => 'boolean', 'default' => true ],
+                    'showOrbits'                 => [ 'type' => 'boolean', 'default' => false ],
+                    'showGalaxy'                 => [ 'type' => 'boolean', 'default' => true ],
+                    'ground'                     => [ 'type' => 'boolean', 'default' => true ],
+                    'gradient'                   => [ 'type' => 'boolean', 'default' => true ],
+                    'keyboard'                   => [ 'type' => 'boolean', 'default' => true ],
+                    'mouse'                      => [ 'type' => 'boolean', 'default' => true ],
+                    'live'                       => [ 'type' => 'boolean', 'default' => false ],
                 ],
                 function( array $attributes ): string {
-
                     wp_enqueue_style( 'sgu-sky-tonight' );
-
                     $location_handler = new SGU_Weather_Location();
                     $location         = $location_handler->get_stored_location();
                     $location_name    = $location?->name ?? '';
                     $latitude         = $location?->lat ?? 19.8987;
                     $longitude        = $location?->lon ?? -155.6659;
-
-                    $astronomy_api  = new SGU_Space_API();
-                    $star_chart_url = null;
-
-                    if ( $astronomy_api->has_credentials() ) {
-                        $star_chart_url = $astronomy_api->get_star_chart(
-                            $latitude,
-                            $longitude,
-                            '',
-                            12.0,
-                            0.0,
-                            $attributes['zoom'] ?? 3,
-                            $attributes['style'] ?? 'default'
-                        );
-                    }
-
                     $data = [
-                        'title'                => $attributes['title'] ?? 'Star Chart',
-                        'show_title'           => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'wrapper_attr'         => get_block_wrapper_attributes(),
-                        'has_location'         => (bool) $location,
-                        'location'             => $location,
-                        'location_name'        => $location_name,
-                        'latitude'             => $latitude,
-                        'longitude'            => $longitude,
-                        'star_chart_url'       => $star_chart_url,
-                        'has_credentials'      => $astronomy_api->has_credentials(),
+                        'title'                      => $attributes['title'] ?? 'Star Chart',
+                        'show_title'                 => $attributes['showTitle'] ?? true,
+                        'show_location_picker'       => $attributes['showLocationPicker'] ?? true,
+                        'wrapper_attr'               => get_block_wrapper_attributes(),
+                        'has_location'               => (bool) $location,
+                        'location'                   => $location,
+                        'location_name'              => $location_name,
+                        'latitude'                   => $latitude,
+                        'longitude'                  => $longitude,
+                        'projection'                 => $attributes['projection'] ?? 'stereo',
+                        'style'                      => $attributes['style'] ?? 'default',
+                        'zoom'                       => $attributes['zoom'] ?? 3,
+                        'az'                         => $attributes['az'] ?? 180,
+                        'show_stars'                 => $attributes['showStars'] ?? true,
+                        'show_star_labels'           => $attributes['showStarLabels'] ?? false,
+                        'show_constellations'        => $attributes['showConstellations'] ?? true,
+                        'show_constellation_labels'  => $attributes['showConstellationLabels'] ?? true,
+                        'show_planets'               => $attributes['showPlanets'] ?? true,
+                        'show_planet_labels'         => $attributes['showPlanetLabels'] ?? true,
+                        'show_orbits'                => $attributes['showOrbits'] ?? false,
+                        'show_galaxy'                => $attributes['showGalaxy'] ?? true,
+                        'ground'                     => $attributes['ground'] ?? true,
+                        'gradient'                   => $attributes['gradient'] ?? true,
+                        'keyboard'                   => $attributes['keyboard'] ?? true,
+                        'mouse'                      => $attributes['mouse'] ?? true,
+                        'live'                       => $attributes['live'] ?? false,
                     ];
-
                     return SGU_Static::render_template( 'astro/star-chart', $data );
                 }
             );
-
+            
             // Register Moon Phase block
             $this->register_block(
                 'sgup/moon-phase',
