@@ -131,9 +131,9 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
             $cache_key = 'sgu_starchart_' . md5( $latitude . $longitude . $date . $right_ascension . $declination . $zoom . $style );
             $cached    = get_transient( $cache_key );
 
-            if ( $cached !== false ) {
+            /*if ( $cached !== false ) {
                 return $cached;
-            }
+            }*/
 
             $body = [
                 'style'    => $style,
@@ -155,7 +155,7 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
                     ],
                 ],
             ];
-
+            var_dump($body);
             $result = $this->request( '/studio/star-chart', $body, 'POST' );
 
             if ( $result && isset( $result->data->imageUrl ) ) {

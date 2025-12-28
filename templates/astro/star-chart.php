@@ -19,6 +19,7 @@
  */
 
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
+var_dump($star_chart_url);
 ?>
 
 <div class="sgu-star-chart-container" <?php echo $wrapper_attr; ?>>
