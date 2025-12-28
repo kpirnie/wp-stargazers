@@ -1063,6 +1063,160 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return $directions[ strtoupper( $compass ) ] ?? 0;
         }
 
+        /**
+         * Generate planet SVG icon
+         * 
+         * @param string $planet Planet name (mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto)
+         * @param string $size CSS class for size (default: w-8 h-8)
+         * @return string SVG icon HTML
+         */
+        public static function get_planet_icon( $planet = 'earth', $size = 'w-8 h-8' ) {
+            $class = esc_attr($size) . ' inline-block';
+            
+            return match (strtolower($planet)) {
+                'mercury' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#8C7853" stroke="#6B5D47" stroke-width="2"/>
+                        <circle cx="35" cy="35" r="8" fill="#6B5D47" opacity="0.6"/>
+                        <circle cx="60" cy="45" r="6" fill="#6B5D47" opacity="0.5"/>
+                        <circle cx="45" cy="65" r="10" fill="#6B5D47" opacity="0.7"/>
+                        <circle cx="70" cy="30" r="5" fill="#6B5D47" opacity="0.4"/>
+                    </svg>
+                    SVG,
+
+                'venus' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#FFC649" stroke="#E5B041" stroke-width="2"/>
+                        <ellipse cx="50" cy="50" rx="35" ry="30" fill="#FFD873" opacity="0.3"/>
+                        <path d="M30 40 Q50 45 70 40" stroke="#E5B041" stroke-width="1.5" fill="none" opacity="0.4"/>
+                        <path d="M25 60 Q50 55 75 60" stroke="#E5B041" stroke-width="1.5" fill="none" opacity="0.4"/>
+                    </svg>
+                    SVG,
+
+                'earth' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#4A90E2" stroke="#357ABD" stroke-width="2"/>
+                        <path d="M30 35 Q40 30 50 35 T70 35" fill="#2D5F3F" opacity="0.8"/>
+                        <path d="M25 55 Q35 50 45 55 T65 55" fill="#2D5F3F" opacity="0.8"/>
+                        <ellipse cx="60" cy="70" rx="15" ry="10" fill="#2D5F3F" opacity="0.8"/>
+                        <circle cx="50" cy="50" r="45" fill="white" opacity="0.15"/>
+                    </svg>
+                    SVG,
+
+                'mars' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#CD5C5C" stroke="#A64545" stroke-width="2"/>
+                        <circle cx="40" cy="40" r="10" fill="#A64545" opacity="0.5"/>
+                        <circle cx="65" cy="55" r="8" fill="#A64545" opacity="0.6"/>
+                        <circle cx="45" cy="70" r="6" fill="#A64545" opacity="0.4"/>
+                        <path d="M20 50 L30 45 L35 55 Z" fill="#8B3A3A" opacity="0.7"/>
+                    </svg>
+                    SVG,
+
+                'jupiter' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#D4A574" stroke="#B8956A" stroke-width="2"/>
+                        <ellipse cx="50" cy="35" rx="40" ry="8" fill="#C19A6B" opacity="0.6"/>
+                        <ellipse cx="50" cy="50" rx="40" ry="8" fill="#B8956A" opacity="0.7"/>
+                        <ellipse cx="50" cy="65" rx="40" ry="8" fill="#A67C52" opacity="0.6"/>
+                        <circle cx="30" cy="50" r="12" fill="#8B4513" opacity="0.5"/>
+                    </svg>
+                    SVG,
+
+                'saturn' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="50" cy="50" rx="60" ry="10" fill="#D4C5A9" opacity="0.6" stroke="#B8A98C" stroke-width="1.5"/>
+                        <ellipse cx="50" cy="50" rx="50" ry="8" fill="#E8D7BA" opacity="0.4"/>
+                        <circle cx="50" cy="50" r="30" fill="#F4E7D2" stroke="#D4C5A9" stroke-width="2"/>
+                        <ellipse cx="50" cy="45" rx="25" ry="5" fill="#E8D7BA" opacity="0.4"/>
+                        <ellipse cx="50" cy="55" rx="25" ry="5" fill="#D4C5A9" opacity="0.3"/>
+                    </svg>
+                    SVG,
+
+                'uranus' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#4FD0E7" stroke="#3BB5CC" stroke-width="2"/>
+                        <circle cx="50" cy="50" r="45" fill="white" opacity="0.1"/>
+                        <ellipse cx="50" cy="40" rx="35" ry="6" fill="#6FE0F7" opacity="0.4"/>
+                        <ellipse cx="50" cy="60" rx="35" ry="6" fill="#2FA5BC" opacity="0.4"/>
+                        <circle cx="50" cy="50" r="20" fill="#87E8F8" opacity="0.3"/>
+                    </svg>
+                    SVG,
+
+                'neptune' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#4169E1" stroke="#2F4FBF" stroke-width="2"/>
+                        <circle cx="50" cy="50" r="45" fill="white" opacity="0.15"/>
+                        <ellipse cx="50" cy="35" rx="30" ry="8" fill="#5A7FE6" opacity="0.5"/>
+                        <ellipse cx="50" cy="55" rx="30" ry="8" fill="#2F4FBF" opacity="0.5"/>
+                        <circle cx="35" cy="45" r="8" fill="#6A8FFF" opacity="0.4"/>
+                    </svg>
+                    SVG,
+
+                'pluto' => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="40" fill="#A89881" stroke="#8C7D6B" stroke-width="2"/>
+                        <circle cx="35" cy="40" r="7" fill="#6B5D47" opacity="0.6"/>
+                        <circle cx="60" cy="35" r="5" fill="#6B5D47" opacity="0.5"/>
+                        <circle cx="45" cy="60" r="9" fill="#6B5D47" opacity="0.7"/>
+                        <path d="M55 55 L65 65 M65 55 L55 65" stroke="#6B5D47" stroke-width="2" opacity="0.4"/>
+                    </svg>
+                    SVG,
+
+                default => <<<SVG
+                    <svg class="{$class}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="#4A90E2" stroke="#357ABD" stroke-width="2"/>
+                        <path d="M30 35 Q40 30 50 35 T70 35" fill="#2D5F3F" opacity="0.8"/>
+                        <path d="M25 55 Q35 50 45 55 T65 55" fill="#2D5F3F" opacity="0.8"/>
+                        <ellipse cx="60" cy="70" rx="15" ry="10" fill="#2D5F3F" opacity="0.8"/>
+                        <circle cx="50" cy="50" r="45" fill="white" opacity="0.15"/>
+                    </svg>
+                    SVG,
+            };
+        }
+
+        /**
+         * Generate moon phase SVG icon
+         * 
+         * @param string $phase Moon phase name (new, waxing_crescent, first_quarter, waxing_gibbous, full, waning_gibbous, last_quarter, waning_crescent)
+         * @param string $size pixel size
+         * @return string SVG icon HTML
+         */
+        public static function get_moon_phase_icon( string $phase = 'full', int $size = 100 ) {
+            $phase = strtolower( str_replace( ' ', '_', $phase ) );
+            $r = $size / 2;
+            $s = $size + 5;
+            $cx = $r;
+            $cy = $r;
+
+            // Theme colors from Stargazers
+            $lit = '#0e3759';      // astro-light - illuminated portion
+            $shadow = '#77aad4';   // astro-dark - shadow portion
+            $border = '#185e98';   // astro-mid - border
+
+            $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{$s}\" height=\"{$s}\" viewBox=\"0 0 {$size} {$size}\">";
+            
+            // Background circle (illuminated)
+            $svg .= "<circle cx=\"{$cx}\" cy=\"{$cy}\" r=\"{$r}\" fill=\"{$lit}\" stroke=\"{$border}\" stroke-width=\"0\"/>";
+
+            // Shadow overlay based on phase
+            $shadow_path = match ($phase) {
+                'new' => "<circle cx=\"{$cx}\" cy=\"{$cy}\" r=\"" . ($r - 1) . "\" fill=\"{$shadow}\"/>",
+                'waxing_crescent' => "<path d=\"M {$cx} 1 A " . ($r - 1) . " " . ($r - 1) . " 0 1 0 {$cx} " . ($size - 1) . " A " . ($r * 0.6) . " " . ($r - 1) . " 0 1 1 {$cx} 1\" fill=\"{$shadow}\"/>",
+                'first_quarter' => "<path d=\"M {$cx} 1 A " . ($r - 1) . " " . ($r - 1) . " 0 1 0 {$cx} " . ($size - 1) . " L {$cx} 1\" fill=\"{$shadow}\"/>",
+                'waxing_gibbous' => "<path d=\"M {$cx} 1 A " . ($r - 1) . " " . ($r - 1) . " 0 1 0 {$cx} " . ($size - 1) . " A " . ($r * 0.6) . " " . ($r - 1) . " 0 1 0 {$cx} 1\" fill=\"{$shadow}\"/>",
+                'full' => '',
+                'waning_gibbous' => "<path d=\"M {$cx} 1 A " . ($r - 1) . " " . ($r - 1) . " 0 1 1 {$cx} " . ($size - 1) . " A " . ($r * 0.6) . " " . ($r - 1) . " 0 1 1 {$cx} 1\" fill=\"{$shadow}\"/>",
+                'last_quarter' => "<path d=\"M {$cx} 1 A " . ($r - 1) . " " . ($r - 1) . " 0 1 1 {$cx} " . ($size - 1) . " L {$cx} 1\" fill=\"{$shadow}\"/>",
+                'waning_crescent' => "<path d=\"M {$cx} 1 A " . ($r - 1) . " " . ($r - 1) . " 0 1 1 {$cx} " . ($size - 1) . " A " . ($r * 0.6) . " " . ($r - 1) . " 0 1 0 {$cx} 1\" fill=\"{$shadow}\"/>",
+                default => throw new InvalidArgumentException("Invalid phase: {$phase}"),
+            };
+
+            $svg .= $shadow_path;
+            $svg .= '</svg>';
+
+            return $svg;    
+        }
     }
 
 }

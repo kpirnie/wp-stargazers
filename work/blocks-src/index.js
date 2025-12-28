@@ -33,7 +33,6 @@ import './flare-alerts';
 import './geomag-alerts';
 import './latest-alerts';
 import './light-pollution';
-import './moon-phase';
 import './moon-riseset';
 import './neos';
 import './planet-positions';
@@ -41,3 +40,4 @@ import './star-chart';
 import './sun-riseset';
 import './sw-alerts';
 import './weather';
+

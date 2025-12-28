@@ -749,55 +749,6 @@ if ( ! class_exists( 'SGU_Space_Blocks' ) ) {
                     return SGU_Static::render_template( 'astro/star-chart', $data );
                 }
             );
-            
-            // Register Moon Phase block
-            $this->register_block(
-                'sgup/moon-phase',
-                [
-                    'title'              => [ 'type' => 'string', 'default' => 'Moon Phase' ],
-                    'showTitle'          => [ 'type' => 'boolean', 'default' => true ],
-                    'showLocationPicker' => [ 'type' => 'boolean', 'default' => true ],
-                    'moonStyle'          => [ 'type' => 'string', 'default' => 'shaded' ],
-                ],
-                function( array $attributes ): string {
-
-                    wp_enqueue_style( 'sgu-sky-tonight' );
-
-                    $location_handler = new SGU_Weather_Location();
-                    $location         = $location_handler->get_stored_location();
-                    $location_name    = $location?->name ?? '';
-                    $latitude         = $location?->lat ?? 19.8987;
-                    $longitude        = $location?->lon ?? -155.6659;
-
-                    $astronomy_api  = new SGU_Space_API();
-                    $moon_phase_url = null;
-
-                    if ( $astronomy_api->has_credentials() ) {
-                        $moon_phase_url = $astronomy_api->get_moon_phase(
-                            $latitude,
-                            $longitude,
-                            '',
-                            $attributes['moonStyle'] ?? 'shaded'
-                        );
-                    }
-
-                    $data = [
-                        'title'                => $attributes['title'] ?? 'Moon Phase',
-                        'show_title'           => $attributes['showTitle'] ?? true,
-                        'show_location_picker' => $attributes['showLocationPicker'] ?? true,
-                        'wrapper_attr'         => get_block_wrapper_attributes(),
-                        'has_location'         => (bool) $location,
-                        'location'             => $location,
-                        'location_name'        => $location_name,
-                        'latitude'             => $latitude,
-                        'longitude'            => $longitude,
-                        'moon_phase_url'       => $moon_phase_url,
-                        'has_credentials'      => $astronomy_api->has_credentials(),
-                    ];
-
-                    return SGU_Static::render_template( 'astro/moon-phase', $data );
-                }
-            );
 
         }
 
