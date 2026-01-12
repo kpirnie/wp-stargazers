@@ -381,6 +381,11 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             // we only need the first item
             $data = $the_data[0];
             
+            // if there's no data
+            if(count($data) == 0) {
+                return false;
+            }
+            
             // Extract and sanitize APOD data
             $title = sanitize_text_field( $data['title'] );
             $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $data['date'] ) ) );

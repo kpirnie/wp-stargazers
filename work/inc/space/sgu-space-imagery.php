@@ -182,6 +182,51 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
             }
         }
 
+        /**
+         * Convert TIF/TIFF to PNG before WordPress upload
+         * Add this before media_handle_sideload call
+         */
+        private function convert_tif_for_upload( string $file_path ) : string {
+            $ext = strtolower( pathinfo( $file_path, PATHINFO_EXTENSION ) );
+            
+            if( ! in_array( $ext, ['tif', 'tiff'], true ) ) {
+                return $file_path;
+            }
+            
+            // Check if ImageMagick is available
+            if( extension_loaded( 'imagick' ) ) {
+                try {
+                    $imagick = new Imagick( $file_path );
+                    $new_path = preg_replace( '/\.tiff?$/i', '.png', $file_path );
+                    $imagick -> setImageFormat( 'png' );
+                    $imagick -> writeImage( $new_path );
+                    $imagick -> destroy( );
+                    @unlink( $file_path );
+                    return $new_path;
+                } catch( Exception $e ) {
+                    // Fall through to GD
+                }
+            }
+            
+            // Fallback to GD if available
+            if( function_exists( 'imagecreatefromstring' ) ) {
+                $img_data = @file_get_contents( $file_path );
+                $img = @imagecreatefromstring( $img_data );
+                if( $img ) {
+                    $new_path = preg_replace( '/\.tiff?$/i', '.png', $file_path );
+                    imagepng( $img, $new_path );
+                    imagedestroy( $img );
+                    @unlink( $file_path );
+                    return $new_path;
+                }
+            }
+            
+            // Last resort: just rename to .png (may not work for all viewers)
+            $new_path = preg_replace( '/\.tiff?$/i', '.png', $file_path );
+            @rename( $file_path, $new_path );
+            return $new_path;
+        }
+
         /** 
          * sync_apod_imagery_with_progress
          * 
@@ -197,14 +242,25 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
          * 
         */
         public function sync_apod_imagery_with_progress( ) : void {
-
+            
             // Add upload_mimes filter
             add_filter( 'upload_mimes', function( $mimes ) {
                 $mimes['gif'] = 'image/gif';
                 $mimes['svg'] = 'image/svg+xml';
                 $mimes['svgz'] = 'image/svg+xml';
+                $mimes['tif'] = 'image/tiff';
+                $mimes['tiff'] = 'image/tiff';
                 return $mimes;
             } );
+            add_filter( 'wp_check_filetype_and_ext', function( $data, $file, $filename, $mimes ) {
+                $ext = strtolower( pathinfo( $filename, PATHINFO_EXTENSION ) );
+                if( in_array( $ext, ['tif', 'tiff'], true ) ) {
+                    $data['ext'] = $ext;
+                    $data['type'] = 'image/tiff';
+                    $data['proper_filename'] = $filename;
+                }
+                return $data;
+            }, 10, 4 );
 
             // Query all published APOD posts that need imagery
             $args = [
@@ -312,7 +368,10 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
 
                     // Attachment doesn't exist, need to download
                     // Use the cleaned URL for download
-                    $response = wp_safe_remote_get( $clean_url, [ 'timeout' => 90 ] );
+                    $response = wp_remote_get( $clean_url, [ 
+                        'timeout' => 90,
+                        'sslverify' => true,
+                    ] );
 
                     // Check for download errors
                     if( ! is_wp_error( $response ) ) {
@@ -325,6 +384,24 @@ if( ! class_exists( 'SGU_Space_Imagery' ) ) {
 
                         // Check if upload succeeded
                         if( ! isset( $upload['error'] ) || ! $upload['error'] ) {
+
+                            // Convert TIF to JPG before inserting attachment
+                            $ext = strtolower( pathinfo( $upload['file'], PATHINFO_EXTENSION ) );
+                            if( in_array( $ext, ['tif', 'tiff'], true ) ) {
+                                $editor = wp_get_image_editor( $upload['file'] );
+                                if( ! is_wp_error( $editor ) ) {
+                                    $new_file = preg_replace( '/\.tiff?$/i', '.jpg', $upload['file'] );
+                                    $editor -> set_quality( 90 );
+                                    $saved = $editor -> save( $new_file, 'image/jpeg' );
+                                    if( ! is_wp_error( $saved ) ) {
+                                        @unlink( $upload['file'] ); // Delete TIF
+                                        $upload['file'] = $saved['path'];
+                                        $upload['url'] = preg_replace( '/\.tiff?$/i', '.jpg', $upload['url'] );
+                                        $upload['type'] = 'image/jpeg';
+                                        $filepath = preg_replace( '/\.tiff?$/i', '.jpg', $filepath );
+                                    }
+                                }
+                            }
 
                             // Prepare attachment post data
                             $attachment = [

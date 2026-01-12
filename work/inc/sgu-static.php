@@ -67,7 +67,18 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return '';
         }
 
-
+        /** 
+         * get_remote_data
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @return array Returns an array of data retrieved
+         * 
+        */
         public static function get_remote_data( string $endpoint, array $headers = [], $should_cache = false, int $cache_length = 0, string $method = 'GET', mixed $body = null ) : array {
 
             // Validate HTTP method
@@ -172,7 +183,19 @@ if( ! class_exists( 'SGU_Static' ) ) {
 
         }
 
-        public static function get_api_endpoint( string $which ) {
+        /** 
+         * get_api_endpoint
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param string $which Which endpoing do we need to pull
+         * 
+        */
+        public static function get_api_endpoint( string $which )  {
 
             return match( $which ) {
                 'cme' => (array) SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [],
@@ -187,13 +210,25 @@ if( ! class_exists( 'SGU_Static' ) ) {
 
         }
 
-
+        /** 
+         * get_api_key
+         * 
+         * @since 8.0
+         * @access public
+         * @static
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Star Gazers
+         * 
+         * @param string $which Which endpoing do we need to pull
+         * 
+        */
         public static function get_api_key( string $which ) : array {
 
             // get the CME keys by default
             $cme_keys = self::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_keys ?: [];
 
-            return match( $which ) {
+            // setup the return matching
+            $ret = match( $which ) {
                 // NOAA endpoints don't require API keys
                 'geo', 'sw' => [],
                 
@@ -215,10 +250,10 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 'neo' => ( function( ) use( $cme_keys ) {
                     // Get the "use CME keys" checkbox value
                     $use_cme = filter_var( 
-                        self::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_cme ?: false, 
+                        self::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_use_cme ?: false, 
                         FILTER_VALIDATE_BOOLEAN 
                     );
-                    
+
                     // Return CME keys if sharing, otherwise get dedicated NEO keys
                     return $use_cme 
                         ? $cme_keys 
@@ -239,12 +274,12 @@ if( ! class_exists( 'SGU_Static' ) ) {
                         : ( self::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_keys ?: [] );
                 } )( ),
 
-                // Astronomy API keys
+                // AstronomyAPI keys
                 'aapi' => ( function( ) use( $cme_keys ) {
 
                     // get the dedicated keys, and set the return
-                    $aa_group = self::get_sgu_option( 'sgup_apis' ) -> sgu_aa_group;
-                    var_dump(self::get_sgu_option( 'sgu_api_settings' ));
+                    $aa_group = self::get_sgu_option( 'sgu_api_settings' ) -> sgu_aa_group;
+
                     $ret = [];
                     
                     // loop the returned setting, so we can combine the app id and secret into one string we can use later on
@@ -260,6 +295,12 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 // CME and unknown types use CME keys by default
                 default => $cme_keys,
             };
+
+            // return the mapped array
+            return array_map( fn( $item ) => is_array( $item ) 
+                ? ['key' => current( $item )] 
+                : ['key' => $item ], 
+            $ret );
 
         }
 

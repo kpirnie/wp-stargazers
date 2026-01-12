@@ -122,6 +122,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                     $skipped++;
                 }
             }
+            exit;
 
             $total = $successes + $skipped;
             $this -> cli_line( WP_CLI::colorize("%GData sync completed!%N") );
@@ -274,18 +275,39 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                     }
 
                 } else {
-                    $days_in_chunk = $current_start -> diff( $chunk_end ) -> days + 1;
-                    $failed += $days_in_chunk;
+                    // API failed - fallback to archive scraping
+                    $response = $this -> scrape_apod_archive( 
+                        $current_start -> format( 'Y-m-d' ), 
+                        $chunk_end -> format( 'Y-m-d' ) 
+                    );
                     
-                    for( $i = 0; $i < $days_in_chunk; $i++ ) {
-                        $progress -> tick( );
-                    }
+                    if( $response && is_array( $response ) ) {
+                        foreach( $response as $apod ) {
+                            $result = $this -> insert_apod( $apod );
+                            
+                            if( $result === 'inserted' ) {
+                                $inserted++;
+                            } elseif( $result === 'skipped' ) {
+                                $skipped++;
+                            } else {
+                                $failed++;
+                            }
+                            $progress -> tick( );
+                        }
+                    } else {
+                        $days_in_chunk = $current_start -> diff( $chunk_end ) -> days + 1;
+                        $failed += $days_in_chunk;
+                        
+                        for( $i = 0; $i < $days_in_chunk; $i++ ) {
+                            $progress -> tick( );
+                        }
 
-                    WP_CLI::warning( sprintf( 
-                        "Failed to fetch data for %s to %s", 
-                        $current_start -> format( 'Y-m-d' ),
-                        $chunk_end -> format( 'Y-m-d' )
-                    ) );
+                        WP_CLI::warning( sprintf( 
+                            "Failed to fetch data for %s to %s", 
+                            $current_start -> format( 'Y-m-d' ),
+                            $chunk_end -> format( 'Y-m-d' )
+                        ) );
+                    }
                 }
 
                 $current_start = clone $chunk_end;
@@ -526,6 +548,78 @@ if( ! class_exists( 'SGU_Sync' ) ) {
 
             return $data;
 
+        }
+
+        /**
+         * scrape_apod_archive
+         * 
+         * Fallback method to scrape APOD data from NASA's archive page
+         * when the API fails or times out
+         * 
+         * @since 8.4
+         * @access private
+         * @author Kevin Pirnie <me@kpirnie.com>
+         * @package US Stargazers Plugin
+         * 
+         * @param string $start Start date in Y-m-d format
+         * @param string $end End date in Y-m-d format
+         * 
+         * @return array Array of APOD data or empty array on failure
+         * 
+         */
+        private function scrape_apod_archive( string $start, string $end ) : array {
+            $results = [];
+            $current = new DateTime( $start );
+            $end_date = new DateTime( $end );
+            
+            while( $current <= $end_date ) {
+                $date_code = $current -> format( 'ymd' );
+                $page_url = 'https://apod.nasa.gov/apod/ap' . $date_code . '.html';
+                
+                $response = wp_safe_remote_get( $page_url, ['timeout' => 30] );
+                if( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+                    $current -> modify( '+1 day' );
+                    continue;
+                }
+                
+                $html = wp_remote_retrieve_body( $response );
+                
+                // Extract title
+                preg_match( '/<b>\s*(.+?)\s*<\/b>\s*<br>/i', $html, $title_match );
+                $title = isset( $title_match[1] ) ? trim( strip_tags( $title_match[1] ) ) : '';
+                
+                // Extract image URL
+                $media_url = '';
+                $media_type = 'image';
+                if( preg_match( '/href="(image\/[^"]+)"/i', $html, $img_match ) ) {
+                    $media_url = 'https://apod.nasa.gov/apod/' . $img_match[1];
+                } elseif( preg_match( '/src="(image\/[^"]+)"/i', $html, $img_match ) ) {
+                    $media_url = 'https://apod.nasa.gov/apod/' . $img_match[1];
+                } elseif( preg_match( '/youtube\.com\/embed\/([^"?]+)/i', $html, $vid_match ) ) {
+                    $media_url = 'https://www.youtube.com/embed/' . $vid_match[1];
+                    $media_type = 'video';
+                }
+                
+                // Extract explanation
+                preg_match( '/<b>\s*Explanation:\s*<\/b>\s*(.+?)(?=<p>\s*<center>|<center>|Tomorrow)/is', $html, $exp_match );
+                $explanation = isset( $exp_match[1] ) ? trim( strip_tags( $exp_match[1] ) ) : '';
+                
+                if( $title && $media_url ) {
+                    $results[] = [
+                        'date' => $current -> format( 'Y-m-d' ),
+                        'title' => $title,
+                        'explanation' => $explanation,
+                        'url' => $media_url,
+                        'hdurl' => $media_url,
+                        'media_type' => $media_type,
+                    ];
+                }
+                
+                $current -> modify( '+1 day' );
+                usleep( 100000 ); // 0.1s delay between requests
+            }
+            
+            return $results;
         }
 
         /**

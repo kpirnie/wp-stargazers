@@ -142,11 +142,11 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
         private function get_the_data( string $which ) : array {
             
             // Load API keys (cached after first call)
-            $keys = $this -> get_keys( $which );
+            $keys = SGU_Static::get_api_key($which);
             
             // Load endpoints (cached after first call)
-            $endpoints = $this -> get_endpoints( $which );
-            
+            $endpoints = SGU_Static::get_api_endpoint($which);
+
             // Array to store responses
             $ret = [];
         
@@ -156,93 +156,29 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
                 // Select random API key if keys are required for this endpoint
                 // Some endpoints (NOAA) don't require keys, others (NASA) do
                 $key = ( in_array( $which, ['cme', 'sf', 'neo', 'apod'] ) ) 
-                    ? $keys[ array_rand( $keys, 1 ) ]  // Random key from pool
+                    ? $keys[ array_rand( $keys, 1 ) ]['key']  // Random key from pool
                     : '';                               // No key needed
                 
                 // Format endpoint URL with API key
                 // Endpoint should contain %s placeholder for key
                 $url = sprintf( $endpoint, $key );
+
+                // get a response
+                $resp = SGU_Static::get_remote_data( $url );
                 
                 // Make HTTP request and parse response
-                $ret[] = SGU_Static::get_remote_data( $url )['body'] ?: [];
+                $ret[] = ($resp['success']) ? $resp['body'] : [];
 
+            }
+
+            // check if we're syncing the apod
+            if( $which === 'apod' ){
+                var_dump($ret);
             }
 
             // Return first response (or empty array if all failed)
-            return ( $ret ) ?: [];
+            return $ret;
         }
 
-        /** 
-         * get_keys
-         * 
-         * Retrieves API keys for the specified data type.
-         * Implements intelligent key management:
-         * - Some data types use shared CME keys (if configured)
-         * - Some data types don't require keys at all (NOAA)
-         * - Keys are cached in memory to avoid repeated database queries
-         * 
-         * API Key Strategy:
-         * - CME keys are the "master" key pool
-         * - SF, NEO, APOD can optionally share CME keys (saves API quota)
-         * - GEO and SW don't use keys (NOAA endpoints are open)
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @param string $type Data type identifier (geo, neo, sf, sw, apod, cme)
-         * 
-         * @return array Array of API keys (empty array if keys not required)
-         * 
-        */
-        private function get_keys( string $type = '' ) : array {
-            
-            // Return cached keys if already loaded
-            if( isset( $this -> keys_cache[$type] ) ) {
-                return $this -> keys_cache[$type];
-            }
-
-            // Determine which keys to use based on type and configuration
-            $this -> keys_cache[$type] = SGU_Static::get_api_key( $type );
-
-            return $this -> keys_cache[$type];
-        }
-
-        /** 
-         * get_endpoints
-         * 
-         * Retrieves API endpoint URLs for the specified data type.
-         * Endpoints are configured by users in WordPress admin settings.
-         * Results are cached in memory to avoid repeated database queries.
-         * 
-         * Endpoint Format:
-         * - Should contain %s placeholder for API key insertion
-         * - Example: "https://api.nasa.gov/DONKI/CME?api_key=%s"
-         * - NOAA endpoints don't need the placeholder (no keys)
-         * 
-         * @since 8.0
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Star Gazers
-         * 
-         * @param string $type Data type identifier (geo, neo, sf, sw, apod, cme)
-         * 
-         * @return array Array of endpoint URLs (empty array if none configured)
-         * 
-        */
-        private function get_endpoints( string $type ) : array {
-            
-            // Return cached endpoints if already loaded
-            if( isset( $this -> endpoints_cache[$type] ) ) {
-                return $this -> endpoints_cache[$type];
-            }
-
-            // Load endpoints from WordPress options based on type
-            // Each data type has its own settings page in admin
-            $this -> endpoints_cache[$type] = SGU_Static::get_api_endpoint($type);
-
-            return $this -> endpoints_cache[$type];
-        }
     }
 }
