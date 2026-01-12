@@ -45,18 +45,6 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
         private ?SGU_Space_Data_CRUD $space_data;
         
         /** 
-         * @var array In-memory cache of API keys to avoid repeated database queries
-         *            Keys are indexed by data type (cme, sf, neo, apod, etc.)
-         */
-        private array $keys_cache = [];
-        
-        /** 
-         * @var array In-memory cache of API endpoints to avoid repeated database queries
-         *            Endpoints are indexed by data type (cme, sf, neo, apod, etc.)
-         */
-        private array $endpoints_cache = [];
-
-        /** 
          * __construct
          * 
          * Initialize the space requests handler.
@@ -173,7 +161,23 @@ if( ! class_exists( 'SGU_Space_Requests' ) ) {
 
             // check if we're syncing the apod
             if( $which === 'apod' ){
-                var_dump($ret);
+                // Check if API response is empty or failed
+                $has_data = false;
+                foreach( $ret as $r ) {
+                    if( ! empty( $r ) ) {
+                        $has_data = true;
+                        break;
+                    }
+                }
+                
+                // If no data from API, try to scrape
+                if( ! $has_data ) {
+                    $ss = new SGU_Sync( );
+                    $scraped = $ss -> scrape_apod_archive( date( 'Y-m-d' ), date( 'Y-m-d' ) );
+                    if( ! empty( $scraped ) ) {
+                        $ret = [ $scraped ];
+                    }
+                }
             }
 
             // Return first response (or empty array if all failed)

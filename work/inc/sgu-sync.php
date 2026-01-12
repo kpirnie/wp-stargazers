@@ -122,7 +122,6 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                     $skipped++;
                 }
             }
-            exit;
 
             $total = $successes + $skipped;
             $this -> cli_line( WP_CLI::colorize("%GData sync completed!%N") );
@@ -275,6 +274,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
                     }
 
                 } else {
+                    
                     // API failed - fallback to archive scraping
                     $response = $this -> scrape_apod_archive( 
                         $current_start -> format( 'Y-m-d' ), 
@@ -567,7 +567,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
          * @return array Array of APOD data or empty array on failure
          * 
          */
-        private function scrape_apod_archive( string $start, string $end ) : array {
+        public function scrape_apod_archive( string $start, string $end ) : array {
             $results = [];
             $current = new DateTime( $start );
             $end_date = new DateTime( $end );
