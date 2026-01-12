@@ -13,12 +13,14 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
+// pull our framework
+use \KP\WPFieldFramework\Loader;
+
+// make sure the class doesnt already exist
 if( ! class_exists( 'SGU_Settings' ) ) {
 
     /** 
      * Class SGU_Settings
-     * 
-     * The primary theme class
      * 
      * @since 8.4
      * @access public
@@ -27,6 +29,15 @@ if( ! class_exists( 'SGU_Settings' ) ) {
      * 
     */
     class SGU_Settings {
+
+        // hold the framework
+        private $fw;
+
+        // fire us up
+        public function __construct( ) {
+            // load up our framework
+            $this -> fw = Loader::init( );
+        }
 
         /** 
          * init
@@ -42,7 +53,8 @@ if( ! class_exists( 'SGU_Settings' ) ) {
         public function init( ): void {
 
             // add the primary settings page
-            $this->add_settings();
+            $this->add_settings( );
+
         }
 
         /** 
@@ -58,47 +70,22 @@ if( ! class_exists( 'SGU_Settings' ) ) {
         */
         private function add_settings(): void {
 
-            // hook into the field framework's admin init
-            add_action( 'cmb2_admin_init', function() {
+            $settings_id = 'sgu_api_settings';
 
-                // setup the keys
-                $apis_id = 'sgup_apis';
-                $epoints_id = 'sgup_endpoints';
-
-                // the apis options page
-                $apis = new_cmb2_box( array(
-                    'id'           => $apis_id,
-                    'title'        => esc_html__( 'US Stargazers API\'s', 'sgup' ),
-                    'object_types' => array( 'options-page' ),
-
-                    'option_key'      => $apis_id,
-                    'icon_url'        => 'dashicons-location-alt',
-                    'menu_title'      => esc_html__( 'Stargazers API\'s', 'sgup' ),
-                    'capability'      => 'list_users',
-                    'position'        => 2,
-                    'save_button'     => esc_html__( 'Save the Settings', 'sgup' ),
-                ) );
-
-                // the endpoints options page
-                $epoints = new_cmb2_box( array(
-                    'id'           => $epoints_id,
-                    'title'        => esc_html__( 'US Stargazers Endpoints', 'sgup' ),
-                    'object_types' => array( 'options-page' ),
-
-                    'option_key'      => $epoints_id,
-                    'icon_url'        => 'dashicons-star-filled',
-                    'menu_title'      => esc_html__( 'Endpoints', 'sgup' ),
-                    'parent_slug'     => $apis_id,
-                    'capability'      => 'list_users',
-                    'position'        => 2,
-                    'save_button'     => esc_html__( 'Save the Endpoints', 'sgup' ),
-                ) );
-
-                // add our fields
-                $this->api_key_fields( $apis );
-                $this->endpoint_fields( $epoints );
-
-            } );
+            // create the main options page
+            $this -> fw -> addOptionsPage([
+                'option_key' => $settings_id,
+                'page_title'  => 'US Star Gazers Options',
+                'menu_title'  => 'SGU Options',
+                'capability'  => 'manage_options',
+                'menu_slug'   => 'sgu-options',
+                'icon_url'    => 'dashicons-location-alt',
+                'position'    => 2,
+                'tabs'       => [
+                    'apis' => $this -> api_key_fields(),
+                    'endpoints' => $this -> endpoint_fields(),
+                ],
+            ]);
 
         }
 
@@ -113,61 +100,62 @@ if( ! class_exists( 'SGU_Settings' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        private function api_key_fields( \CMB2 $the_box ) : void {
+        private function api_key_fields(  ) : array {
 
-            // Open-Meteo notice - no API key required
-            $the_box->add_field( 
-                array(
-                    'name' => esc_html__( 'Open-Meteo Weather API', 'sgup' ),
-                    'desc' => esc_html__( 'Open-Meteo provides free weather data without requiring an API key. No configuration needed for basic weather functionality.', 'sgup' ),
-                    'id'   => 'sgup_openmeteo_notice',
-                    'type' => 'title',
-                ) 
-            );
+            // return the field configuration array
+            return [
+                    'title'    => 'API Settings',
+                    'sections' => [
+                        'apiinfo' => [
+                            'title'  => 'API Info',
+                            'fields' => [
+                                [
+                                    'id' => 'om_info',
+                                    'type' => 'html',
+                                    'label' => __( 'Open-Meteo', 'sgup'),
+                                    'content' => __( 'Open-Meteo provides free weather data without requiring an API key. No configuration needed for basic weather functionality.', 'sgup' ),
+                                ],
+                                [
+                                    'id' => 'sgup_noaa_user_agent',
+                                    'type' => 'text',
+                                    'label' => __('NOAA User Agent (Optional)', 'sgup'),
+                                    'description' => __( 'NOAA Weather API does not require keys, but you can customize the User-Agent string. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
+                                    'default' => 'US Star Gazers (iam@kevinpirnie.com)',
+                                ],
+                            ],
+                        ],
+                        'apikeys' => [
+                            'title'  => 'API Keys',
+                            'fields' => [
+                                [
+                                    'id' => 'sgu_aa_group',
+                                    'type' => 'repeater',
+                                    'label' => __('AstronomyAPI Keys', 'sgup'),
+                                    'sublabel' => __( 'See here to obtain the keys: https://docs.astronomyapi.com/', 'sgup' ),
+                                    'min_rows' => 1,
+                                    'max_rows' => 25,
+                                    'collapsed' => true,
+                                    'sortable' => true,
+                                    'row_label' => __('Key', 'sgup' ),
+                                    'button_label' => __('Add a Key', 'sgup' ),
+                                    'fields' => [
+                                        [
+                                            'id'    => 'sgup_aa_api_id',
+                                            'type'  => 'text',
+                                            'label' => __('App ID', 'sgup' ),
+                                        ],
+                                        [
+                                            'id'    => 'sgup_aa_api_secret',
+                                            'type'  => 'text',
+                                            'label' => __('App Secret', 'sgup' ),
+                                        ],
 
-            // add the NOAA keys (optional, for extended functionality)
-            $the_box->add_field( 
-                array(
-                    'name'    => esc_html__( 'NOAA User Agent (Optional)', 'sgup' ),
-                    'desc'    => esc_html__( 'NOAA Weather API does not require keys, but you can customize the User-Agent string. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
-                    'id'      => 'sgup_noaa_user_agent',
-                    'type'    => 'text',
-                    'default' => 'US Star Gazers (iam@kevinpirnie.com)',
-                ) 
-            );
-
-            // add the astronomyapi.com keys
-            // add the aa endpoint groups
-            $aa_group = $the_box->add_field( 
-                array(
-                    'id' => 'sgu_aa_group',
-                    'type' => 'group',
-                    'name' => esc_html__( 'Astronomy API', 'sgup' ),
-                    'description' => esc_html__( 'See here to obtain the keys: https://docs.astronomyapi.com/', 'sgup' ),
-                    'options'     => array(
-                        'group_title'       => __( 'Key {#}', 'sgup' ),
-                        'add_button'        => __( 'Add Another Key', 'sgup' ),
-                        'remove_button'     => __( 'Remove Key', 'sgup' ),
-                        'sortable'          => true,
-                        'closed'         => true,
-                    ),
-                )
-            );
-
-            // NOAA endpoint fields
-            $the_box->add_group_field( $aa_group, array(
-                'id'      => 'sgup_aa_api_id',
-                'type'    => 'text',
-                'name' => __( 'App ID', 'sgup' ),
-                ) 
-            );
-            $the_box->add_group_field( $aa_group, array(
-                'id'      => 'sgup_aa_api_secret',
-                'type'    => 'text',
-                'name' => __( 'App Secret', 'sgup' ),
-                ) 
-            );
-
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];        
         }
 
         /** 
@@ -181,39 +169,38 @@ if( ! class_exists( 'SGU_Settings' ) ) {
          * @package US Stargazers Plugin
          * 
         */
-        private function endpoint_fields( \CMB2 $the_box ) : void {
+        private function endpoint_fields( ) : array {
 
-            // Open-Meteo endpoints info
-            $the_box->add_field( 
-                array(
-                    'name' => esc_html__( 'Open-Meteo Endpoints', 'sgup' ),
-                    'desc' => esc_html__( 'Open-Meteo endpoints are pre-configured. See documentation: https://open-meteo.com/en/docs', 'sgup' ),
-                    'id'   => 'sgup_openmeteo_endpoints_notice',
-                    'type' => 'title',
-                )
-            );
-
-            // add the NOAA endpoint groups
-            $the_box->add_field( 
-                array(
-                    'id' => 'noaa_ep_group',
-                    'type' => 'title',
-                    'name' => esc_html__( 'NOAA Endpoints (Optional Override)', 'sgup' ),
-                    'desc' => esc_html__( 'NOAA endpoints are pre-configured. Only add custom endpoints if needed. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
-                )
-            );
-
-            // add the astronomyapi.com endpoint(s)
-            $the_box->add_field( 
-                array(
-                    'name'    => esc_html__( 'Astronomy API Endpoint', 'sgup' ),
-                    'id'      => 'sgup_aapi_endpont',
-                    'desc'    => esc_html__( 'Astronomy API Endpoint can be found here: https://docs.astronomyapi.com/', 'sgup' ),
-                    'type'    => 'text',
-                    'default' => '',
-                ) 
-            );
-
+            // return the array for the fields
+            return [
+                    'title'    => __('API Endpoints', 'sgup'),
+                    'sections' => [
+                        'endpoints' => [
+                            'title'  => __('Endpoints', 'sgup'),
+                            'fields' => [
+                                [
+                                    'id'    => 'om_ep',
+                                    'type'  => 'html',
+                                    'label' => __( 'Open-Meteo Endpoints', 'sgup' ),
+                                    'content' => __( 'Open-Meteo provides free weather data without requiring an API key. No configuration needed for basic weather functionality.', 'sgup' ),
+                                ],
+                                [
+                                    'id'    => 'noaa_ep',
+                                    'type'  => 'html',
+                                    'label' => __( 'NOAA Endponts', 'sgup' ),
+                                    'content' => __( 'NOAA endpoints are pre-configured. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
+                                ],
+                                [
+                                    'id'    => 'sgup_aapi_endpont',
+                                    'type'  => 'text',
+                                    'label' => __( 'AstronomyAPI Endpoint', 'sgup' ),
+                                    'description' => __( 'Astronomy API Endpoint can be found here: https://docs.astronomyapi.com/', 'sgup' ),
+                                ],
+                                
+                            ],
+                        ],
+                    ],
+                ];
         }
 
     }

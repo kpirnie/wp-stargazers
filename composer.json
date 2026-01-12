@@ -13,7 +13,8 @@
     ],
     "require": {
         "php": ">=8.4",
-        "cmb2/cmb2": "dev-master"
+        "cmb2/cmb2": "dev-master",
+        "kevinpirnie/kpt-wpfieldframework": "dev-develop"
     },
     "autoload": {
         "classmap": [

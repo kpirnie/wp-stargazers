@@ -19,6 +19,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'kevinpirnie/kpt-wpfieldframework' => array(
+            'pretty_version' => 'dev-develop',
+            'version' => 'dev-develop',
+            'reference' => '78f6b81d254d19684c7c6621ceb86fa693af5812',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../kevinpirnie/kpt-wpfieldframework',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'kevinpirnie/stargazers' => array(
             'pretty_version' => '0.0.1',
             'version' => '0.0.1.0',

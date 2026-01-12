@@ -208,7 +208,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
             $this -> cli_line( null, WP_CLI::colorize( "%YStarting historical APOD sync...%N" ) );
             WP_CLI::line( sprintf( "Date range: %s to %s", $start_date, $end_date ) );
 
-            $keys = $this -> get_api_keys( );
+            $keys = SGU_Static::get_api_key( 'apod' );
             if( empty( $keys ) ) {
                 WP_CLI::error( "No API keys configured. Please set up NASA API keys in CME settings." );
                 return;
@@ -246,10 +246,12 @@ if( ! class_exists( 'SGU_Sync' ) ) {
 
                 $url = sprintf(
                     'https://api.nasa.gov/planetary/apod?api_key=%s&start_date=%s&end_date=%s',
-                    $api_key,
+                    $api_key['sgup_cme_api_key'],
                     $current_start -> format( 'Y-m-d' ),
                     $chunk_end -> format( 'Y-m-d' )
                 );
+
+                WP_CLI::line( sprintf( "Day Syncing: %d", $this -> request_count+1 ) );
 
                 $response = $this -> make_api_request( $url );
                 $this -> request_count++;
@@ -465,32 +467,6 @@ if( ! class_exists( 'SGU_Sync' ) ) {
         }
 
         /**
-         * get_api_keys
-         * 
-         * Get NASA API keys from settings
-         * 
-         * @since 8.4
-         * @access private
-         * @author Kevin Pirnie <me@kpirnie.com>
-         * @package US Stargazers Plugin
-         * 
-         * @return array Array of API keys
-         */
-        private function get_api_keys( ) : array {
-
-            $apod_settings = SGU_Static::get_sgu_option( 'sgup_apod_settings' );
-            $use_cme = filter_var( $apod_settings -> sgup_apod_cme ?? false, FILTER_VALIDATE_BOOLEAN );
-
-            if( $use_cme ) {
-                $cme_settings = SGU_Static::get_sgu_option( 'sgup_cme_settings' );
-                return (array) ( $cme_settings -> sgup_cme_api_keys ?? [] );
-            }
-
-            return (array) ( $apod_settings -> sgup_apod_keys ?? [] );
-
-        }
-
-        /**
          * make_api_request
          * 
          * Execute HTTP request to NASA API
@@ -507,14 +483,15 @@ if( ! class_exists( 'SGU_Sync' ) ) {
         private function make_api_request( string $url ) : array|bool {
 
             $args = [
-                'timeout' => 60,
+                'timeout' => 30,
                 'redirection' => 3,
-                'user-agent' => 'US Star Gazers Historical Sync ( iam@kevinpirnie.com )',
+                'user-agent' => 'US Star Gazers ( iam@kevinpirnie.com )',
             ];
 
             $request = wp_safe_remote_get( $url, $args );
 
             if( is_wp_error( $request ) ) {
+                WP_CLI::error( sprintf("ERROR: %s", $request->get_error_message()), false );
                 return false;
             }
 
@@ -529,18 +506,21 @@ if( ! class_exists( 'SGU_Sync' ) ) {
             }
 
             if( $response_code !== 200 ) {
+                WP_CLI::error( sprintf("Invalid Response Code: %d", $response_code), false );
                 return false;
             }
 
             $body = wp_remote_retrieve_body( $request );
 
             if( ! $body ) {
+                WP_CLI::error( "NO BODY", false );
                 return false;
             }
 
             $data = json_decode( $body, true );
             
             if( json_last_error( ) !== JSON_ERROR_NONE ) {
+                WP_CLI::error( sprintf("JSON Decode Error: %s", json_last_error_msg()), false );
                 return false;
             }
 

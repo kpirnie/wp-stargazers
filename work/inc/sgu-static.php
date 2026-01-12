@@ -229,7 +229,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
                 'apod' => ( function( ) use( $cme_keys ) {
                     // Get the "use CME keys" checkbox value
                     $use_cme = filter_var( 
-                        self::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_cme ?: false, 
+                        self::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_use_cme ?: false, 
                         FILTER_VALIDATE_BOOLEAN 
                     );
                     
@@ -244,6 +244,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
 
                     // get the dedicated keys, and set the return
                     $aa_group = self::get_sgu_option( 'sgup_apis' ) -> sgu_aa_group;
+                    var_dump(self::get_sgu_option( 'sgu_api_settings' ));
                     $ret = [];
                     
                     // loop the returned setting, so we can combine the app id and secret into one string we can use later on

@@ -7,6 +7,15 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'KP\\WPFieldFramework\\BlockGenerator' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/BlockGenerator.php',
+    'KP\\WPFieldFramework\\FieldTypes' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/FieldTypes.php',
+    'KP\\WPFieldFramework\\Framework' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Framework.php',
+    'KP\\WPFieldFramework\\Loader' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Loader.php',
+    'KP\\WPFieldFramework\\MetaBox' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/MetaBox.php',
+    'KP\\WPFieldFramework\\OptionsPage' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/OptionsPage.php',
+    'KP\\WPFieldFramework\\Repeater' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Repeater.php',
+    'KP\\WPFieldFramework\\Sanitizer' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Sanitizer.php',
+    'KP\\WPFieldFramework\\Storage' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Storage.php',
     'SGU_CPT_Admin_Cols' => $baseDir . '/work/inc/cpt/sgu-cpt-admin-cols.php',
     'SGU_CPT_Settings' => $baseDir . '/work/inc/cpt/sgu-cpt-settings.php',
     'SGU_CPTs' => $baseDir . '/work/inc/cpt/sgu-cpts.php',

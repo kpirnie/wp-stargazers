@@ -13,6 +13,9 @@
 // We don't want to allow direct access to this
 defined( 'ABSPATH' ) || die( 'No direct script access allowed' );
 
+// pull our framework
+use \KP\WPFieldFramework\Loader;
+
 if( ! class_exists( 'SGU_CPT_Settings' ) ) {
 
     /** 
@@ -25,6 +28,9 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
      * 
     */
     class SGU_CPT_Settings {
+
+        // hold the framework
+        private $fw;
 
         /** 
          * init
@@ -39,14 +45,20 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
         */
         public function init( ): void {
 
+            // load up our framework
+            $this -> fw = Loader::init( );
+
+            // add cme settings
+            $this -> add_cme_settings( );
+
+            // add solar flare settings
+            $this -> add_flare_settings( );
+            
+
+
             // hook into the field framework's admin init
             add_action( 'cmb2_admin_init', function( ) {
 
-                // add cme settings
-                $this -> add_cme_settings( );
-
-                // add solar flare settings
-                $this -> add_flare_settings( );
 
                 // add geomagnetic settings
                 $this -> add_geomag_settings( );
@@ -80,47 +92,48 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
             // setup the cme settings ID
             $cme_id = 'sgup_cme_settings';
 
-            // the apis options page
-            $cmes = new_cmb2_box( array(
-                'id'           => $cme_id,
-                'title'        => esc_html__( 'US Stargazers CME Settings', 'sgup' ),
-                'object_types' => array( 'options-page' ),
-                'option_key'      => $cme_id, // The option key and admin menu page slug.
-                'icon_url'        => 'dashicons-star-filled', // Menu icon. Only applicable if 'parent_slug' is left empty.
-                'menu_title'      => esc_html__( 'Settings', 'sgup' ), // Falls back to 'title' (above).
-                'parent_slug'     => 'edit.php?post_type=sgu_cme_alerts', // Make options page a submenu item of the themes menu.
-                'capability'      => 'list_users', // Cap required to view options-page.
-                // 'position'        => 2, // Menu position. Only applicable if 'parent_slug' is left empty.
-                // 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-                // 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-                'save_button'     => esc_html__( 'Save the Settings', 'sgup' ), // The text for the options-page save button. Defaults to 'Save'.
-                // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
-                // 'message_cb'      => 'yourprefix_options_page_message_callback',
-            ) );
+            // add in the CME options
+            $this -> fw -> addOptionsPage([
+                'option_key' => $cme_id,
+                'page_title'  => __( 'US Stargazers CME Settings', 'sgup' ),
+                'menu_title'  => __( 'Settings', 'sgup'),
+                'capability'  => 'list_users',
+                'menu_slug'   => 'cme-settings',
+                'parent_slug' => 'edit.php?post_type=sgu_cme_alerts',
+                'sections' => [
+                    'cme_settings' => [
+                        'fields' => [
+                            [
+                                'id' => 'sgup_cme_api_endpoint',
+                                'type' => 'text',
+                                'label' => __( 'Endpoint', 'sgup'),
+                                'description' => __('See here to get your endpoint: https://api.nasa.gov/. If your endpont needs a key attached to it, add it with a %s', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_cme_api_keys',
+                                'type' => 'repeater',
+                                'label' => __('API Keys', 'sgup'),
+                                'description' => __('See here to get your API keys: https://api.nasa.gov/', 'sgup'),
+                                'min_rows' => 1,
+                                'max_rows' => 25,
+                                'collapsed' => true,
+                                'sortable' => true,
+                                'row_label' => __('Key', 'sgup' ),
+                                'button_label' => __('Add a Key', 'sgup' ),
+                                'fields' => [
+                                    [
+                                        'id'    => 'sgup_cme_api_key',
+                                        'type'  => 'text',
+                                        'label' => __('Key', 'sgup' ),
+                                    ],
 
-            // the endpoint
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Endpoint', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your endpoint: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_cme_api_endpoint',
-                    'type'    => 'text_url',
-                ) 
-            );
+                                ],
+                            ],
 
-            // the api keys
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'API Keys', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your API keys: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_cme_api_keys',
-                    'type'    => 'text',
-                    'repeatable' => true,
-                    'text' => array(
-                        'add_row_text' => 'Add Another Key',
-                    ),
-                ) 
-            );
+                        ],
+                    ],
+                ],
+            ] );
 
         }
 
@@ -138,61 +151,57 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
         private function add_flare_settings( ) : void {
 
             // setup the cme settings ID
-            $cme_id = 'sgup_flare_settings';
+            $flare_id = 'sgup_flare_settings';
 
-            // the apis options page
-            $cmes = new_cmb2_box( array(
-                'id'           => $cme_id,
-                'title'        => esc_html__( 'US Stargazers Solar Flare Settings', 'sgup' ),
-                'object_types' => array( 'options-page' ),
-                'option_key'      => $cme_id, // The option key and admin menu page slug.
-                'icon_url'        => 'dashicons-star-filled', // Menu icon. Only applicable if 'parent_slug' is left empty.
-                'menu_title'      => esc_html__( 'Settings', 'sgup' ), // Falls back to 'title' (above).
-                'parent_slug'     => 'edit.php?post_type=sgu_sf_alerts', // Make options page a submenu item of the themes menu.
-                'capability'      => 'list_users', // Cap required to view options-page.
-                // 'position'        => 2, // Menu position. Only applicable if 'parent_slug' is left empty.
-                // 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-                // 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-                'save_button'     => esc_html__( 'Save the Settings', 'sgup' ), // The text for the options-page save button. Defaults to 'Save'.
-                // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
-                // 'message_cb'      => 'yourprefix_options_page_message_callback',
-            ) );
+            $this -> fw -> addOptionsPage([
+                'option_key' => $flare_id,
+                'page_title'  => __( 'US Stargazers Solar Flare Settings', 'sgup' ),
+                'menu_title'  => __( 'Settings', 'sgup'),
+                'capability'  => 'list_users',
+                'menu_slug'   => 'flare-settings',
+                'parent_slug' => 'edit.php?post_type=sgu_sf_alerts',
+                'sections' => [
+                    'cme_settings' => [
+                        'fields' => [
+                            [
+                                'id' => 'sgup_flare_api_endpoint',
+                                'type' => 'text',
+                                'label' => __( 'Endpoint', 'sgup'),
+                                'description' => __('See here to get your endpoint: https://api.nasa.gov/. If your endpont needs a key attached to it, add it with a %s', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_flare_use_cme',
+                                'type' => 'checkbox',
+                                'label' => __('Use CME Keys?', 'sgup'),
+                                'checkbox_label' => __('Should we use the same keys you set for the CME\'s?', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_flare_api_keys',
+                                'type' => 'repeater',
+                                'label' => __('API Keys', 'sgup'),
+                                'description' => __('See here to get your API keys: https://api.nasa.gov/', 'sgup'),
+                                'min_rows' => 1,
+                                'max_rows' => 25,
+                                'collapsed' => true,
+                                'sortable' => true,
+                                'row_label' => __('Key', 'sgup' ),
+                                'button_label' => __('Add a Key', 'sgup' ),
+                                'fields' => [
+                                    [
+                                        'id'    => 'sgup_flare_api_key',
+                                        'type'  => 'text',
+                                        'label' => __('Key', 'sgup' ),
+                                    ],
+                                ],
+                                'conditional' => [ 'sgup_flare_use_cme' => [ '==' => true ], ],
+                                'before_field' => '<div data-conditional-id="sgup_flare_use_cme" data-conditional-value="off">',
+                                'after_field' => '</div>',
+                            ],
 
-            // the endpoint
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Endpoint', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your endpoint: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_flare_api_endpoint',
-                    'type'    => 'text_url',
-                ) 
-            );
-
-            // should we use CME keys?
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Use CME Keys?', 'sgup' ),
-                    'desc'    => esc_html__( 'Should we use the same keys you set for the CME\'s?', 'sgup' ),
-                    'id'      => 'sgup_flare_use_cme',
-                    'type'    => 'checkbox',
-                ) 
-            );
-
-            // the api keys
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'API Keys', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your API keys: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_flare_api_keys',
-                    'type'    => 'text',
-                    'repeatable' => true,
-                    'text' => array(
-                        'add_row_text' => 'Add Another Key',
-                    ),
-                    'before_row' => '<div data-conditional-id="sgup_flare_use_cme" data-conditional-value="off">',
-                    'after_row' => '</div>',
-                ) 
-            );
+                        ],
+                    ],
+                ],
+            ] );
 
         }
 
@@ -210,35 +219,57 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
         private function add_geomag_settings( ) : void {
 
             // setup the cme settings ID
-            $cme_id = 'sgup_geomag_settings';
+            $geomag_id = 'sgup_geomag_settings';
 
-            // the apis options page
-            $cmes = new_cmb2_box( array(
-                'id'           => $cme_id,
-                'title'        => esc_html__( 'US Stargazers Geo-Magnetic Settings', 'sgup' ),
-                'object_types' => array( 'options-page' ),
-                'option_key'      => $cme_id, // The option key and admin menu page slug.
-                'icon_url'        => 'dashicons-star-filled', // Menu icon. Only applicable if 'parent_slug' is left empty.
-                'menu_title'      => esc_html__( 'Settings', 'sgup' ), // Falls back to 'title' (above).
-                'parent_slug'     => 'edit.php?post_type=sgu_geo_alerts', // Make options page a submenu item of the themes menu.
-                'capability'      => 'list_users', // Cap required to view options-page.
-                // 'position'        => 2, // Menu position. Only applicable if 'parent_slug' is left empty.
-                // 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-                // 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-                'save_button'     => esc_html__( 'Save the Settings', 'sgup' ), // The text for the options-page save button. Defaults to 'Save'.
-                // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
-                // 'message_cb'      => 'yourprefix_options_page_message_callback',
-            ) );
+            $this -> fw -> addOptionsPage([
+                'option_key' => $geomag_id,
+                'page_title'  => __( 'US Stargazers Geo-Magnetic Settings', 'sgup' ),
+                'menu_title'  => __( 'Settings', 'sgup'),
+                'capability'  => 'list_users',
+                'menu_slug'   => 'geomag-settings',
+                'parent_slug' => 'edit.php?post_type=sgu_geo_alerts',
+                'sections' => [
+                    'cme_settings' => [
+                        'fields' => [
+                            [
+                                'id' => 'sgup_geomag_endpoint',
+                                'type' => 'text',
+                                'label' => __( 'Endpoint', 'sgup'),
+                                'description' => __('See here to get your endpoint: https://services.swpc.noaa.gov/text/', 'sgup'),
+                            ],/*
+                            [
+                                'id' => 'sgup_flare_use_cme',
+                                'type' => 'checkbox',
+                                'label' => __('Use CME Keys?', 'sgup'),
+                                'checkbox_label' => __('Should we use the same keys you set for the CME\'s?', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_flare_api_keys',
+                                'type' => 'repeater',
+                                'label' => __('API Keys', 'sgup'),
+                                'description' => __('See here to get your API keys: https://api.nasa.gov/', 'sgup'),
+                                'min_rows' => 1,
+                                'max_rows' => 25,
+                                'collapsed' => true,
+                                'sortable' => true,
+                                'row_label' => __('Key', 'sgup' ),
+                                'button_label' => __('Add a Key', 'sgup' ),
+                                'fields' => [
+                                    [
+                                        'id'    => 'sgup_flare_api_key',
+                                        'type'  => 'text',
+                                        'label' => __('Key', 'sgup' ),
+                                    ],
+                                ],
+                                'conditional' => [ 'sgup_flare_use_cme' => [ '==' => true ], ],
+                                'before_field' => '<div data-conditional-id="sgup_flare_use_cme" data-conditional-value="off">',
+                                'after_field' => '</div>',
+                            ],*/
 
-            // the endpoint
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Endpoint', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your endpoint: https://services.swpc.noaa.gov/text/', 'sgup' ),
-                    'id'      => 'sgup_geomag_endpoint',
-                    'type'    => 'text_url',
-                ) 
-            );
+                        ],
+                    ],
+                ],
+            ] );
 
         }
 
@@ -256,35 +287,57 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
         private function add_sw_settings( ) : void {
 
             // setup the cme settings ID
-            $cme_id = 'sgup_sw_settings';
+            $sw_id = 'sgup_sw_settings';
 
-            // the apis options page
-            $cmes = new_cmb2_box( array(
-                'id'           => $cme_id,
-                'title'        => esc_html__( 'US Stargazers Space Weather Settings', 'sgup' ),
-                'object_types' => array( 'options-page' ),
-                'option_key'      => $cme_id, // The option key and admin menu page slug.
-                'icon_url'        => 'dashicons-star-filled', // Menu icon. Only applicable if 'parent_slug' is left empty.
-                'menu_title'      => esc_html__( 'Settings', 'sgup' ), // Falls back to 'title' (above).
-                'parent_slug'     => 'edit.php?post_type=sgu_sw_alerts', // Make options page a submenu item of the themes menu.
-                'capability'      => 'list_users', // Cap required to view options-page.
-                // 'position'        => 2, // Menu position. Only applicable if 'parent_slug' is left empty.
-                // 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-                // 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-                'save_button'     => esc_html__( 'Save the Settings', 'sgup' ), // The text for the options-page save button. Defaults to 'Save'.
-                // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
-                // 'message_cb'      => 'yourprefix_options_page_message_callback',
-            ) );
+            $this -> fw -> addOptionsPage([
+                'option_key' => $sw_id,
+                'page_title'  => __( 'US Stargazers Space Weather Settings', 'sgup' ),
+                'menu_title'  => __( 'Settings', 'sgup'),
+                'capability'  => 'list_users',
+                'menu_slug'   => 'sw-settings',
+                'parent_slug' => 'edit.php?post_type=sgu_sw_alerts',
+                'sections' => [
+                    'cme_settings' => [
+                        'fields' => [
+                            [
+                                'id' => 'sgup_sw_endpoint',
+                                'type' => 'text',
+                                'label' => __( 'Endpoint', 'sgup'),
+                                'description' => __('See here to get your endpoint: https://services.swpc.noaa.gov/products/', 'sgup'),
+                            ],/*
+                            [
+                                'id' => 'sgup_flare_use_cme',
+                                'type' => 'checkbox',
+                                'label' => __('Use CME Keys?', 'sgup'),
+                                'checkbox_label' => __('Should we use the same keys you set for the CME\'s?', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_flare_api_keys',
+                                'type' => 'repeater',
+                                'label' => __('API Keys', 'sgup'),
+                                'description' => __('See here to get your API keys: https://api.nasa.gov/', 'sgup'),
+                                'min_rows' => 1,
+                                'max_rows' => 25,
+                                'collapsed' => true,
+                                'sortable' => true,
+                                'row_label' => __('Key', 'sgup' ),
+                                'button_label' => __('Add a Key', 'sgup' ),
+                                'fields' => [
+                                    [
+                                        'id'    => 'sgup_flare_api_key',
+                                        'type'  => 'text',
+                                        'label' => __('Key', 'sgup' ),
+                                    ],
+                                ],
+                                'conditional' => [ 'sgup_flare_use_cme' => [ '==' => true ], ],
+                                'before_field' => '<div data-conditional-id="sgup_flare_use_cme" data-conditional-value="off">',
+                                'after_field' => '</div>',
+                            ],*/
 
-            // the endpoint
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Endpoint', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your endpoint: https://services.swpc.noaa.gov/products/', 'sgup' ),
-                    'id'      => 'sgup_sw_endpoint',
-                    'type'    => 'text_url',
-                ) 
-            );
+                        ],
+                    ],
+                ],
+            ] );
             
         }
 
@@ -304,59 +357,54 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
             // setup the cme settings ID
             $cme_id = 'sgup_neo_settings';
 
-            // the apis options page
-            $cmes = new_cmb2_box( array(
-                'id'           => $cme_id,
-                'title'        => esc_html__( 'US Stargazers Near Earth Object Settings', 'sgup' ),
-                'object_types' => array( 'options-page' ),
-                'option_key'      => $cme_id, // The option key and admin menu page slug.
-                'icon_url'        => 'dashicons-star-filled', // Menu icon. Only applicable if 'parent_slug' is left empty.
-                'menu_title'      => esc_html__( 'Settings', 'sgup' ), // Falls back to 'title' (above).
-                'parent_slug'     => 'edit.php?post_type=sgu_neo', // Make options page a submenu item of the themes menu.
-                'capability'      => 'list_users', // Cap required to view options-page.
-                // 'position'        => 2, // Menu position. Only applicable if 'parent_slug' is left empty.
-                // 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-                // 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-                'save_button'     => esc_html__( 'Save the Settings', 'sgup' ), // The text for the options-page save button. Defaults to 'Save'.
-                // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
-                // 'message_cb'      => 'yourprefix_options_page_message_callback',
-            ) );
+            // add in the CME options
+            $this -> fw -> addOptionsPage([
+                'option_key' => $cme_id,
+                'page_title'  => __( 'US Stargazers Near Earth Object Settings', 'sgup' ),
+                'menu_title'  => __( 'Settings', 'sgup'),
+                'capability'  => 'list_users',
+                'menu_slug'   => 'neo-settings',
+                'parent_slug' => 'edit.php?post_type=sgu_neo',
+                'sections' => [
+                    'cme_settings' => [
+                        'fields' => [
+                            [
+                                'id' => 'sgup_neo_endpoint',
+                                'type' => 'text',
+                                'label' => __( 'Endpoint', 'sgup'),
+                                'description' => __('See here to get your endpoint: https://api.nasa.gov/. If your endpont needs a key attached to it, add it with a %s', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_neo_use_cme',
+                                'type' => 'checkbox',
+                                'label' => __('Use CME Keys?', 'sgup'),
+                                'checkbox_label' => __('Should we use the same keys you set for the CME\'s?', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_neo_keys',
+                                'type' => 'repeater',
+                                'label' => __('API Keys', 'sgup'),
+                                'description' => __('See here to get your API keys: https://api.nasa.gov/', 'sgup'),
+                                'min_rows' => 1,
+                                'max_rows' => 25,
+                                'collapsed' => true,
+                                'sortable' => true,
+                                'row_label' => __('Key', 'sgup' ),
+                                'button_label' => __('Add a Key', 'sgup' ),
+                                'fields' => [
+                                    [
+                                        'id'    => 'sgup_neo_key',
+                                        'type'  => 'text',
+                                        'label' => __('Key', 'sgup' ),
+                                    ],
 
-            // the endpoint
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Endpoint', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your endpoint: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_neo_endpoint',
-                    'type'    => 'text_url',
-                ) 
-            );
+                                ],
+                            ],
 
-            // should we use CME keys?
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Use CME Keys?', 'sgup' ),
-                    'desc'    => esc_html__( 'Should we use the same keys you set for the CME\'s?', 'sgup' ),
-                    'id'      => 'sgup_neo_cme',
-                    'type'    => 'checkbox',
-                ) 
-            );
-
-            // the api keys
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'API Keys', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your API keys: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_neo_keys',
-                    'type'    => 'text',
-                    'repeatable' => true,
-                    'text' => array(
-                        'add_row_text' => 'Add Another Key',
-                    ),
-                    'before_row' => '<div data-conditional-id="sgup_neo_cme" data-conditional-value="off">',
-                    'after_row' => '</div>',
-                ) 
-            );
+                        ],
+                    ],
+                ],
+            ] );
 
         }
 
@@ -376,72 +424,60 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
             // setup the cme settings ID
             $cme_id = 'sgup_apod_settings';
 
-            // the apis options page
-            $cmes = new_cmb2_box( array(
-                'id'           => $cme_id,
-                'title'        => esc_html__( 'US Stargazers Astronomy Photo of the Day Settings', 'sgup' ),
-                'object_types' => array( 'options-page' ),
-                'option_key'      => $cme_id, // The option key and admin menu page slug.
-                'icon_url'        => 'dashicons-star-filled', // Menu icon. Only applicable if 'parent_slug' is left empty.
-                'menu_title'      => esc_html__( 'Settings', 'sgup' ), // Falls back to 'title' (above).
-                'parent_slug'     => 'edit.php?post_type=sgu_apod', // Make options page a submenu item of the themes menu.
-                'capability'      => 'list_users', // Cap required to view options-page.
-                // 'position'        => 2, // Menu position. Only applicable if 'parent_slug' is left empty.
-                // 'admin_menu_hook' => 'network_admin_menu', // 'network_admin_menu' to add network-level options page.
-                // 'display_cb'      => false, // Override the options-page form output (CMB2_Hookup::options_page_output()).
-                'save_button'     => esc_html__( 'Save the Settings', 'sgup' ), // The text for the options-page save button. Defaults to 'Save'.
-                // 'disable_settings_errors' => true, // On settings pages (not options-general.php sub-pages), allows disabling.
-                // 'message_cb'      => 'yourprefix_options_page_message_callback',
-            ) );
+            // add in the CME options
+            $this -> fw -> addOptionsPage([
+                'option_key' => $cme_id,
+                'page_title'  => __( 'US Stargazers Astronomy Photo of the Day Settings', 'sgup' ),
+                'menu_title'  => __( 'Settings', 'sgup'),
+                'capability'  => 'list_users',
+                'menu_slug'   => 'apod-settings',
+                'parent_slug' => 'edit.php?post_type=sgu_apod',
+                'sections' => [
+                    'cme_settings' => [
+                        'fields' => [
+                            [
+                                'id' => 'sgup_apod_archive',
+                                'type' => 'page_select',
+                                'label' => __( 'Archive Page', 'sgup'),
+                                'description' => __('Select the page to use as the archive page for the photo journal articles.', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_apod_endpoint',
+                                'type' => 'text',
+                                'label' => __( 'Endpoint', 'sgup'),
+                                'description' => __('See here to get your endpoint: https://api.nasa.gov/. If your endpont needs a key attached to it, add it with a %s', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_apod_use_cme',
+                                'type' => 'checkbox',
+                                'label' => __('Use CME Keys?', 'sgup'),
+                                'checkbox_label' => __('Should we use the same keys you set for the CME\'s?', 'sgup'),
+                            ],
+                            [
+                                'id' => 'sgup_apod_keys',
+                                'type' => 'repeater',
+                                'label' => __('API Keys', 'sgup'),
+                                'description' => __('See here to get your API keys: https://api.nasa.gov/', 'sgup'),
+                                'min_rows' => 1,
+                                'max_rows' => 25,
+                                'collapsed' => true,
+                                'sortable' => true,
+                                'row_label' => __('Key', 'sgup' ),
+                                'button_label' => __('Add a Key', 'sgup' ),
+                                'fields' => [
+                                    [
+                                        'id'    => 'sgup_apod_key',
+                                        'type'  => 'text',
+                                        'label' => __('Key', 'sgup' ),
+                                    ],
 
-            // create the page selector for the archive page
-            $cmes -> add_field( array(
-                'name'             => 'Archive Page',
-                'desc'             => 'Select the page to use as the archive page for the photo journal articles.',
-                'id'               => 'sgup_apod_archive',
-                'type'             => 'select',
-                'show_option_none' => true,
-                'options_cb' => function( ) : array {
-                        return SGU_Static::get_pages_array( );
-                    },
-                ) 
-            );
+                                ],
+                            ],
 
-            // the endpoint
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Endpoint', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your endpoint: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_apod_endpoint',
-                    'type'    => 'text_url',
-                ) 
-            );
-
-            // should we use CME keys?
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'Use CME Keys?', 'sgup' ),
-                    'desc'    => esc_html__( 'Should we use the same keys you set for the CME\'s?', 'sgup' ),
-                    'id'      => 'sgup_apod_cme',
-                    'type'    => 'checkbox',
-                ) 
-            );
-
-            // the api keys
-            $cmes -> add_field( 
-                array(
-                    'name'    => esc_html__( 'API Keys', 'sgup' ),
-                    'desc'    => esc_html__( 'See here to get your API keys: https://api.nasa.gov/', 'sgup' ),
-                    'id'      => 'sgup_apod_keys',
-                    'type'    => 'text',
-                    'repeatable' => true,
-                    'text' => array(
-                        'add_row_text' => 'Add Another Key',
-                    ),
-                    'before_row' => '<div data-conditional-id="sgup_apod_cme" data-conditional-value="off">',
-                    'after_row' => '</div>',
-                ) 
-            );
+                        ],
+                    ],
+                ],
+            ] );
             
         }
 

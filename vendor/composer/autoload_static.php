@@ -4,15 +4,38 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
+class ComposerStaticInitc96e14f509864e4bb11faa9df0e3bcde
 {
     public static $files = array (
         '92e1323cf455d9db36d434a3947782b6' => __DIR__ . '/..' . '/cmb2/cmb2/init.php',
         'd375b04b6307a289857df2b6d12b680a' => __DIR__ . '/../..' . '/work/sgu.php',
     );
 
+    public static $prefixLengthsPsr4 = array (
+        'K' => 
+        array (
+            'KP\\WPFieldFramework\\' => 20,
+        ),
+    );
+
+    public static $prefixDirsPsr4 = array (
+        'KP\\WPFieldFramework\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src',
+        ),
+    );
+
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'KP\\WPFieldFramework\\BlockGenerator' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/BlockGenerator.php',
+        'KP\\WPFieldFramework\\FieldTypes' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/FieldTypes.php',
+        'KP\\WPFieldFramework\\Framework' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Framework.php',
+        'KP\\WPFieldFramework\\Loader' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Loader.php',
+        'KP\\WPFieldFramework\\MetaBox' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/MetaBox.php',
+        'KP\\WPFieldFramework\\OptionsPage' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/OptionsPage.php',
+        'KP\\WPFieldFramework\\Repeater' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Repeater.php',
+        'KP\\WPFieldFramework\\Sanitizer' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Sanitizer.php',
+        'KP\\WPFieldFramework\\Storage' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Storage.php',
         'SGU_CPT_Admin_Cols' => __DIR__ . '/../..' . '/work/inc/cpt/sgu-cpt-admin-cols.php',
         'SGU_CPT_Settings' => __DIR__ . '/../..' . '/work/inc/cpt/sgu-cpt-settings.php',
         'SGU_CPTs' => __DIR__ . '/../..' . '/work/inc/cpt/sgu-cpts.php',
@@ -35,7 +58,9 @@ class ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->classMap = ComposerStaticInit02250426dc5e1ec6e3714c7f1b2238e5::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInitc96e14f509864e4bb11faa9df0e3bcde::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInitc96e14f509864e4bb11faa9df0e3bcde::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInitc96e14f509864e4bb11faa9df0e3bcde::$classMap;
 
         }, null, ClassLoader::class);
     }

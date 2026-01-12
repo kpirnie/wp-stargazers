@@ -61,6 +61,57 @@
                 "source": "http://wordpress.org/support/plugin/cmb2"
             },
             "install-path": "../cmb2/cmb2"
+        },
+        {
+            "name": "kevinpirnie/kpt-wpfieldframework",
+            "version": "dev-develop",
+            "version_normalized": "dev-develop",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kpirnie/kpt-wpfieldframework.git",
+                "reference": "78f6b81d254d19684c7c6621ceb86fa693af5812"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/kpirnie/kpt-wpfieldframework/zipball/78f6b81d254d19684c7c6621ceb86fa693af5812",
+                "reference": "78f6b81d254d19684c7c6621ceb86fa693af5812",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2"
+            },
+            "time": "2026-01-11T13:07:10+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "KP\\WPFieldFramework\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Pirnie",
+                    "email": "iam@kevinpirnie.com"
+                }
+            ],
+            "description": "A PHP framework for creating WordPress Options Pages, Meta Boxes, and Gutenberg Blocks with repeatable field groups.",
+            "keywords": [
+                "blocks",
+                "framework",
+                "gutenberg",
+                "meta-box",
+                "options-page",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/kpirnie/kpt-wpfieldframework/issues",
+                "source": "https://github.com/kpirnie/kpt-wpfieldframework"
+            },
+            "install-path": "../kevinpirnie/kpt-wpfieldframework"
         }
     ],
     "dev": true,

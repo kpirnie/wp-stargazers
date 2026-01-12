@@ -29,8 +29,10 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
 
             // get the key strings we need
             $the_items = SGU_Static::get_api_key( 'aapi' );
-            $the_item = explode( '|', $the_items[array_rand( $the_items, 1 )] );
 
+            if($the_items) {
+                $the_item = explode( '|', $the_items[array_rand( $the_items, 1 )] );
+            }
             // set the api's IDs and Secrets
             $this->app_id     = $the_item[0] ?: '';
             $this->app_secret = $the_item[1] ?: '';
