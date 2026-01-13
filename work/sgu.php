@@ -99,6 +99,11 @@ if( ! class_exists( 'SGUP' ) ) {
 
             // register the scripts and styles
             add_action( 'wp_enqueue_scripts', [$this, 'register_light_pollution_assets'] );
+
+            // hopefully this helps with apod videos
+            add_action('send_headers', function( ) {
+                header_remove( 'X-Frame-Options' );
+            } );
             
         }
 

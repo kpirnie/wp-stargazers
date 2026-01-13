@@ -385,7 +385,8 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             if(count($data) == 0) {
                 return false;
             }
-            
+            $data = $data[0];
+
             // Extract and sanitize APOD data
             $title = sanitize_text_field( $data['title'] );
             $date = sanitize_text_field( date( 'Y-m-d H:i:s', strtotime( $data['date'] ) ) );
@@ -393,12 +394,15 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             
             // Prefer HD URL if available, fall back to standard
             $media = sanitize_url( ( $data['hdurl'] ) ?? ( $data['url'] ) ?? '' );
-            
+
+            // let's see if the media file has a video extension...
+            $is_actually_vid = preg_match( '/\.(mp4|avi|mov|mkv|webm|flv|wmv)$/i', $media );
+
             // Extract copyright or default to NASA
             $copyright = sanitize_text_field( ( $data['copyright'] ) ?? 'NASA/JPL' );
             
             // Media type: 'image' or 'video'
-            $media_type = sanitize_text_field( $data['media_type'] );
+            $media_type = ( $is_actually_vid ) ? 'video' : sanitize_text_field( $data['media_type'] );
 
             // if the media type is not an image or video, skip it
             if( ! in_array( $media_type, ['video', 'image'] ) ) {
