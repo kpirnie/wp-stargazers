@@ -661,7 +661,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
             // add first page link if we're not on page 1
             if( $current_page > 1 ) {
                 $first_url = esc_url( get_pagenum_link( 1 ) );
-                $out[] = '<a href="' . $first_url . '" class="inline-flex items-center justify-center w-10 h-10 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700" aria-label="First page">';
+                $out[] = '<a href="' . $first_url . '" class="inline-flex items-center justify-center w-10 h-10 bg-slate-800 text-slate-200 rounded hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700" aria-label="First page">';
                 $out[] = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>';
                 $out[] = '</a>';
             }
@@ -669,7 +669,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
             // add each page link
             foreach( $page_links as $link ) {
                 // replace WordPress classes with Tailwind classes
-                $link = str_replace( 'page-numbers', 'inline-flex items-center justify-center min-w-10 h-10 px-3 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700', $link );
+                $link = str_replace( 'page-numbers', 'inline-flex items-center justify-center min-w-10 h-10 px-3 bg-slate-800 text-slate-200 rounded hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700', $link );
                 $link = str_replace( 
                     'class="page-numbers current"', 
                     'class="font-bold inline-flex items-center justify-center min-w-10 h-10 px-3 bg-cyan-600 text-white rounded-lg border border-cyan-500"', 
@@ -682,7 +682,7 @@ if( ! class_exists( 'SGU_Static' ) ) {
             // add last page link if we're not on the last page
             if( $current_page < $max_pages ) {
                 $last_url = esc_url( get_pagenum_link( $max_pages ) );
-                $out[] = '<a href="' . $last_url . '" class="inline-flex items-center justify-center w-10 h-10 bg-slate-800 text-slate-200 rounded-lg hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700" aria-label="Last page">';
+                $out[] = '<a href="' . $last_url . '" class="inline-flex items-center justify-center w-10 h-10 bg-slate-800 text-slate-200 rounded hover:bg-cyan-600 hover:text-white transition-colors border border-slate-700" aria-label="Last page">';
                 $out[] = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>';
                 $out[] = '</a>';
             }
