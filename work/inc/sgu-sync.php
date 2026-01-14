@@ -246,7 +246,7 @@ if( ! class_exists( 'SGU_Sync' ) ) {
 
                 $url = sprintf(
                     'https://api.nasa.gov/planetary/apod?api_key=%s&start_date=%s&end_date=%s',
-                    $api_key['sgup_cme_api_key'],
+                    $api_key['key'],
                     $current_start -> format( 'Y-m-d' ),
                     $chunk_end -> format( 'Y-m-d' )
                 );

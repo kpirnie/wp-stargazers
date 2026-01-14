@@ -67,6 +67,68 @@ if( ! class_exists( 'SGU_Static' ) ) {
             return '';
         }
 
+        /**
+         * Render video media from various sources
+         * Handles YouTube, Vimeo, direct video files, and fallback for blocked iframes
+         *
+         * @param string $url The video URL
+         * @param string $title Title for fallback display
+         * @param string $class CSS classes for video/oembed/fallback elements
+         * @return string HTML output
+         */
+        public static function render_video_media( string $url, string $title = '', string $class = '', bool $show_controls = true ): string {
+            
+            $class_attr = $class ? ' class="' . esc_attr( $class ) . '"' : '';
+            
+            // Direct video files - use HTML5 video player
+            $video_extensions = [ 'mp4', 'webm', 'ogg', 'mov', 'm4v' ];
+            $parsed_path = parse_url( $url, PHP_URL_PATH );
+            $extension = strtolower( pathinfo( $parsed_path, PATHINFO_EXTENSION ) );
+            
+            if ( in_array( $extension, $video_extensions, true ) ) {
+                $mime_map = [
+                    'mp4'  => 'video/mp4',
+                    'webm' => 'video/webm',
+                    'ogg'  => 'video/ogg',
+                    'mov'  => 'video/mp4',
+                    'm4v'  => 'video/mp4',
+                ];
+                $controls = ($show_controls) ? ' controls playsinline' : '';
+                return '<video' . $class_attr . '' . $controls . '>
+                    <source src="' . esc_url( $url ) . '" type="' . esc_attr( $mime_map[ $extension ] ?? 'video/mp4' ) . '">
+                </video>';
+            }
+            
+            // YouTube
+            if ( preg_match( '/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $url, $matches ) ) {
+                $oembed = wp_oembed_get( 'https://www.youtube.com/watch?v=' . $matches[1] );
+                if ( $oembed ) {
+                    return $class ? '<div' . $class_attr . '>' . $oembed . '</div>' : $oembed;
+                }
+            }
+            
+            // Vimeo
+            if ( preg_match( '/vimeo\.com\/(?:video\/)?(\d+)/', $url, $matches ) ) {
+                $oembed = wp_oembed_get( 'https://vimeo.com/' . $matches[1] );
+                if ( $oembed ) {
+                    return $class ? '<div' . $class_attr . '>' . $oembed . '</div>' : $oembed;
+                }
+            }
+            
+            // Generic oEmbed
+            $oembed = wp_oembed_get( $url );
+            if ( $oembed ) {
+                return $class ? '<div' . $class_attr . '>' . $oembed . '</div>' : $oembed;
+            }
+            
+            // Fallback
+            return '<div' . $class_attr . '>
+                <a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . 
+                    esc_html( $title ?: __( 'Watch Video', 'flavor-developer' ) ) . ' &#8599;' .
+                '</a>
+            </div>';
+        }
+
         /** 
          * get_remote_data
          * 

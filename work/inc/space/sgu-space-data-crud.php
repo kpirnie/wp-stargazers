@@ -385,7 +385,7 @@ if( ! class_exists( 'SGU_Space_Data_CRUD' ) ) {
             if(count($data) == 0) {
                 return false;
             }
-            $data = $data[0];
+            $data = ( isset( $data[0] ) ) ? $data[0] : $data;
 
             // Extract and sanitize APOD data
             $title = sanitize_text_field( $data['title'] );
