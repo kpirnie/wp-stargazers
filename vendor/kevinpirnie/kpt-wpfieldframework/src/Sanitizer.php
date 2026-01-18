@@ -62,7 +62,7 @@ class Sanitizer
             'link'                      => $this->sanitizeLink($value),
             'select', 'radio'           => $this->sanitizeSelect($value, $field),
             'multiselect', 'checkboxes' => $this->sanitizeMultiSelect($value, $field),
-            'checkbox'                  => $this->sanitizeCheckbox($value),
+            'checkbox', 'switch'        => $this->sanitizeCheckbox($value),
             'wysiwyg'                   => $this->sanitizeWysiwyg($value),
             'code'                      => $this->sanitizeCode($value),
             'color'                     => $this->sanitizeColor($value),
@@ -73,6 +73,7 @@ class Sanitizer
             'user_select'               => $this->sanitizeUserSelect($value),
             'repeater'                  => $this->sanitizeRepeater($value, $field),
             'group'                     => $this->sanitizeGroup($value, $field),
+            'heading', 'separator', 'html', 'message' => null,
             default                     => $this->sanitizeText($value),
         };
     }

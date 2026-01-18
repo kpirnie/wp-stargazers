@@ -1,4 +1,4 @@
-# KP WP Starter Framework
+# KPT WP Field Framework
 
 A PHP framework for creating WordPress Options Pages, Meta Boxes, and Gutenberg Blocks with repeatable field groups.
 
@@ -10,7 +10,7 @@ A PHP framework for creating WordPress Options Pages, Meta Boxes, and Gutenberg 
 ## Installation
 
 ```bash
-composer require kevinpirnie/kp-wp-starter-framework
+composer require kevinpirnie/kpt-wpfieldframework
 ```
 
 ## Quick Start
@@ -30,7 +30,6 @@ $framework->addOptionsPage([
     'page_title' => 'My Plugin Settings',
     'menu_title' => 'My Plugin',
     'menu_slug'  => 'my-plugin-settings',
-    'option_key' => 'my_plugin_options',
     'sections'   => [
         'general' => [
             'title'  => 'General Settings',
@@ -97,7 +96,6 @@ $framework->addOptionsPage([
     'menu_title'  => 'Theme Options',
     'capability'  => 'manage_options',
     'menu_slug'   => 'theme-options',
-    'option_key'  => 'my_theme_options',
     'icon_url'    => 'dashicons-admin-customizer',
     'position'    => 60,
     'sections'    => [
@@ -112,19 +110,6 @@ $framework->addOptionsPage([
 ]);
 ```
 
-### Options Page Configuration
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `page_title` | string | Title shown in browser tab |
-| `menu_title` | string | Title shown in admin menu |
-| `menu_slug` | string | URL slug for the page |
-| `option_key` | string | Database option name (defaults to menu_slug with underscores) |
-| `capability` | string | Required user capability (default: `manage_options`) |
-| `parent_slug` | string | Parent menu slug for submenus |
-| `icon_url` | string | Dashicon or URL for menu icon |
-| `position` | int | Menu position |
-
 ### Tabbed Options Page
 
 ```php
@@ -132,7 +117,6 @@ $framework->addOptionsPage([
     'page_title' => 'Theme Options',
     'menu_title' => 'Theme Options',
     'menu_slug'  => 'theme-options',
-    'option_key' => 'my_theme_options',
     'tabs'       => [
         'general' => [
             'title'    => 'General',
@@ -176,7 +160,6 @@ $framework->addOptionsPage([
     'page_title'  => 'Plugin Settings',
     'menu_title'  => 'Settings',
     'menu_slug'   => 'my-plugin-settings',
-    'option_key'  => 'my_plugin_settings',
     'parent_slug' => 'options-general.php', // Under Settings menu.
     'sections'    => [
         // ...
@@ -189,15 +172,15 @@ $framework->addOptionsPage([
 ```php
 use KP\WPStarterFramework\Framework;
 
-// Get all options using your custom option key.
-$options = get_option('my_theme_options');
+// Get all options.
+$options = get_option('theme_options');
 
 // Get specific option.
 $logo_id = $options['logo'] ?? '';
 
 // Using the Storage class.
 $storage = Framework::getInstance()->getStorage();
-$value = $storage->getOptionKey('my_theme_options', 'logo', '');
+$value = $storage->getOptionKey('theme_options', 'logo', '');
 ```
 
 ## Meta Boxes
@@ -426,6 +409,7 @@ $photo  = $attributes['photo'] ?? 0;
     'id'          => 'title',
     'type'        => 'text',
     'label'       => 'Title',
+    'sublabel'    => 'Enter the main title for this section.',
     'placeholder' => 'Enter title...',
     'default'     => '',
     'required'    => true,
@@ -595,6 +579,17 @@ $photo  = $attributes['photo'] ?? 0;
     ],
     'default' => 'md',
 ]
+
+// Switch toggle
+[
+    'id'        => 'enable_feature',
+    'type'      => 'switch',
+    'label'     => 'Enable Feature',
+    'sublabel'  => 'Turn this feature on or off.',
+    'on_label'  => 'Enabled',
+    'off_label' => 'Disabled',
+    'default'   => false,
+]
 ```
 
 ### Text Areas & Editors
@@ -653,39 +648,6 @@ $photo  = $attributes['photo'] ?? 0;
     'type'  => 'gallery',
     'label' => 'Image Gallery',
 ]
-```
-
-### Link Field
-
-The link field provides a WordPress link selector dialog with URL, title, and target options.
-
-```php
-// Link selector
-[
-    'id'    => 'cta_link',
-    'type'  => 'link',
-    'label' => 'Call to Action Link',
-]
-```
-
-**Retrieving Link Data:**
-
-```php
-$link = get_post_meta($post_id, 'cta_link', true);
-
-$url    = $link['url'] ?? '';
-$title  = $link['title'] ?? '';
-$target = $link['target'] ?? ''; // '_blank' or ''
-
-// Output as HTML link
-if ($url) {
-    printf(
-        '<a href="%s"%s>%s</a>',
-        esc_url($url),
-        $target === '_blank' ? ' target="_blank" rel="noopener"' : '',
-        esc_html($title ?: $url)
-    );
-}
 ```
 
 ### Special Fields
@@ -777,6 +739,136 @@ if ($url) {
 ]
 ```
 
+## Conditional Fields
+
+Fields can be shown or hidden based on the values of other fields in the same section. Conditionals are evaluated in real-time using JavaScript.
+
+### Single Condition
+
+```php
+[
+    'id'      => 'enable_feature',
+    'type'    => 'switch',
+    'label'   => 'Enable Feature',
+    'default' => false,
+],
+[
+    'id'          => 'feature_option',
+    'type'        => 'text',
+    'label'       => 'Feature Option',
+    'conditional' => [
+        'field'     => 'enable_feature',
+        'value'     => true,
+        'condition' => '==',
+    ],
+]
+```
+
+### Multiple Conditions (AND)
+
+All conditions must be true for the field to be visible.
+
+```php
+[
+    'id'          => 'advanced_option',
+    'type'        => 'text',
+    'label'       => 'Advanced Option',
+    'conditional' => [
+        'AND' => [
+            [
+                'field'     => 'enable_feature',
+                'value'     => true,
+                'condition' => '==',
+            ],
+            [
+                'field'     => 'feature_level',
+                'value'     => 'advanced',
+                'condition' => '==',
+            ],
+        ],
+    ],
+]
+```
+
+### Multiple Conditions (OR)
+
+At least one condition must be true for the field to be visible.
+
+```php
+[
+    'id'          => 'show_either',
+    'type'        => 'text',
+    'label'       => 'Show Either',
+    'conditional' => [
+        'OR' => [
+            [
+                'field'     => 'status',
+                'value'     => 'active',
+                'condition' => '==',
+            ],
+            [
+                'field'     => 'override',
+                'value'     => true,
+                'condition' => '==',
+            ],
+        ],
+    ],
+]
+```
+
+### Available Condition Operators
+
+| Operator | Description |
+|----------|-------------|
+| `==` | Equal to |
+| `!=` | Not equal to |
+| `>` | Greater than |
+| `<` | Less than |
+| `>=` | Greater than or equal to |
+| `<=` | Less than or equal to |
+| `IN` | Value is in array/comma-separated list |
+| `NOT_IN` | Value is not in array/comma-separated list |
+| `CONTAINS` | Value contains substring or array contains value |
+| `NOT_CONTAINS` | Value does not contain substring |
+| `EMPTY` | Value is empty |
+| `NOT_EMPTY` | Value is not empty |
+
+### Conditional with Radio Buttons
+
+```php
+[
+    'id'      => 'display_mode',
+    'type'    => 'radio',
+    'label'   => 'Display Mode',
+    'options' => [
+        'simple'   => 'Simple',
+        'advanced' => 'Advanced',
+        'custom'   => 'Custom',
+    ],
+    'default' => 'simple',
+],
+[
+    'id'          => 'custom_template',
+    'type'        => 'text',
+    'label'       => 'Custom Template Path',
+    'conditional' => [
+        'field'     => 'display_mode',
+        'value'     => 'custom',
+        'condition' => '==',
+    ],
+],
+[
+    'id'          => 'advanced_options',
+    'type'        => 'textarea',
+    'label'       => 'Advanced Options',
+    'conditional' => [
+        'field'     => 'display_mode',
+        'value'     => ['advanced', 'custom'],
+        'condition' => 'IN',
+    ],
+]
+```
+
 ## Repeater Fields
 
 ### Basic Repeater
@@ -813,35 +905,6 @@ if ($url) {
             'id'    => 'bio',
             'type'  => 'textarea',
             'label' => 'Biography',
-        ],
-    ],
-]
-```
-
-### Repeater with Link Fields
-
-```php
-[
-    'id'           => 'buttons',
-    'type'         => 'repeater',
-    'label'        => 'Buttons',
-    'button_label' => 'Add Button',
-    'max_rows'     => 5,
-    'fields'       => [
-        [
-            'id'    => 'button_link',
-            'type'  => 'link',
-            'label' => 'Button Link',
-        ],
-        [
-            'id'      => 'button_style',
-            'type'    => 'select',
-            'label'   => 'Style',
-            'options' => [
-                'primary'   => 'Primary',
-                'secondary' => 'Secondary',
-                'outline'   => 'Outline',
-            ],
         ],
     ],
 ]
@@ -966,6 +1029,7 @@ All fields support these common options:
 | `id` | string | Unique field identifier (required) |
 | `type` | string | Field type (required) |
 | `label` | string | Field label |
+| `sublabel` | string | Secondary label displayed below the main label |
 | `description` | string | Help text displayed below field |
 | `default` | mixed | Default value |
 | `placeholder` | string | Placeholder text |
@@ -976,6 +1040,7 @@ All fields support these common options:
 | `attributes` | array | Additional HTML attributes |
 | `sanitize` | callable | Custom sanitization callback |
 | `validate` | callable | Custom validation callback |
+| `conditional` | array | Conditional display rules |
 
 ### Custom Sanitization
 
@@ -1006,47 +1071,6 @@ All fields support these common options:
     },
 ]
 ```
-
-## Available Field Types Reference
-
-| Type | Description |
-|------|-------------|
-| `text` | Single line text input |
-| `email` | Email address input |
-| `url` | URL input |
-| `password` | Password input |
-| `number` | Numeric input with min/max/step |
-| `tel` | Telephone number input |
-| `hidden` | Hidden input field |
-| `date` | Date picker |
-| `datetime` | Date and time picker |
-| `time` | Time picker |
-| `week` | Week picker |
-| `month` | Month picker |
-| `select` | Dropdown select |
-| `multiselect` | Multiple selection dropdown |
-| `checkbox` | Single checkbox |
-| `checkboxes` | Multiple checkboxes |
-| `radio` | Radio button group |
-| `textarea` | Multi-line text area |
-| `wysiwyg` | WordPress visual editor |
-| `code` | Code editor with syntax highlighting |
-| `image` | Image upload with preview |
-| `file` | File upload |
-| `gallery` | Multiple image gallery |
-| `link` | WordPress link selector with URL, title, and target |
-| `color` | Color picker |
-| `range` | Range slider |
-| `post_select` | Post selection dropdown |
-| `page_select` | Page selection dropdown |
-| `term_select` | Taxonomy term dropdown |
-| `user_select` | User selection dropdown |
-| `heading` | Section heading |
-| `separator` | Horizontal separator line |
-| `html` | Raw HTML content |
-| `message` | Notice/message box |
-| `repeater` | Repeatable field group |
-| `group` | Field group |
 
 ## Storage API
 
@@ -1100,6 +1124,113 @@ $storage->clearCache();
 $storage->clearCache('post_meta_'); // Clear by prefix
 $storage->setUseCache(false);
 ```
+
+## Export / Import Settings
+
+The framework includes built-in functionality to export and import settings, making it easy to backup configurations or migrate settings between environments.
+
+### Enabling Export/Import UI
+
+Add `show_export_import => true` to your options page configuration:
+```php
+$framework->addOptionsPage([
+    'page_title'         => 'My Plugin Settings',
+    'menu_title'         => 'My Plugin',
+    'menu_slug'          => 'my-plugin-settings',
+    'show_export_import' => true,  // Enables the Export/Import UI
+    'tabs'               => [
+        // All tabs will be included in export/import
+        'general'  => [
+            'title'    => 'General',
+            'sections' => [ /* ... */ ],
+        ],
+        'advanced' => [
+            'title'    => 'Advanced',
+            'sections' => [ /* ... */ ],
+        ],
+    ],
+]);
+```
+
+This adds an "Export / Import Settings" panel at the bottom of your options page that allows users to:
+
+- **Export**: Download all current settings (including defaults for unsaved fields) as a JSON file
+- **Import**: Upload a previously exported JSON file to restore settings
+
+### Programmatic Export/Import
+
+You can also export and import settings programmatically:
+```php
+use KP\WPFieldFramework\Framework;
+
+$framework = Framework::getInstance();
+$export_import = $framework->getExportImport();
+
+// Export specific option keys
+$json = $export_import->export(['my_plugin_settings']);
+
+// Export with defaults (includes default values for fields not yet saved)
+$options_page = $framework->getOptionsPageBySlug('my-plugin-settings');
+$json = $export_import->exportWithDefaults([$options_page]);
+
+// Validate import data before importing
+$validation = $export_import->validate($json);
+if ($validation['valid']) {
+    echo 'Options to import: ' . implode(', ', $validation['options']);
+    echo 'Exported from: ' . $validation['meta']['site_url'];
+    echo 'Export date: ' . $validation['meta']['exported'];
+}
+
+// Import settings (with optional whitelist)
+$allowed_options = ['my_plugin_settings'];
+$result = $export_import->import($json, $allowed_options);
+
+if ($result['success']) {
+    echo 'Imported: ' . implode(', ', $result['imported']);
+} else {
+    echo 'Errors: ' . implode(', ', $result['errors']);
+}
+
+// Import from uploaded file
+if (isset($_FILES['import_file'])) {
+    $result = $export_import->importFromFile(
+        $_FILES['import_file'],
+        ['my_plugin_settings']
+    );
+}
+
+// Trigger direct download
+$export_import->exportDownload(
+    ['my_plugin_settings'],
+    'my-plugin-backup.json'
+);
+```
+
+### Export File Format
+
+Exported JSON files include metadata and all settings:
+```json
+{
+    "version": "1.0.0",
+    "exported": "2025-01-17T12:00:00+00:00",
+    "site_url": "https://example.com",
+    "settings": {
+        "my_plugin_settings": {
+            "logo": 123,
+            "primary_color": "#0073aa",
+            "enable_feature": true,
+            "custom_css": ".my-class { color: red; }"
+        }
+    }
+}
+```
+
+### Security Considerations
+
+- Export/Import requires the `manage_options` capability
+- Imports are validated against registered option keys (whitelist)
+- All values pass through the framework's sanitization on import
+- AJAX endpoints are protected with nonce verification
 
 ## Advanced Usage
 
@@ -1175,7 +1306,7 @@ KpWsfAdmin.initCodeEditors();
 KpWsfAdmin.initRangeSliders();
 KpWsfAdmin.initRepeaterSortable();
 KpWsfAdmin.initGallerySortable();
-KpWsfAdmin.initLinkSelector();
+KpWsfAdmin.initConditionals();
 
 // Add repeater row programmatically.
 KpWsfAdmin.repeaterAddRow($('.kp-wsf-repeater'));
@@ -1208,4 +1339,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/developer-developer/kp-wp-starter-framework/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/kpirnie/kpt-wpfieldframework/issues) on GitHub.
+```

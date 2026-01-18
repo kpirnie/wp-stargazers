@@ -43,6 +43,19 @@
             this.initRangeSliders();
             this.initGallery();
             this.initLinkSelector();
+            this.initMultiSelector();
+            this.initConditionals();
+            this.initExportImport();
+        },
+
+        /**
+         * Initialize Select2 functionality.
+         *
+         * @since 1.0.0
+         * @return {void}
+         */
+        initMultiSelector: function () {
+            $("select[multiple='multiple']").select2({ width: '75%', placeholder: "Select an option..." });
         },
 
         // =====================================================================
@@ -883,7 +896,429 @@
                     $value.text($range.val());
                 }
             });
-        }
+        },
+        // =====================================================================
+        // Conditional Fields
+        // =====================================================================
+
+        /**
+         * Initialize conditional field logic.
+         *
+         * @since 1.0.0
+         * @return {void}
+         */
+        initConditionals: function () {
+            const self = this;
+
+            // Find all conditional fields and set up listeners.
+            $('[data-kp-wsf-conditional]').each(function () {
+                const $field = $(this).closest('.kp-wsf-field, .kp-wsf-field-row, tr');
+                const conditional = $(this).data('kp-wsf-conditional');
+
+                if (!conditional) {
+                    return;
+                }
+
+                self.setupConditionalListeners($field, conditional);
+                self.evaluateConditional($field, conditional);
+            });
+        },
+
+
+
+        /**
+         * Set up event listeners for conditional field dependencies.
+         *
+         * @since 1.0.0
+         * @param {jQuery} $field      The conditional field element.
+         * @param {Object} conditional The conditional configuration.
+         * @return {void}
+         */
+        setupConditionalListeners: function ($field, conditional) {
+            const self = this;
+            const fieldIds = self.getConditionalFieldIds(conditional);
+
+            fieldIds.forEach(function (fieldId) {
+                // Find the controlling field by ID or name.
+                const $controller = self.findControllerField(fieldId, $field);
+
+                if ($controller.length) {
+                    $controller.on('change input', function () {
+                        self.evaluateConditional($field, conditional);
+                    });
+                }
+            });
+        },
+
+        /**
+         * Extract all field IDs from a conditional configuration.
+         *
+         * @since 1.0.0
+         * @param {Object} conditional The conditional configuration.
+         * @return {Array} Array of field IDs.
+         */
+        getConditionalFieldIds: function (conditional) {
+            const ids = [];
+
+            if (conditional.AND) {
+                conditional.AND.forEach(function (condition) {
+                    if (condition.field) {
+                        ids.push(condition.field);
+                    }
+                });
+            }
+
+            if (conditional.OR) {
+                conditional.OR.forEach(function (condition) {
+                    if (condition.field) {
+                        ids.push(condition.field);
+                    }
+                });
+            }
+
+            // Single condition without AND/OR.
+            if (conditional.field) {
+                ids.push(conditional.field);
+            }
+
+            return ids;
+        },
+
+        /**
+         * Find the controller field element.
+         *
+         * @since 1.0.0
+         * @param {string} fieldId The field ID to find.
+         * @param {jQuery} $field  The conditional field for context.
+         * @return {jQuery} The controller field element.
+         */
+        findControllerField: function (fieldId, $field) {
+            // Try direct ID match.
+            let $controller = $('#' + fieldId);
+
+            if ($controller.length) {
+                return $controller;
+            }
+
+            // Try finding by name attribute (for options pages with array notation).
+            $controller = $('[name$="[' + fieldId + ']"]');
+
+            if ($controller.length) {
+                return $controller;
+            }
+
+            // Try finding within the same context (repeater, meta box, etc.).
+            const $context = $field.closest('.kp-wsf-meta-box, .kp-wsf-repeater, .kp-wsf-options-form, form');
+            $controller = $context.find('[id="' + fieldId + '"], [name$="[' + fieldId + ']"]');
+
+            return $controller;
+        },
+
+        /**
+         * Evaluate a conditional and show/hide the field.
+         *
+         * @since 1.0.0
+         * @param {jQuery} $field      The conditional field element.
+         * @param {Object} conditional The conditional configuration.
+         * @return {void}
+         */
+        evaluateConditional: function ($field, conditional) {
+            const self = this;
+            let result = false;
+
+            if (conditional.AND) {
+                // All conditions must be true.
+                result = conditional.AND.every(function (condition) {
+                    return self.evaluateCondition(condition, $field);
+                });
+            } else if (conditional.OR) {
+                // At least one condition must be true.
+                result = conditional.OR.some(function (condition) {
+                    return self.evaluateCondition(condition, $field);
+                });
+            } else if (conditional.field) {
+                // Single condition.
+                result = self.evaluateCondition(conditional, $field);
+            }
+
+            // Show or hide the field.
+            if (result) {
+                $field.slideDown(200).removeClass('kp-wsf-conditional-hidden');
+            } else {
+                $field.slideUp(200).addClass('kp-wsf-conditional-hidden');
+            }
+        },
+
+        /**
+         * Evaluate a single condition.
+         *
+         * @since 1.0.0
+         * @param {Object} condition The condition to evaluate.
+         * @param {jQuery} $field    The conditional field for context.
+         * @return {boolean} Whether the condition is met.
+         */
+        evaluateCondition: function (condition, $field) {
+            const self = this;
+            const $controller = self.findControllerField(condition.field, $field);
+
+            if (!$controller.length) {
+                return false;
+            }
+
+            let controllerValue = self.getFieldValue($controller);
+            const targetValue = condition.value;
+            const operator = condition.condition || '==';
+
+            return self.compareValues(controllerValue, targetValue, operator);
+        },
+
+        /**
+         * Get the current value of a field.
+         *
+         * @since 1.0.0
+         * @param {jQuery} $field The field element.
+         * @return {mixed} The field value.
+         */
+        getFieldValue: function ($field) {
+            const type = $field.attr('type');
+
+            if (type === 'checkbox') {
+                return $field.is(':checked');
+            }
+
+            if (type === 'radio') {
+                return $field.filter(':checked').val();
+            }
+
+            if ($field.is('select[multiple]')) {
+                return $field.val() || [];
+            }
+
+            return $field.val();
+        },
+
+        /**
+         * Compare two values using an operator.
+         *
+         * @since 1.0.0
+         * @param {mixed}  actual   The actual value.
+         * @param {mixed}  expected The expected value.
+         * @param {string} operator The comparison operator.
+         * @return {boolean} The comparison result.
+         */
+        compareValues: function (actual, expected, operator) {
+            // Handle boolean comparisons.
+            if (typeof expected === 'boolean') {
+                actual = !!actual;
+            }
+
+            switch (operator) {
+                case '==':
+                case '===':
+                    return actual == expected;
+
+                case '!=':
+                case '!==':
+                    return actual != expected;
+
+                case '>':
+                    return parseFloat(actual) > parseFloat(expected);
+
+                case '<':
+                    return parseFloat(actual) < parseFloat(expected);
+
+                case '>=':
+                    return parseFloat(actual) >= parseFloat(expected);
+
+                case '<=':
+                    return parseFloat(actual) <= parseFloat(expected);
+
+                case 'IN':
+                    if (Array.isArray(expected)) {
+                        return expected.includes(actual);
+                    }
+                    return String(expected).split(',').map(s => s.trim()).includes(actual);
+
+                case 'NOT_IN':
+                    if (Array.isArray(expected)) {
+                        return !expected.includes(actual);
+                    }
+                    return !String(expected).split(',').map(s => s.trim()).includes(actual);
+
+                case 'CONTAINS':
+                    if (Array.isArray(actual)) {
+                        return actual.includes(expected);
+                    }
+                    return String(actual).indexOf(expected) !== -1;
+
+                case 'NOT_CONTAINS':
+                    if (Array.isArray(actual)) {
+                        return !actual.includes(expected);
+                    }
+                    return String(actual).indexOf(expected) === -1;
+
+                case 'EMPTY':
+                    return !actual || actual === '' || (Array.isArray(actual) && actual.length === 0);
+
+                case 'NOT_EMPTY':
+                    return actual && actual !== '' && !(Array.isArray(actual) && actual.length === 0);
+
+                default:
+                    return actual == expected;
+            }
+        },
+
+        // =====================================================================
+        // Export / Import
+        // =====================================================================
+
+        /**
+         * Initialize export/import functionality.
+         *
+         * @since 1.0.0
+         * @return {void}
+         */
+        initExportImport: function () {
+            const self = this;
+
+            // Export button click.
+            $(document).on('click', '.kp-wsf-export-btn', function (e) {
+                e.preventDefault();
+                self.exportSettings($(this));
+            });
+
+            // Import file selection.
+            $(document).on('change', '.kp-wsf-import-file', function () {
+                const $btn = $(this).siblings('.kp-wsf-import-btn');
+                $btn.prop('disabled', !this.files.length);
+            });
+
+            // Import button click.
+            $(document).on('click', '.kp-wsf-import-btn', function (e) {
+                e.preventDefault();
+                self.importSettings($(this));
+            });
+        },
+
+        /**
+         * Export settings via AJAX.
+         *
+         * @since 1.0.0
+         * @param {jQuery} $button The export button.
+         * @return {void}
+         */
+        exportSettings: function ($button) {
+            const menuSlug = $button.data('menu-slug') || '';
+            const originalText = $button.text();
+
+            $button.prop('disabled', true).text(kpWsfAdmin.i18n.exporting || 'Exporting...');
+
+            $.ajax({
+                url: kpWsfAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'kp_wsf_export_settings',
+                    nonce: kpWsfAdmin.nonce,
+                    menu_slug: menuSlug
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Create download.
+                        const blob = new Blob([response.data.json], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = response.data.filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    } else {
+                        alert(response.data.message || 'Export failed.');
+                    }
+                },
+                error: function () {
+                    alert(kpWsfAdmin.i18n.exportError || 'Export failed. Please try again.');
+                },
+                complete: function () {
+                    $button.prop('disabled', false).text(originalText);
+                }
+            });
+        },
+
+        /**
+         * Import settings via AJAX.
+         *
+         * @since 1.0.0
+         * @param {jQuery} $button The import button.
+         * @return {void}
+         */
+        importSettings: function ($button) {
+            const $container = $button.closest('.kp-wsf-import-section');
+            const $fileInput = $container.find('.kp-wsf-import-file');
+            const $status = $container.find('.kp-wsf-import-status');
+            const menuSlug = $button.data('menu-slug') || '';
+            const file = $fileInput[0].files[0];
+
+            if (!file) {
+                $status.text(kpWsfAdmin.i18n.noFileSelected || 'Please select a file.');
+                return;
+            }
+
+            if (!confirm(kpWsfAdmin.i18n.confirmImport || 'This will overwrite your current settings. Continue?')) {
+                return;
+            }
+
+            const originalText = $button.text();
+            $button.prop('disabled', true).text(kpWsfAdmin.i18n.importing || 'Importing...');
+            $status.text('');
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $.ajax({
+                    url: kpWsfAdmin.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'kp_wsf_import_settings',
+                        nonce: kpWsfAdmin.nonce,
+                        menu_slug: menuSlug,
+                        json: e.target.result
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $status.html('<span style="color: green;">' + response.data.message + '</span>');
+                            if (response.data.errors && response.data.errors.length) {
+                                $status.append('<br><span style="color: orange;">Warnings: ' + response.data.errors.join(', ') + '</span>');
+                            }
+                            // Reload page after short delay to show updated settings.
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            $status.html('<span style="color: red;">' + (response.data.message || 'Import failed.') + '</span>');
+                            if (response.data.errors && response.data.errors.length) {
+                                $status.append('<br><span style="color: red;">' + response.data.errors.join('<br>') + '</span>');
+                            }
+                        }
+                    },
+                    error: function () {
+                        $status.html('<span style="color: red;">' + (kpWsfAdmin.i18n.importError || 'Import failed. Please try again.') + '</span>');
+                    },
+                    complete: function () {
+                        $button.prop('disabled', false).text(originalText);
+                        $fileInput.val('');
+                    }
+                });
+            };
+
+            reader.onerror = function () {
+                $status.html('<span style="color: red;">' + (kpWsfAdmin.i18n.fileReadError || 'Failed to read file.') + '</span>');
+                $button.prop('disabled', false).text(originalText);
+            };
+
+            reader.readAsText(file);
+        },
+
     };
 
     /**

@@ -71,17 +71,18 @@ class OptionsPage
      * @var array
      */
     private array $defaults = array(
-        'page_title'  => 'Options',
-        'menu_title'  => 'Options',
-        'capability'  => 'manage_options',
-        'menu_slug'   => 'kp-wsf-options',
-        'parent_slug' => '',
-        'icon_url'    => 'dashicons-admin-generic',
-        'position'    => null,
-        'option_name' => '',
-        'option_key'  => '',
-        'tabs'        => array(),
-        'sections'    => array(),
+        'page_title'            => 'Options',
+        'menu_title'            => 'Options',
+        'capability'            => 'manage_options',
+        'menu_slug'             => 'kp-wsf-options',
+        'parent_slug'           => '',
+        'icon_url'              => 'dashicons-admin-generic',
+        'position'              => null,
+        'option_name'           => '',
+        'option_key'            => '',
+        'show_export_import'    => false,
+        'tabs'                  => array(),
+        'sections'              => array(),
     );
     /**
      * Constructor.
@@ -283,7 +284,7 @@ class OptionsPage
      */
     private function registerField(string $section_id, array $field): void
     {
-        // Skip layout-only fields.
+        /*// Skip layout-only fields.
         $layout_types = array( 'heading', 'separator', 'html', 'message' );
         if (in_array($field['type'] ?? 'text', $layout_types, true)) {
             add_settings_field(
@@ -297,11 +298,21 @@ class OptionsPage
                 $section_id
             );
             return;
+        }*/
+
+        $label = $field['label'] ?? '';
+        if (! empty($field['sublabel'])) {
+            $label .= sprintf('<br /><span class="kp-wsf-sublabel">%s</span>', wp_kses_post($field['sublabel']));
+        }
+
+        $row_class = 'kp-wsf-field-row kp-wsf-field-row--' . ( $field['type'] ?? 'text' );
+        if (! empty($field['conditional'])) {
+            $row_class .= ' kp-wsf-conditional-field';
         }
 
         add_settings_field(
             $field['id'],
-            $field['label'] ?? '',
+            $label,
             function () use ($field) {
 
                 $this->renderField($field);
@@ -309,8 +320,9 @@ class OptionsPage
             $this->config['menu_slug'],
             $section_id,
             array(
-                'label_for' => $field['id'],
-                'class'     => 'kp-wsf-field-row kp-wsf-field-row--' . ( $field['type'] ?? 'text' ),
+                'label_for'  => $field['id'],
+                'class'      => $row_class,
+                'conditional' => ! empty($field['conditional']) ? $field['conditional'] : null,
             )
         );
     }
@@ -395,10 +407,28 @@ class OptionsPage
                 do_settings_sections($this->config['menu_slug']);
             }
 
-            submit_button(__('Save Settings', 'kp-wsf'));
+            submit_button($this->config['save_button'] ?? __('Save Settings', 'kp-wsf'));
+            $this->renderExportImport();
             ?>
         </form>
         <?php
+
+        // render the footer test, if it's set.. allows some html
+        if ($this->config['footer_text']) :
+            echo wp_kses($this->config['footer_text'], array(
+                'a' => array(
+                    'href' => true,
+                    'title' => true,
+                    'target' => true,
+                    'class' => true,
+                ),
+                'br' => array('class' => true,),
+                'em' => array('class' => true,),
+                'strong' => array('class' => true,),
+                'p' => array('class' => true,),
+                'div' => array('class' => true,),
+            ));
+        endif;
     }
 
     /**
@@ -464,13 +494,22 @@ class OptionsPage
      */
     private function renderField(array $field): void
     {
+
+        // Output conditional data attribute if present.
+        if (! empty($field['conditional'])) {
+            printf('<span class="kp-wsf-conditional-data" data-kp-wsf-conditional="%s"></span>', esc_attr(wp_json_encode($field['conditional'])));
+        }
+
         // Get current value from options.
         $options = $this->storage->getOption($this->config['option_key'], array());
         $value = $options[ $field['id'] ] ?? ( $field['default'] ?? null );
+
         // Set the field name to use array notation for the option.
         $field['name'] = sprintf('%s[%s]', $this->config['option_key'], $field['id']);
+
         // Render the field.
         echo $this->field_types->render($field, $value);
+
         // Render description if present.
         if (! empty($field['description'])) {
             printf('<p class="description">%s</p>', wp_kses_post($field['description']));
@@ -566,5 +605,78 @@ class OptionsPage
         $options = $this->getOptions();
         unset($options[ $key ]);
         return $this->storage->updateOption($this->config['option_key'], $options);
+    }
+
+    /**
+     * Render export/import section.
+     *
+     * @since  1.0.0
+     * @return void
+     */
+    private function renderExportImport(): void
+    {
+        if (empty($this->config['show_export_import'])) {
+            return;
+        }
+        ?>
+        <div class="kp-wsf-export-import">
+            <h2><?php esc_html_e('Export / Import Settings', 'kp-wsf'); ?></h2>
+            <p class="description"><?php esc_html_e('Export or import all settings for this options page, including all tabs.', 'kp-wsf'); ?></p>
+            
+            <div class="kp-wsf-export-import-columns">
+                <div class="kp-wsf-export-section">
+                    <h3><?php esc_html_e('Export', 'kp-wsf'); ?></h3>
+                    <p class="description"><?php esc_html_e('Download all current settings (including defaults) as a JSON file.', 'kp-wsf'); ?></p>
+                    <button type="button" class="button button-secondary kp-wsf-export-btn" data-menu-slug="<?php echo esc_attr($this->config['menu_slug']); ?>">
+                        <?php esc_html_e('Export All Settings', 'kp-wsf'); ?>
+                    </button>
+                </div>
+
+                <div class="kp-wsf-import-section">
+                    <h3><?php esc_html_e('Import', 'kp-wsf'); ?></h3>
+                    <p class="description"><?php esc_html_e('Upload a previously exported JSON file to restore all settings.', 'kp-wsf'); ?></p>
+                    <input type="file" class="kp-wsf-import-file" accept=".json" />
+                    <button type="button" class="button button-secondary kp-wsf-import-btn" data-menu-slug="<?php echo esc_attr($this->config['menu_slug']); ?>" disabled>
+                        <?php esc_html_e('Import All Settings', 'kp-wsf'); ?>
+                    </button>
+                    <p class="kp-wsf-import-status"></p>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Get all registered fields across all sections and tabs.
+     *
+     * @since  1.0.0
+     * @return array Array of all field configurations.
+     */
+    public function getAllFields(): array
+    {
+        $all_fields = [];
+
+        foreach ($this->fields as $section_id => $section_fields) {
+            foreach ($section_fields as $field) {
+                // Skip layout-only fields.
+                $layout_types = ['heading', 'separator', 'html', 'message'];
+                if (!in_array($field['type'] ?? 'text', $layout_types, true)) {
+                    $all_fields[$field['id']] = $field;
+                }
+
+                // Handle repeater sub-fields.
+                if (($field['type'] ?? '') === 'repeater' && !empty($field['fields'])) {
+                    // Store repeater field info for reference.
+                    $all_fields[$field['id']]['_is_repeater'] = true;
+                }
+
+                // Handle group sub-fields.
+                if (($field['type'] ?? '') === 'group' && !empty($field['fields'])) {
+                    $all_fields[$field['id']]['_is_group'] = true;
+                }
+            }
+        }
+
+        return $all_fields;
     }
 }

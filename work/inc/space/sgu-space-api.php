@@ -17,7 +17,7 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
 
     class SGU_Space_API {
 
-        private const API_BASE = 'https://api.astronomyapi.com/api/v2';
+        private string $api_base;
 
         private ?string $app_id = null;
 
@@ -26,6 +26,8 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
         private const CACHE_DURATION = 3600;
 
         public function __construct() {
+
+            $this -> api_base = SGU_Static::get_sgu_option('sgu_api_settings') -> sgup_aapi_endpoint ?? '';
 
             // get the key strings we need
             $the_items = SGU_Static::get_api_key( 'aapi' );
@@ -52,7 +54,7 @@ if ( ! class_exists( 'SGU_Space_API' ) ) :
                 return null;
             }
 
-            $url = self::API_BASE . $endpoint;
+            $url = $this->api_base . $endpoint;
 
             $args = [
                 'method'  => $method,

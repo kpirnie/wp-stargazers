@@ -7,7 +7,6 @@ namespace Composer\Autoload;
 class ComposerStaticInitc96e14f509864e4bb11faa9df0e3bcde
 {
     public static $files = array (
-        '92e1323cf455d9db36d434a3947782b6' => __DIR__ . '/..' . '/cmb2/cmb2/init.php',
         'd375b04b6307a289857df2b6d12b680a' => __DIR__ . '/../..' . '/work/sgu.php',
     );
 
@@ -28,6 +27,7 @@ class ComposerStaticInitc96e14f509864e4bb11faa9df0e3bcde
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'KP\\WPFieldFramework\\BlockGenerator' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/BlockGenerator.php',
+        'KP\\WPFieldFramework\\ExportImport' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/ExportImport.php',
         'KP\\WPFieldFramework\\FieldTypes' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/FieldTypes.php',
         'KP\\WPFieldFramework\\Framework' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Framework.php',
         'KP\\WPFieldFramework\\Loader' => __DIR__ . '/..' . '/kevinpirnie/kpt-wpfieldframework/src/Loader.php',

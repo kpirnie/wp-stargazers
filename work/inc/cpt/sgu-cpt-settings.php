@@ -54,25 +54,17 @@ if( ! class_exists( 'SGU_CPT_Settings' ) ) {
             // add solar flare settings
             $this -> add_flare_settings( );
             
+            // add geomagnetic settings
+            $this -> add_geomag_settings( );
 
+            // add spaceweather settings
+            $this -> add_sw_settings( );
 
-            // hook into the field framework's admin init
-            add_action( 'cmb2_admin_init', function( ) {
+            // add neo settings
+            $this -> add_neo_settings( );
 
-
-                // add geomagnetic settings
-                $this -> add_geomag_settings( );
-
-                // add spaceweather settings
-                $this -> add_sw_settings( );
-
-                // add neo settings
-                $this -> add_neo_settings( );
-
-                // add the apod settings
-                $this -> add_apod_settings( );
-
-            } );
+            // add the apod settings
+            $this -> add_apod_settings( );
 
         }
 

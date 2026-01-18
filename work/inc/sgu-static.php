@@ -260,12 +260,12 @@ if( ! class_exists( 'SGU_Static' ) ) {
         public static function get_api_endpoint( string $which )  {
 
             return match( $which ) {
-                'cme' => (array) SGU_Static::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [],
-                'geo' => (array) SGU_Static::get_sgu_option( 'sgup_geomag_settings' ) -> sgup_geomag_endpoint ?: [],
-                'neo' => (array) SGU_Static::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [],
-                'sf' => (array) SGU_Static::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [],
-                'sw' => (array) SGU_Static::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [],
-                'apod' => (array) SGU_Static::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [],
+                'cme' => (array) self::get_sgu_option( 'sgup_cme_settings' ) -> sgup_cme_api_endpoint ?: [],
+                'geo' => (array) self::get_sgu_option( 'sgup_geomag_settings' ) -> sgup_geomag_endpoint ?: [],
+                'neo' => (array) self::get_sgu_option( 'sgup_neo_settings' ) -> sgup_neo_endpoint ?: [],
+                'sf' => (array) self::get_sgu_option( 'sgup_flare_settings' ) -> sgup_flare_api_endpoint ?: [],
+                'sw' => (array) self::get_sgu_option( 'sgup_sw_settings' ) -> sgup_sw_endpoint ?: [],
+                'apod' => (array) self::get_sgu_option( 'sgup_apod_settings' ) -> sgup_apod_endpoint ?: [],
 
                 default => [],  // Unknown type - return empty array
             };

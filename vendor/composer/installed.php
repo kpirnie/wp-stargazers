@@ -10,19 +10,10 @@
         'dev' => true,
     ),
     'versions' => array(
-        'cmb2/cmb2' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => '2847828b5cce1b48d09427ee13e6f7c752704468',
-            'type' => 'wordpress-plugin',
-            'install_path' => __DIR__ . '/../cmb2/cmb2',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'kevinpirnie/kpt-wpfieldframework' => array(
-            'pretty_version' => 'dev-develop',
-            'version' => 'dev-develop',
-            'reference' => '78f6b81d254d19684c7c6621ceb86fa693af5812',
+            'pretty_version' => 'v1.5.43',
+            'version' => '1.5.43.0',
+            'reference' => '1a38b01efd3aa1c8213868b8adc6bd914603e2e5',
             'type' => 'library',
             'install_path' => __DIR__ . '/../kevinpirnie/kpt-wpfieldframework',
             'aliases' => array(),

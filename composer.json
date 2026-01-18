@@ -13,15 +13,13 @@
     ],
     "require": {
         "php": ">=8.4",
-        "cmb2/cmb2": "dev-master",
-        "kevinpirnie/kpt-wpfieldframework": "dev-develop"
+        "kevinpirnie/kpt-wpfieldframework": ">=1"
     },
     "autoload": {
         "classmap": [
             "work/inc"
         ],
         "files": [
-            "vendor/cmb2/cmb2/init.php",
             "work/sgu.php"
         ]
     },

@@ -143,11 +143,13 @@ if( ! class_exists( 'SGU_Settings' ) ) {
                                             'id'    => 'sgup_aa_api_id',
                                             'type'  => 'text',
                                             'label' => __('App ID', 'sgup' ),
+                                            'inline' => true,
                                         ],
                                         [
                                             'id'    => 'sgup_aa_api_secret',
                                             'type'  => 'text',
                                             'label' => __('App Secret', 'sgup' ),
+                                            'inline' => true,
                                         ],
 
                                     ],
@@ -187,11 +189,11 @@ if( ! class_exists( 'SGU_Settings' ) ) {
                                 [
                                     'id'    => 'noaa_ep',
                                     'type'  => 'html',
-                                    'label' => __( 'NOAA Endponts', 'sgup' ),
+                                    'label' => __( 'NOAA Endpoints', 'sgup' ),
                                     'content' => __( 'NOAA endpoints are pre-configured. See: https://www.weather.gov/documentation/services-web-api', 'sgup' ),
                                 ],
                                 [
-                                    'id'    => 'sgup_aapi_endpont',
+                                    'id'    => 'sgup_aapi_endpoint',
                                     'type'  => 'text',
                                     'label' => __( 'AstronomyAPI Endpoint', 'sgup' ),
                                     'description' => __( 'Astronomy API Endpoint can be found here: https://docs.astronomyapi.com/', 'sgup' ),

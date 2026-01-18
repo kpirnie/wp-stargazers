@@ -1,86 +1,24 @@
 {
     "packages": [
         {
-            "name": "cmb2/cmb2",
-            "version": "dev-master",
-            "version_normalized": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CMB2/CMB2.git",
-                "reference": "2847828b5cce1b48d09427ee13e6f7c752704468"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CMB2/CMB2/zipball/2847828b5cce1b48d09427ee13e6f7c752704468",
-                "reference": "2847828b5cce1b48d09427ee13e6f7c752704468",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">7.4"
-            },
-            "require-dev": {
-                "apigen/apigen": "4.1.2",
-                "awesomemotive/am-cli-tools": ">=1.3.7",
-                "nette/utils": "2.5.3",
-                "phpunit/phpunit": "^6.5",
-                "yoast/phpunit-polyfills": "^1.1"
-            },
-            "suggest": {
-                "composer/installers": "~1.0"
-            },
-            "time": "2024-04-02T19:30:07+00:00",
-            "type": "wordpress-plugin",
-            "installation-source": "dist",
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Justin Sternberg",
-                    "email": "justin@dsgnwrks.pro",
-                    "homepage": "https://dsgnwrks.pro",
-                    "role": "Developer"
-                },
-                {
-                    "name": "WebDevStudios",
-                    "email": "contact@webdevstudios.com",
-                    "homepage": "https://github.com/WebDevStudios",
-                    "role": "Developer"
-                }
-            ],
-            "description": "CMB2 is a metabox, custom fields, and forms library for WordPress that will blow your mind.",
-            "homepage": "https://github.com/CMB2/CMB2",
-            "keywords": [
-                "metabox",
-                "plugin",
-                "wordpress"
-            ],
-            "support": {
-                "issues": "https://github.com/CMB2/CMB2/issues",
-                "source": "http://wordpress.org/support/plugin/cmb2"
-            },
-            "install-path": "../cmb2/cmb2"
-        },
-        {
             "name": "kevinpirnie/kpt-wpfieldframework",
-            "version": "dev-develop",
-            "version_normalized": "dev-develop",
+            "version": "v1.5.43",
+            "version_normalized": "1.5.43.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/kpirnie/kpt-wpfieldframework.git",
-                "reference": "78f6b81d254d19684c7c6621ceb86fa693af5812"
+                "url": "https://github.com/kpirnie/kp-wpfieldframework.git",
+                "reference": "1a38b01efd3aa1c8213868b8adc6bd914603e2e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kpirnie/kpt-wpfieldframework/zipball/78f6b81d254d19684c7c6621ceb86fa693af5812",
-                "reference": "78f6b81d254d19684c7c6621ceb86fa693af5812",
+                "url": "https://api.github.com/repos/kpirnie/kp-wpfieldframework/zipball/1a38b01efd3aa1c8213868b8adc6bd914603e2e5",
+                "reference": "1a38b01efd3aa1c8213868b8adc6bd914603e2e5",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2"
             },
-            "time": "2026-01-11T13:07:10+00:00",
+            "time": "2026-01-18T16:00:12+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -99,6 +37,7 @@
                 }
             ],
             "description": "A PHP framework for creating WordPress Options Pages, Meta Boxes, and Gutenberg Blocks with repeatable field groups.",
+            "homepage": "https://kevinpirnie.com/",
             "keywords": [
                 "blocks",
                 "framework",
@@ -111,6 +50,16 @@
                 "issues": "https://github.com/kpirnie/kpt-wpfieldframework/issues",
                 "source": "https://github.com/kpirnie/kpt-wpfieldframework"
             },
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/kevinpirnie",
+                    "type": "ko-fi"
+                },
+                {
+                    "url": "https://www.paypal.biz/kevinpirnie",
+                    "type": "paypal"
+                }
+            ],
             "install-path": "../kevinpirnie/kpt-wpfieldframework"
         }
     ],

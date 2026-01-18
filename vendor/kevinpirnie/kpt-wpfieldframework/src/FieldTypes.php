@@ -56,6 +56,7 @@ class FieldTypes
         'multiselect',
         'checkbox',
         'checkboxes',
+        'switch',
         'radio',
         'link',
         // Text areas/editors.
@@ -93,6 +94,7 @@ class FieldTypes
         'name'        => '',
         'type'        => 'text',
         'label'       => '',
+        'sublabel'    => '',
         'description' => '',
         'default'     => '',
         'class'       => '',
@@ -102,6 +104,7 @@ class FieldTypes
         'readonly'    => false,
         'options'     => array(),
         'attributes'  => array(),
+        'conditional'  => array(),
     );
     /**
      * Check if a field type is supported.
@@ -138,7 +141,6 @@ class FieldTypes
     {
         // Merge with defaults.
         $field = wp_parse_args($field, $this->field_defaults);
-        
         // Ensure name is set from id if not provided.
         if (empty($field['name'])) {
             $field['name'] = $field['id'];
@@ -157,9 +159,7 @@ class FieldTypes
         // Build method name and call it.
         $method = 'render' . str_replace('_', '', ucwords($field['type'], '_'));
         if (method_exists($this, $method)) {
-
             return $this->$method($field, $value);
-            
         }
 
         return $this->renderUnsupported($field);
@@ -177,19 +177,20 @@ class FieldTypes
     public function renderRow(array $field, mixed $value = null, string $context = 'meta'): string
     {
         $field = wp_parse_args($field, $this->field_defaults);
-        
-        // Skip row wrapper for certain types.
+
+        /*// Skip row wrapper for certain types.
         $no_wrapper_types = array( 'hidden', 'heading', 'separator', 'html' );
         if (in_array($field['type'], $no_wrapper_types, true)) {
             return $this->render($field, $value);
-        }
+        }*/
 
         $html = '';
         if ($context === 'options') {
             // Options page table row format.
-            $html .= '<tr>';
+            $html .= '<tr class="options-row">';
             $html .= '<th scope="row">';
             $html .= $this->renderLabel($field);
+            $html .= $this->renderSublabel($field);
             $html .= '</th>';
             $html .= '<td>';
             $html .= $this->render($field, $value);
@@ -198,9 +199,12 @@ class FieldTypes
             $html .= '</tr>';
         } else {
             // Meta box / user profile format.
-            $html .= '<div class="kp-wsf-field kp-wsf-field--' . esc_attr($field['type']) . '">';
+            $conditional_attrs = $this->buildConditionalAttributes($field);
+            $conditional_class = ! empty($field['conditional']) ? ' kp-wsf-conditional-field' : '';
+            $html .= '<div class="kp-wsf-field kp-wsf-field--' . esc_attr($field['type']) . $conditional_class . '"' . $conditional_attrs . '>';
             $html .= '<div class="kp-wsf-field__label">';
             $html .= $this->renderLabel($field);
+            $html .= $this->renderSublabel($field);
             $html .= '</div>';
             $html .= '<div class="kp-wsf-field__input">';
             $html .= $this->render($field, $value);
@@ -226,9 +230,6 @@ class FieldTypes
         }
 
         $required = ! empty($field['required']) ? ' <span class="required">*</span>' : '';
-        $sublabel = !empty($field['sublabel'])
-        ? sprintf('<span class="kp-wsf-sublabel">%s</span>', esc_html($field['sublabel']))
-        : '';
 
         return sprintf(
             '<label for="%s">%s%s</label>%s',
@@ -253,6 +254,22 @@ class FieldTypes
         }
 
         return sprintf('<p class="description">%s</p>', wp_kses_post($field['description']));
+    }
+
+    /**
+     * Render a field sublabel.
+     *
+     * @since  1.0.0
+     * @param  array $field The field configuration.
+     * @return string       The sublabel HTML.
+     */
+    public function renderSublabel(array $field): string
+    {
+        if (empty($field['sublabel'])) {
+            return '';
+        }
+
+        return sprintf('<span class="kp-wsf-sublabel">%s</span>', wp_kses_post($field['sublabel']));
     }
 
     /**
@@ -304,6 +321,22 @@ class FieldTypes
         }
 
         return $attr_string;
+    }
+
+    /**
+     * Build conditional data attributes for a field.
+     *
+     * @since  1.0.0
+     * @param  array $field The field configuration.
+     * @return string       The data attributes string.
+     */
+    private function buildConditionalAttributes(array $field): string
+    {
+        if (empty($field['conditional'])) {
+            return '';
+        }
+
+        return sprintf(' data-kp-wsf-conditional="%s"', esc_attr(wp_json_encode($field['conditional'])));
     }
 
     /**
@@ -657,11 +690,23 @@ class FieldTypes
     private function renderCheckboxes(array $field, mixed $value): string
     {
         $value = is_array($value) ? $value : array();
-        $html = '<fieldset class="kp-wsf-checkboxes">';
+        $is_inline = filter_var($field['inline'], FILTER_VALIDATE_BOOLEAN);
+        $inliner = ($is_inline) ? ' inline-field' : '';
+        $html = '<fieldset class="kp-wsf-checkboxes' . $inliner . '">';
         foreach ($field['options'] as $opt_value => $opt_label) {
             $checked = in_array((string) $opt_value, array_map('strval', $value), true) ? ' checked="checked"' : '';
             $opt_id = $field['id'] . '_' . sanitize_key($opt_value);
-            $html .= sprintf('<label for="%s"><input type="checkbox" id="%s" name="%s[]" value="%s"%s /> %s</label><br />', esc_attr($opt_id), esc_attr($opt_id), esc_attr($field['name']), esc_attr($opt_value), $checked, esc_html($opt_label));
+            $html .= sprintf(
+                '<label for="%s"><input type="checkbox" id="%s" name="%s[]" value="%s"%s%s /> %s</label>%s',
+                esc_attr($opt_id),
+                esc_attr($opt_id),
+                esc_attr($field['name']),
+                esc_attr($opt_value),
+                $checked,
+                $this->buildAttributes($field),
+                esc_html($opt_label),
+                ($is_inline) ? '' : '<br />'
+            );
         }
 
         $html .= '</fieldset>';
@@ -678,14 +723,57 @@ class FieldTypes
      */
     private function renderRadio(array $field, mixed $value): string
     {
-        $html = '<fieldset class="kp-wsf-radios">';
+        $is_inline = filter_var($field['inline'], FILTER_VALIDATE_BOOLEAN);
+        $inliner = ($is_inline) ? ' inline-field"' : '';
+        $html = '<fieldset class="kp-wsf-radios' . $inliner . '">';
         foreach ($field['options'] as $opt_value => $opt_label) {
             $checked = checked($value, $opt_value, false);
             $opt_id = $field['id'] . '_' . sanitize_key($opt_value);
-            $html .= sprintf('<label for="%s"><input type="radio" id="%s" name="%s" value="%s"%s /> %s</label><br />', esc_attr($opt_id), esc_attr($opt_id), esc_attr($field['name']), esc_attr($opt_value), $checked, esc_html($opt_label));
+            $html .= sprintf(
+                '<label for="%s"><input type="radio" id="%s" name="%s" value="%s"%s%s /> %s</label>%s',
+                esc_attr($opt_id),
+                esc_attr($opt_id),
+                esc_attr($field['name']),
+                esc_attr($opt_value),
+                $checked,
+                $this->buildAttributes($field),
+                esc_html($opt_label),
+                ($is_inline) ? '' : '<br />'
+            );
         }
 
         $html .= '</fieldset>';
+        return $html;
+    }
+
+    /**
+     * Render a switch toggle field.
+     *
+     * @since  1.0.0
+     * @param  array $field The field configuration.
+     * @param  mixed $value The current value.
+     * @return string       The field HTML.
+     */
+    private function renderSwitch(array $field, mixed $value): string
+    {
+        $checked = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $on_label = $field['on_label'] ?? __('On', 'kp-wsf');
+        $off_label = $field['off_label'] ?? __('Off', 'kp-wsf');
+
+        $html = '<div class="kp-wsf-switch-field">';
+        $html .= sprintf('<span class="kp-wsf-switch-label kp-wsf-switch-label--off">%s</span>', esc_html($off_label));
+        $html .= '<label class="kp-wsf-switch">';
+        $html .= sprintf(
+            '<input type="checkbox" id="%s" name="%s" value="1"%s />',
+            esc_attr($field['id']),
+            esc_attr($field['name']),
+            $checked ? ' checked="checked"' : ''
+        );
+        $html .= '<span class="kp-wsf-switch-slider"></span>';
+        $html .= '</label>';
+        $html .= sprintf('<span class="kp-wsf-switch-label kp-wsf-switch-label--on">%s</span>', esc_html($on_label));
+        $html .= '</div>';
+
         return $html;
     }
 
@@ -1048,23 +1136,7 @@ class FieldTypes
      */
     private function renderHtml(array $field, mixed $value): string
     {
-        $html = '';
-        
-        if (!empty($field['label'])) {
-            $sublabel = !empty($field['sublabel']) 
-                ? sprintf('<span class="kp-wsf-sublabel">%s</span>', esc_html($field['sublabel'])) 
-                : '';
-            
-            $html .= sprintf(
-                '<div class="kp-wsf-html-header"><strong>%s</strong>%s</div>',
-                esc_html($field['label']),
-                $sublabel
-            );
-        }
-        
-        $html .= wp_kses_post($field['content'] ?? '');
-        
-        return $html;
+        return wp_kses_post($field['content'] ?? '');
     }
 
     /**
@@ -1117,8 +1189,9 @@ class FieldTypes
     {
         $value = is_array($value) ? $value : array();
         $sub_fields = $field['fields'] ?? array();
+
         $html = '<div class="kp-wsf-group">';
-        if (! empty($field['label'])) {
+        if (!empty($field['label'])) {
             $html .= sprintf('<h4 class="kp-wsf-group-title">%s</h4>', esc_html($field['label']));
         }
 
@@ -1127,8 +1200,29 @@ class FieldTypes
             // Prefix subfield IDs/names with group ID.
             $sub_field['id'] = $field['id'] . '_' . $sub_field['id'];
             $sub_field['name'] = $field['name'] . '[' . $sub_field['id'] . ']';
-            $sub_value = $value[ $sub_field['id'] ] ?? null;
-            $html .= $this->renderRow($sub_field, $sub_value, 'meta');
+            $sub_value = $value[$sub_field['id']] ?? null;
+
+            // Check for inline
+            $is_inline = !empty($sub_field['inline']) && filter_var($sub_field['inline'], FILTER_VALIDATE_BOOLEAN);
+            $inline_class = $is_inline ? ' kp-wsf-group-field--inline' : '';
+
+            $html .= '<div class="kp-wsf-group-field kp-wsf-group-field--' . esc_attr($sub_field['type'] ?? 'text') . $inline_class . '">';
+
+            if (!empty($sub_field['label'])) {
+                $required = !empty($sub_field['required']) ? ' <span class="required">*</span>' : '';
+                $html .= sprintf('<label for="%s">%s%s</label>', esc_attr($sub_field['id']), esc_html($sub_field['label']), $required);
+            }
+            if (!empty($sub_field['sublabel'])) {
+                $html .= sprintf('<span class="kp-wsf-sublabel">%s</span>', wp_kses_post($sub_field['sublabel']));
+            }
+
+            $html .= '<div class="kp-wsf-group-field__input">';
+            $html .= $this->render($sub_field, $sub_value);
+            if (!empty($sub_field['description'])) {
+                $html .= sprintf('<p class="description">%s</p>', wp_kses_post($sub_field['description']));
+            }
+            $html .= '</div>';
+            $html .= '</div>';
         }
 
         $html .= '</div>';

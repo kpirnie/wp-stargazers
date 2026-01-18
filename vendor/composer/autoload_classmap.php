@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'KP\\WPFieldFramework\\BlockGenerator' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/BlockGenerator.php',
+    'KP\\WPFieldFramework\\ExportImport' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/ExportImport.php',
     'KP\\WPFieldFramework\\FieldTypes' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/FieldTypes.php',
     'KP\\WPFieldFramework\\Framework' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Framework.php',
     'KP\\WPFieldFramework\\Loader' => $vendorDir . '/kevinpirnie/kpt-wpfieldframework/src/Loader.php',
