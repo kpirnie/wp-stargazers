@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'kevinpirnie/kpt-wpfieldframework' => array(
-            'pretty_version' => 'v1.5.43',
-            'version' => '1.5.43.0',
-            'reference' => '1a38b01efd3aa1c8213868b8adc6bd914603e2e5',
+            'pretty_version' => 'v1.6.39',
+            'version' => '1.6.39.0',
+            'reference' => '342502e159ee6b8afeb1b0f23e0affc791bcd9d1',
             'type' => 'library',
             'install_path' => __DIR__ . '/../kevinpirnie/kpt-wpfieldframework',
             'aliases' => array(),
